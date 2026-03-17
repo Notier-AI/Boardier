@@ -1,6 +1,7 @@
 import type { DiamondElement, Vec2, Bounds } from '../core/types';
 import { registerElement } from './base';
 import { rotatePoint } from '../utils/math';
+import { roughDiamond, mulberry32, roughLineTo } from '../utils/roughDraw';
 
 function render(ctx: CanvasRenderingContext2D, el: DiamondElement): void {
   ctx.save();
@@ -12,21 +13,43 @@ function render(ctx: CanvasRenderingContext2D, el: DiamondElement): void {
 
   const hw = el.width / 2;
   const hh = el.height / 2;
-  ctx.beginPath();
-  ctx.moveTo(0, -hh);
-  ctx.lineTo(hw, 0);
-  ctx.lineTo(0, hh);
-  ctx.lineTo(-hw, 0);
-  ctx.closePath();
 
-  if (el.fillStyle === 'solid' && el.backgroundColor !== 'transparent') {
-    ctx.fillStyle = el.backgroundColor;
-    ctx.fill();
-  }
-  if (el.strokeWidth > 0) {
-    ctx.strokeStyle = el.strokeColor;
-    ctx.lineWidth = el.strokeWidth;
-    ctx.stroke();
+  if (el.roughness > 0) {
+    if (el.fillStyle === 'solid' && el.backgroundColor !== 'transparent') {
+      const rng = mulberry32(el.seed + 1);
+      ctx.beginPath();
+      ctx.moveTo(0, -hh);
+      roughLineTo(ctx, 0, -hh, hw, 0, rng, el.roughness * 0.5);
+      roughLineTo(ctx, hw, 0, 0, hh, rng, el.roughness * 0.5);
+      roughLineTo(ctx, 0, hh, -hw, 0, rng, el.roughness * 0.5);
+      roughLineTo(ctx, -hw, 0, 0, -hh, rng, el.roughness * 0.5);
+      ctx.closePath();
+      ctx.fillStyle = el.backgroundColor;
+      ctx.fill();
+    }
+    if (el.strokeWidth > 0) {
+      ctx.strokeStyle = el.strokeColor;
+      ctx.lineWidth = el.strokeWidth;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      roughDiamond(ctx, 0, 0, hw, hh, el.seed, el.roughness);
+    }
+  } else {
+    ctx.beginPath();
+    ctx.moveTo(0, -hh);
+    ctx.lineTo(hw, 0);
+    ctx.lineTo(0, hh);
+    ctx.lineTo(-hw, 0);
+    ctx.closePath();
+    if (el.fillStyle === 'solid' && el.backgroundColor !== 'transparent') {
+      ctx.fillStyle = el.backgroundColor;
+      ctx.fill();
+    }
+    if (el.strokeWidth > 0) {
+      ctx.strokeStyle = el.strokeColor;
+      ctx.lineWidth = el.strokeWidth;
+      ctx.stroke();
+    }
   }
   ctx.restore();
 }

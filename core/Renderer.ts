@@ -13,7 +13,35 @@ import '../elements/freehand';
 import '../elements/text';
 
 const HANDLE_SIZE = 8;
-const HANDLE_HALF = HANDLE_SIZE / 2;
+
+/**
+ * Adapt element stroke/fill colors for the current theme.
+ * Dark colors on dark backgrounds become light and vice versa.
+ */
+function adaptColor(color: string, theme: BoardierTheme): string {
+  if (color === 'transparent') return color;
+  // Parse hex color to luminance
+  const hex = color.replace('#', '');
+  if (hex.length < 6) return color;
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+  const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+
+  // Check if background is dark
+  const bgHex = theme.canvasBackground.replace('#', '');
+  if (bgHex.length < 6) return color;
+  const bgR = parseInt(bgHex.substring(0, 2), 16);
+  const bgG = parseInt(bgHex.substring(2, 4), 16);
+  const bgB = parseInt(bgHex.substring(4, 6), 16);
+  const bgLum = (0.299 * bgR + 0.587 * bgG + 0.114 * bgB) / 255;
+
+  // If foreground and background are both dark → make foreground light
+  if (lum < 0.25 && bgLum < 0.35) return theme.elementDefaults.strokeColor;
+  // If foreground and background are both light → make foreground dark
+  if (lum > 0.75 && bgLum > 0.65) return theme.elementDefaults.strokeColor;
+  return color;
+}
 
 export class Renderer {
   private canvas: HTMLCanvasElement;
@@ -27,8 +55,6 @@ export class Renderer {
     this.ctx = canvas.getContext('2d')!;
     this.dpr = window.devicePixelRatio || 1;
   }
-
-  // ─── Coordinate transforms ────────────────────────────────────────
 
   screenToWorld(screen: Vec2, vs: ViewState): Vec2 {
     return {
@@ -44,8 +70,6 @@ export class Renderer {
     };
   }
 
-  // ─── Resize (call when container changes size) ─────────────────────
-
   resize(w: number, h: number): void {
     this.width = w;
     this.height = h;
@@ -55,8 +79,6 @@ export class Renderer {
     this.canvas.style.width = w + 'px';
     this.canvas.style.height = h + 'px';
   }
-
-  // ─── Main render ──────────────────────────────────────────────────
 
   render(
     elements: BoardierElement[],
@@ -69,27 +91,20 @@ export class Renderer {
     const { zoom, scrollX, scrollY } = viewState;
 
     ctx.save();
-    // Reset & clear
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-    // HiDPI scale
     ctx.scale(this.dpr, this.dpr);
 
-    // Background
     ctx.fillStyle = theme.canvasBackground;
     ctx.fillRect(0, 0, this.width, this.height);
 
-    // Grid
     if (options?.showGrid) {
       this.drawGrid(ctx, viewState, theme, options.gridSize ?? 20);
     }
 
-    // Viewport transform: screen = world * zoom + scroll
     ctx.translate(scrollX, scrollY);
     ctx.scale(zoom, zoom);
 
-    // Compute visible area in world coords for culling
     const visibleWorld: Bounds = {
       x: -scrollX / zoom,
       y: -scrollY / zoom,
@@ -97,17 +112,25 @@ export class Renderer {
       height: this.height / zoom,
     };
 
-    // Draw elements (bottom → top)
+    // Draw elements with color adaptation
     for (const el of elements) {
       const b = getElementBounds(el);
-      // Cull elements outside viewport (generous padding for strokes)
       if (!boundsIntersect(b, {
         x: visibleWorld.x - 50,
         y: visibleWorld.y - 50,
         width: visibleWorld.width + 100,
         height: visibleWorld.height + 100,
       })) continue;
-      renderElement(ctx, el);
+
+      // Apply color adaptation for dark/light theme
+      const adaptedStroke = adaptColor(el.strokeColor, theme);
+      const needsAdapt = adaptedStroke !== el.strokeColor;
+      if (needsAdapt) {
+        const adapted = { ...el, strokeColor: adaptedStroke } as BoardierElement;
+        renderElement(ctx, adapted);
+      } else {
+        renderElement(ctx, el);
+      }
     }
 
     // Selection overlays
@@ -116,7 +139,6 @@ export class Renderer {
       this.drawSelectionOverlay(ctx, selected, theme, zoom);
     }
 
-    // Box-selection rectangle
     if (options?.boxSelect) {
       this.drawBoxSelect(ctx, options.boxSelect, theme);
     }
@@ -124,14 +146,12 @@ export class Renderer {
     ctx.restore();
   }
 
-  // ─── Grid ─────────────────────────────────────────────────────────
-
   private drawGrid(ctx: CanvasRenderingContext2D, vs: ViewState, theme: BoardierTheme, gridSize: number): void {
     const { zoom, scrollX, scrollY } = vs;
     ctx.fillStyle = theme.gridColor;
 
     const step = gridSize * zoom;
-    if (step < 6) return; // too dense — skip
+    if (step < 6) return;
 
     const startX = scrollX % step;
     const startY = scrollY % step;
@@ -143,14 +163,11 @@ export class Renderer {
     }
   }
 
-  // ─── Selection overlay ────────────────────────────────────────────
-
   private drawSelectionOverlay(ctx: CanvasRenderingContext2D, elements: BoardierElement[], theme: BoardierTheme, zoom: number): void {
     ctx.strokeStyle = theme.selectionColor;
     ctx.lineWidth = 1.5 / zoom;
     ctx.setLineDash([6 / zoom, 4 / zoom]);
 
-    // Per-element selection box
     for (const el of elements) {
       const b = getElementBounds(el);
       ctx.strokeRect(b.x, b.y, b.width, b.height);
@@ -158,7 +175,6 @@ export class Renderer {
 
     ctx.setLineDash([]);
 
-    // If multiple selected, draw a combined bounding box
     if (elements.length > 1) {
       const all = elements.map(getElementBounds);
       const minX = Math.min(...all.map(b => b.x));
@@ -172,10 +188,14 @@ export class Renderer {
       ctx.setLineDash([]);
     }
 
-    // Resize handles (corners of single selection)
     if (elements.length === 1) {
-      const b = getElementBounds(elements[0]);
-      this.drawHandles(ctx, b, theme, zoom);
+      const el = elements[0];
+      if (el.type === 'line' || el.type === 'arrow') {
+        this.drawLinePointHandles(ctx, el as any, theme, zoom);
+      } else {
+        const b = getElementBounds(el);
+        this.drawHandles(ctx, b, theme, zoom);
+      }
     }
   }
 
@@ -187,15 +207,32 @@ export class Renderer {
     ctx.lineWidth = 1.5 / zoom;
 
     const positions = [
-      { x: b.x, y: b.y },                               // top-left
-      { x: b.x + b.width, y: b.y },                     // top-right
-      { x: b.x + b.width, y: b.y + b.height },          // bottom-right
-      { x: b.x, y: b.y + b.height },                    // bottom-left
+      { x: b.x, y: b.y },
+      { x: b.x + b.width, y: b.y },
+      { x: b.x + b.width, y: b.y + b.height },
+      { x: b.x, y: b.y + b.height },
     ];
 
     for (const p of positions) {
       ctx.fillRect(p.x - hh, p.y - hh, hs, hs);
       ctx.strokeRect(p.x - hh, p.y - hh, hs, hs);
+    }
+  }
+
+  /** Draw circle handles at each point of a line/arrow. */
+  private drawLinePointHandles(ctx: CanvasRenderingContext2D, el: { x: number; y: number; points: Vec2[] }, theme: BoardierTheme, zoom: number): void {
+    const radius = 4 / zoom;
+    ctx.fillStyle = '#ffffff';
+    ctx.strokeStyle = theme.selectionColor;
+    ctx.lineWidth = 1.5 / zoom;
+
+    for (const p of el.points) {
+      const ax = el.x + p.x;
+      const ay = el.y + p.y;
+      ctx.beginPath();
+      ctx.arc(ax, ay, radius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
     }
   }
 

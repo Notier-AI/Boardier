@@ -56,38 +56,42 @@ const BASE_DEFAULTS = {
   fillStyle: 'none' as const,
   strokeWidth: 2,
   opacity: 1,
+  roughness: 1,
+  seed: Math.floor(Math.random() * 2_000_000_000),
   locked: false,
   groupIds: [] as string[],
 };
 
 // ─── Factories ───────────────────────────────────────────────────────
 
+function newSeed() { return Math.floor(Math.random() * 2_000_000_000); }
+
 export function createRectangle(o: Partial<RectangleElement> = {}): RectangleElement {
-  return { ...BASE_DEFAULTS, id: generateId(), type: 'rectangle', x: 0, y: 0, width: 100, height: 100, borderRadius: 0, ...o };
+  return { ...BASE_DEFAULTS, seed: newSeed(), id: generateId(), type: 'rectangle', x: 0, y: 0, width: 100, height: 100, borderRadius: 0, ...o };
 }
 
 export function createEllipse(o: Partial<EllipseElement> = {}): EllipseElement {
-  return { ...BASE_DEFAULTS, id: generateId(), type: 'ellipse', x: 0, y: 0, width: 100, height: 100, ...o };
+  return { ...BASE_DEFAULTS, seed: newSeed(), id: generateId(), type: 'ellipse', x: 0, y: 0, width: 100, height: 100, ...o };
 }
 
 export function createDiamond(o: Partial<DiamondElement> = {}): DiamondElement {
-  return { ...BASE_DEFAULTS, id: generateId(), type: 'diamond', x: 0, y: 0, width: 100, height: 100, ...o };
+  return { ...BASE_DEFAULTS, seed: newSeed(), id: generateId(), type: 'diamond', x: 0, y: 0, width: 100, height: 100, ...o };
 }
 
 export function createLine(o: Partial<LineElement> = {}): LineElement {
-  return { ...BASE_DEFAULTS, id: generateId(), type: 'line', x: 0, y: 0, width: 0, height: 0, points: [{ x: 0, y: 0 }, { x: 100, y: 0 }], ...o };
+  return { ...BASE_DEFAULTS, seed: newSeed(), id: generateId(), type: 'line', x: 0, y: 0, width: 0, height: 0, points: [{ x: 0, y: 0 }, { x: 100, y: 0 }], ...o };
 }
 
 export function createArrow(o: Partial<ArrowElement> = {}): ArrowElement {
-  return { ...BASE_DEFAULTS, id: generateId(), type: 'arrow', x: 0, y: 0, width: 0, height: 0, points: [{ x: 0, y: 0 }, { x: 100, y: 0 }], arrowheadStart: false, arrowheadEnd: true, ...o };
+  return { ...BASE_DEFAULTS, seed: newSeed(), id: generateId(), type: 'arrow', x: 0, y: 0, width: 0, height: 0, points: [{ x: 0, y: 0 }, { x: 100, y: 0 }], arrowheadStart: false, arrowheadEnd: true, ...o };
 }
 
 export function createFreehand(o: Partial<FreehandElement> = {}): FreehandElement {
-  return { ...BASE_DEFAULTS, id: generateId(), type: 'freehand', x: 0, y: 0, width: 0, height: 0, points: [], ...o };
+  return { ...BASE_DEFAULTS, seed: newSeed(), id: generateId(), type: 'freehand', x: 0, y: 0, width: 0, height: 0, points: [], ...o };
 }
 
 export function createText(o: Partial<TextElement> = {}): TextElement {
-  return { ...BASE_DEFAULTS, id: generateId(), type: 'text', x: 0, y: 0, width: 10, height: 24, text: '', fontSize: 18, fontFamily: 'system-ui, sans-serif', textAlign: 'left', lineHeight: 1.4, ...o };
+  return { ...BASE_DEFAULTS, seed: newSeed(), id: generateId(), type: 'text', x: 0, y: 0, width: 10, height: 24, text: '', fontSize: 18, fontFamily: 'system-ui, sans-serif', textAlign: 'left', lineHeight: 1.4, ...o };
 }
 
 /** Generic factory — dispatches to the correct creator based on type. */

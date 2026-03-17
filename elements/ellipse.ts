@@ -1,6 +1,7 @@
 import type { EllipseElement, Vec2, Bounds } from '../core/types';
 import { registerElement } from './base';
 import { rotatePoint } from '../utils/math';
+import { roughEllipse, mulberry32 } from '../utils/roughDraw';
 
 function render(ctx: CanvasRenderingContext2D, el: EllipseElement): void {
   ctx.save();
@@ -10,17 +11,44 @@ function render(ctx: CanvasRenderingContext2D, el: EllipseElement): void {
   ctx.translate(cx, cy);
   ctx.rotate(el.rotation);
 
-  ctx.beginPath();
-  ctx.ellipse(0, 0, el.width / 2, el.height / 2, 0, 0, Math.PI * 2);
+  const rx = el.width / 2;
+  const ry = el.height / 2;
 
-  if (el.fillStyle === 'solid' && el.backgroundColor !== 'transparent') {
-    ctx.fillStyle = el.backgroundColor;
-    ctx.fill();
-  }
-  if (el.strokeWidth > 0) {
-    ctx.strokeStyle = el.strokeColor;
-    ctx.lineWidth = el.strokeWidth;
-    ctx.stroke();
+  if (el.roughness > 0) {
+    if (el.fillStyle === 'solid' && el.backgroundColor !== 'transparent') {
+      // Fill with a slightly cleaner ellipse
+      const rng = mulberry32(el.seed + 1);
+      const steps = Math.max(16, Math.ceil(Math.max(rx, ry) * 0.8));
+      ctx.beginPath();
+      for (let i = 0; i <= steps; i++) {
+        const angle = (i / steps) * Math.PI * 2;
+        const px = Math.cos(angle) * rx + (rng() - 0.5) * el.roughness * 0.5;
+        const py = Math.sin(angle) * ry + (rng() - 0.5) * el.roughness * 0.5;
+        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.fillStyle = el.backgroundColor;
+      ctx.fill();
+    }
+    if (el.strokeWidth > 0) {
+      ctx.strokeStyle = el.strokeColor;
+      ctx.lineWidth = el.strokeWidth;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      roughEllipse(ctx, 0, 0, rx, ry, el.seed, el.roughness);
+    }
+  } else {
+    ctx.beginPath();
+    ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
+    if (el.fillStyle === 'solid' && el.backgroundColor !== 'transparent') {
+      ctx.fillStyle = el.backgroundColor;
+      ctx.fill();
+    }
+    if (el.strokeWidth > 0) {
+      ctx.strokeStyle = el.strokeColor;
+      ctx.lineWidth = el.strokeWidth;
+      ctx.stroke();
+    }
   }
   ctx.restore();
 }

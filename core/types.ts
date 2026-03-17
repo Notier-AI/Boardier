@@ -41,6 +41,8 @@ export interface BoardierElementBase {
   fillStyle: FillStyle;
   strokeWidth: number;
   opacity: number;           // 0–1
+  roughness: number;         // 0 = clean, 1 = hand-drawn, 2 = sketchy
+  seed: number;              // stable random seed for hand-drawn consistency
   locked: boolean;
   groupIds: string[];
 }

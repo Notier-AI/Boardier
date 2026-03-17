@@ -10,7 +10,17 @@ interface ZoomControlsProps {
   theme: BoardierTheme;
 }
 
-export const ZoomControls: React.FC<ZoomControlsProps> = ({ zoom, onZoomIn, onZoomOut, onFitView, onResetZoom, theme }) => {
+const MinusIcon = () => (
+  <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M5 12h14" /></svg>
+);
+const PlusIcon = () => (
+  <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
+);
+const FitIcon = () => (
+  <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" /></svg>
+);
+
+export const ZoomControls: React.FC<ZoomControlsProps> = React.memo(({ zoom, onZoomIn, onZoomOut, onFitView, onResetZoom, theme }) => {
   const btnStyle: React.CSSProperties = {
     width: 30,
     height: 28,
@@ -20,7 +30,6 @@ export const ZoomControls: React.FC<ZoomControlsProps> = ({ zoom, onZoomIn, onZo
     border: 'none',
     background: 'transparent',
     cursor: 'pointer',
-    fontSize: 14,
     color: theme.panelText,
     borderRadius: 4,
     fontFamily: theme.uiFontFamily,
@@ -44,7 +53,7 @@ export const ZoomControls: React.FC<ZoomControlsProps> = ({ zoom, onZoomIn, onZo
         fontFamily: theme.uiFontFamily,
       }}
     >
-      <button style={btnStyle} onClick={onZoomOut} title="Zoom out (Ctrl+-)">−</button>
+      <button style={btnStyle} onClick={onZoomOut} title="Zoom out (Ctrl+-)"><MinusIcon /></button>
       <button
         style={{ ...btnStyle, width: 'auto', fontSize: 11, fontWeight: 600, padding: '0 4px' }}
         onClick={onResetZoom}
@@ -52,9 +61,11 @@ export const ZoomControls: React.FC<ZoomControlsProps> = ({ zoom, onZoomIn, onZo
       >
         {Math.round(zoom * 100)}%
       </button>
-      <button style={btnStyle} onClick={onZoomIn} title="Zoom in (Ctrl+=)">+</button>
+      <button style={btnStyle} onClick={onZoomIn} title="Zoom in (Ctrl+=)"><PlusIcon /></button>
       <div style={{ width: 1, height: 18, background: theme.panelBorder, margin: '0 2px' }} />
-      <button style={btnStyle} onClick={onFitView} title="Fit to content (Ctrl+Shift+F)">⤢</button>
+      <button style={btnStyle} onClick={onFitView} title="Fit to content (Ctrl+Shift+F)"><FitIcon /></button>
     </div>
   );
-};
+});
+
+ZoomControls.displayName = 'ZoomControls';

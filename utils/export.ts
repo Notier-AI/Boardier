@@ -16,14 +16,16 @@ export async function exportToPNG(
   backgroundColor: string = '#ffffff',
   padding: number = 40,
   scale: number = 2,
+  transparentBackground: boolean = false,
 ): Promise<Blob> {
   if (elements.length === 0) {
-    // Empty canvas — return a small blank image
     const c = document.createElement('canvas');
     c.width = 200; c.height = 200;
     const ctx = c.getContext('2d')!;
-    ctx.fillStyle = backgroundColor;
-    ctx.fillRect(0, 0, 200, 200);
+    if (!transparentBackground) {
+      ctx.fillStyle = backgroundColor;
+      ctx.fillRect(0, 0, 200, 200);
+    }
     return new Promise((resolve) => c.toBlob(b => resolve(b!), 'image/png'));
   }
 
@@ -41,11 +43,11 @@ export async function exportToPNG(
   canvas.height = height;
   const ctx = canvas.getContext('2d')!;
 
-  // Background
-  ctx.fillStyle = backgroundColor;
-  ctx.fillRect(0, 0, width, height);
+  if (!transparentBackground) {
+    ctx.fillStyle = backgroundColor;
+    ctx.fillRect(0, 0, width, height);
+  }
 
-  // Offset so content is centered
   ctx.scale(scale, scale);
   ctx.translate(padding - minX, padding - minY);
 

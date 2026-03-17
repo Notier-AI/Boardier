@@ -1,6 +1,7 @@
 import type { RectangleElement, Vec2, Bounds } from '../core/types';
 import { registerElement } from './base';
 import { rotatePoint } from '../utils/math';
+import { roughRect, roughFillRect } from '../utils/roughDraw';
 
 function render(ctx: CanvasRenderingContext2D, el: RectangleElement): void {
   ctx.save();
@@ -10,21 +11,39 @@ function render(ctx: CanvasRenderingContext2D, el: RectangleElement): void {
   ctx.translate(cx, cy);
   ctx.rotate(el.rotation);
 
-  ctx.beginPath();
-  if (el.borderRadius > 0) {
-    ctx.roundRect(-el.width / 2, -el.height / 2, el.width, el.height, el.borderRadius);
-  } else {
-    ctx.rect(-el.width / 2, -el.height / 2, el.width, el.height);
-  }
+  const hw = el.width / 2;
+  const hh = el.height / 2;
 
-  if (el.fillStyle === 'solid' && el.backgroundColor !== 'transparent') {
-    ctx.fillStyle = el.backgroundColor;
-    ctx.fill();
-  }
-  if (el.strokeWidth > 0) {
-    ctx.strokeStyle = el.strokeColor;
-    ctx.lineWidth = el.strokeWidth;
-    ctx.stroke();
+  if (el.roughness > 0 && el.borderRadius === 0) {
+    // Hand-drawn style
+    if (el.fillStyle === 'solid' && el.backgroundColor !== 'transparent') {
+      ctx.fillStyle = el.backgroundColor;
+      roughFillRect(ctx, -hw, -hh, el.width, el.height, el.seed, el.roughness);
+    }
+    if (el.strokeWidth > 0) {
+      ctx.strokeStyle = el.strokeColor;
+      ctx.lineWidth = el.strokeWidth;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      roughRect(ctx, -hw, -hh, el.width, el.height, el.seed, el.roughness);
+    }
+  } else {
+    // Clean style
+    ctx.beginPath();
+    if (el.borderRadius > 0) {
+      ctx.roundRect(-hw, -hh, el.width, el.height, el.borderRadius);
+    } else {
+      ctx.rect(-hw, -hh, el.width, el.height);
+    }
+    if (el.fillStyle === 'solid' && el.backgroundColor !== 'transparent') {
+      ctx.fillStyle = el.backgroundColor;
+      ctx.fill();
+    }
+    if (el.strokeWidth > 0) {
+      ctx.strokeStyle = el.strokeColor;
+      ctx.lineWidth = el.strokeWidth;
+      ctx.stroke();
+    }
   }
   ctx.restore();
 }

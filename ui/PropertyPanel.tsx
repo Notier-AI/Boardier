@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import type { BoardierElement } from '../core/types';
 import type { BoardierTheme } from '../themes/types';
-import { STROKE_COLORS, FILL_COLORS, STROKE_WIDTHS, FONT_SIZES } from '../utils/colors';
+import { STROKE_COLORS, FILL_COLORS, FONT_SIZES } from '../utils/colors';
 
 interface PropertyPanelProps {
   elements: BoardierElement[];
@@ -10,8 +10,10 @@ interface PropertyPanelProps {
   theme: BoardierTheme;
 }
 
-export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate, onDelete, theme }) => {
+export const PropertyPanel: React.FC<PropertyPanelProps> = React.memo(({ elements, onUpdate, onDelete, theme }) => {
   if (elements.length === 0) return null;
+  const strokePickerRef = useRef<HTMLInputElement>(null);
+  const fillPickerRef = useRef<HTMLInputElement>(null);
 
   const first = elements[0];
   const hasText = elements.some(e => e.type === 'text');
@@ -22,8 +24,8 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
       key={color}
       onClick={onClick}
       style={{
-        width: 20,
-        height: 20,
+        width: 18,
+        height: 18,
         borderRadius: 4,
         border: active ? `2px solid ${theme.selectionColor}` : `1px solid ${theme.panelBorder}`,
         background: color === 'transparent'
@@ -31,6 +33,7 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
           : color,
         cursor: 'pointer',
         padding: 0,
+        flexShrink: 0,
       }}
     />
   );
@@ -45,6 +48,30 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
     fontFamily: theme.uiFontFamily,
   };
 
+  const customColorBtn = (currentColor: string, onPick: (c: string) => void, pickerRef: React.RefObject<HTMLInputElement | null>) => (
+    <span style={{ position: 'relative' }}>
+      <button
+        onClick={() => pickerRef.current?.click()}
+        style={{
+          width: 18, height: 18, borderRadius: 4,
+          border: `1px dashed ${theme.panelBorder}`,
+          background: 'transparent', cursor: 'pointer', padding: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          color: theme.panelTextSecondary, fontSize: 12,
+        }}
+      >
+        <svg width={10} height={10} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
+      </button>
+      <input
+        ref={pickerRef}
+        type="color"
+        value={currentColor === 'transparent' ? '#000000' : currentColor}
+        onChange={e => onPick(e.target.value)}
+        style={{ position: 'absolute', width: 0, height: 0, opacity: 0, pointerEvents: 'none' }}
+      />
+    </span>
+  );
+
   return (
     <div
       style={{
@@ -53,7 +80,7 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
         left: '50%',
         transform: 'translateX(-50%)',
         display: 'flex',
-        gap: 16,
+        gap: 14,
         padding: '8px 14px',
         background: theme.panelBackground,
         border: `1px solid ${theme.panelBorder}`,
@@ -67,21 +94,23 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
       {/* Stroke color */}
       <div style={sectionStyle}>
         <span>Stroke</span>
-        <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap', maxWidth: 120 }}>
+        <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap', maxWidth: 108, alignItems: 'center' }}>
           {STROKE_COLORS.map(c => swatch(c, first.strokeColor === c, () => onUpdate({ strokeColor: c })))}
+          {customColorBtn(first.strokeColor, c => onUpdate({ strokeColor: c }), strokePickerRef)}
         </div>
       </div>
 
-      {/* Fill color (not for lines/freehand) */}
+      {/* Fill color */}
       {isNotLine && (
         <div style={sectionStyle}>
           <span>Fill</span>
-          <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap', maxWidth: 120 }}>
+          <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap', maxWidth: 108, alignItems: 'center' }}>
             {FILL_COLORS.map(c =>
               swatch(c, first.backgroundColor === c, () =>
                 onUpdate({ backgroundColor: c, fillStyle: c === 'transparent' ? 'none' : 'solid' }),
               ),
             )}
+            {customColorBtn(first.backgroundColor, c => onUpdate({ backgroundColor: c, fillStyle: 'solid' }), fillPickerRef)}
           </div>
         </div>
       )}
@@ -89,31 +118,16 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
       {/* Stroke width */}
       <div style={sectionStyle}>
         <span>Width</span>
-        <div style={{ display: 'flex', gap: 4 }}>
-          {STROKE_WIDTHS.map(w => (
-            <button
-              key={w}
-              onClick={() => onUpdate({ strokeWidth: w })}
-              style={{
-                width: 28,
-                height: 24,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                border: `1px solid ${first.strokeWidth === w ? theme.selectionColor : theme.panelBorder}`,
-                borderRadius: 4,
-                background: first.strokeWidth === w ? theme.panelActive : 'transparent',
-                cursor: 'pointer',
-                fontSize: 10,
-                fontWeight: 700,
-                color: theme.panelText,
-                fontFamily: 'inherit',
-              }}
-            >
-              {w}
-            </button>
-          ))}
-        </div>
+        <input
+          type="range"
+          min={1}
+          max={12}
+          step={1}
+          value={first.strokeWidth}
+          onChange={e => onUpdate({ strokeWidth: parseInt(e.target.value) })}
+          style={{ width: 60, accentColor: theme.selectionColor }}
+        />
+        <span style={{ fontSize: 10, textAlign: 'center', color: theme.panelText }}>{first.strokeWidth}px</span>
       </div>
 
       {/* Font size for text */}
@@ -126,19 +140,10 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
                 key={s}
                 onClick={() => onUpdate({ fontSize: s } as any)}
                 style={{
-                  width: 28,
-                  height: 24,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
+                  width: 28, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center',
                   border: `1px solid ${(first as any).fontSize === s ? theme.selectionColor : theme.panelBorder}`,
-                  borderRadius: 4,
-                  background: (first as any).fontSize === s ? theme.panelActive : 'transparent',
-                  cursor: 'pointer',
-                  fontSize: 10,
-                  fontWeight: 700,
-                  color: theme.panelText,
-                  fontFamily: 'inherit',
+                  borderRadius: 4, background: (first as any).fontSize === s ? theme.panelActive : 'transparent',
+                  cursor: 'pointer', fontSize: 10, fontWeight: 700, color: theme.panelText, fontFamily: 'inherit',
                 }}
               >
                 {s}
@@ -147,6 +152,27 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
           </div>
         </div>
       )}
+
+      {/* Roughness */}
+      <div style={sectionStyle}>
+        <span>Style</span>
+        <div style={{ display: 'flex', gap: 3 }}>
+          {[{ v: 0, label: 'Clean' }, { v: 1, label: 'Sketch' }].map(r => (
+            <button
+              key={r.v}
+              onClick={() => onUpdate({ roughness: r.v })}
+              style={{
+                padding: '2px 6px', fontSize: 10, fontWeight: 600,
+                border: `1px solid ${first.roughness === r.v ? theme.selectionColor : theme.panelBorder}`,
+                borderRadius: 4, background: first.roughness === r.v ? theme.panelActive : 'transparent',
+                cursor: 'pointer', color: theme.panelText, fontFamily: 'inherit',
+              }}
+            >
+              {r.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* Opacity */}
       <div style={sectionStyle}>
@@ -158,7 +184,7 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
           step={0.05}
           value={first.opacity}
           onChange={e => onUpdate({ opacity: parseFloat(e.target.value) })}
-          style={{ width: 70, accentColor: theme.selectionColor }}
+          style={{ width: 55, accentColor: theme.selectionColor }}
         />
       </div>
 
@@ -167,23 +193,15 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
         onClick={onDelete}
         title="Delete"
         style={{
-          width: 30,
-          height: 30,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          border: `1px solid ${theme.panelBorder}`,
-          borderRadius: 4,
-          background: 'transparent',
-          cursor: 'pointer',
-          fontSize: 14,
-          color: '#e03131',
-          alignSelf: 'center',
-          fontFamily: 'inherit',
+          width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          border: `1px solid ${theme.panelBorder}`, borderRadius: 4, background: 'transparent',
+          cursor: 'pointer', color: '#e03131', alignSelf: 'center', fontFamily: 'inherit',
         }}
       >
-        ✕
+        <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
       </button>
     </div>
   );
-};
+});
+
+PropertyPanel.displayName = 'PropertyPanel';

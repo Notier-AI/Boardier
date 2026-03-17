@@ -86,8 +86,12 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
       const engine = new BoardierEngine(canvas, fullConfig, resolvedTheme);
       engineRef.current = engine;
 
-      // Wire callbacks
-      engine.onChange(() => { onChange?.(engine.getSceneData()); });
+      // Wire callbacks — debounce onChange to avoid expensive structuredClone on every mutation
+      const changeTimer = { id: 0 as any };
+      engine.onChange(() => {
+        clearTimeout(changeTimer.id);
+        changeTimer.id = setTimeout(() => { onChange?.(engine.getSceneData()); }, 120);
+      });
       engine.onSelectionChange(ids => setSelectedIds(ids));
       engine.onViewChange(vs => setViewState({ ...vs }));
       engine.onToolChange(t => setActiveTool(t));
@@ -144,6 +148,7 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
       window.addEventListener('keyup', onKeyUp);
 
       return () => {
+        clearTimeout(changeTimer.id);
         ro.disconnect();
         canvas.removeEventListener('pointerdown', onPointerDown);
         canvas.removeEventListener('pointermove', onPointerMove);
@@ -382,12 +387,11 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
               background: resolvedTheme.panelBackground,
               boxShadow: resolvedTheme.shadow,
               cursor: 'pointer',
-              fontSize: 16,
               color: resolvedTheme.panelText,
               zIndex: 10,
             }}
           >
-            ⤓
+            <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><path d="M7 10l5 5 5-5" /><path d="M12 15V3" /></svg>
           </button>
         )}
       </div>

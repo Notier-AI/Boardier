@@ -53,3 +53,6 @@ export {
 export { exportToPNG, exportToJSON } from './utils/export';
 export { generateId } from './utils/id';
 export { STROKE_COLORS, FILL_COLORS, CANVAS_BACKGROUNDS, STROKE_WIDTHS, FONT_SIZES } from './utils/colors';
+
+// Hand-drawn rendering utilities
+export { roughRect, roughEllipse, roughDiamond, roughPolyline, roughLineTo } from './utils/roughDraw';

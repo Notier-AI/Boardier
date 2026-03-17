@@ -41,6 +41,9 @@ export class BoardierEngine {
   private spaceHeld = false;
   private panOverrideTool: PanTool;
 
+  // RAF render batching
+  private _rafId = 0;
+
   // Callbacks
   private _onChange?: (elements: BoardierElement[]) => void;
   private _onSelection?: (ids: string[]) => void;
@@ -378,6 +381,14 @@ export class BoardierEngine {
     const rect = this.canvas.getBoundingClientRect();
     const screen: Vec2 = { x: e.clientX - rect.left, y: e.clientY - rect.top };
     const world = this.renderer.screenToWorld(screen, this.viewState);
+
+    // If the active tool supports double-click (e.g., LineTool to finish)
+    const tool = this.activeTool as any;
+    if (tool.onDoubleClick) {
+      tool.onDoubleClick(this.toolCtx, world);
+      return;
+    }
+
     const hit = this.scene.hitTest(world);
     if (hit?.type === 'text') {
       this.scene.setSelection([hit.id]);
@@ -388,6 +399,17 @@ export class BoardierEngine {
   // ─── Render ──────────────────────────────────────────────────────
 
   render(): void {
+    cancelAnimationFrame(this._rafId);
+    this._rafId = requestAnimationFrame(() => this._doRender());
+  }
+
+  /** Synchronous render — use for export or when RAF isn't suitable. */
+  renderNow(): void {
+    cancelAnimationFrame(this._rafId);
+    this._doRender();
+  }
+
+  private _doRender(): void {
     const selectTool = this.tools.get('select') as SelectTool;
     this.renderer.render(
       this.scene.getElements(),
@@ -416,10 +438,121 @@ export class BoardierEngine {
   onTextEditRequest(cb: (id: string) => void): void { this._onTextEdit = cb; }
 
   dispose(): void {
+    cancelAnimationFrame(this._rafId);
     this._onChange = undefined;
     this._onSelection = undefined;
     this._onView = undefined;
     this._onTool = undefined;
     this._onTextEdit = undefined;
   }
+
+  // ─── AI-Facing API ──────────────────────────────────────────────
+  // Designed to be easily consumed by chatbots / AI integrations.
+
+  /** Search elements by type, text content, color, or proximity. */
+  searchElements(query: {
+    type?: string;
+    text?: string;
+    strokeColor?: string;
+    backgroundColor?: string;
+    near?: Vec2;
+    radius?: number;
+  }): BoardierElement[] {
+    return this.scene.getElements().filter(el => {
+      if (query.type && el.type !== query.type) return false;
+      if (query.text) {
+        if (el.type !== 'text') return false;
+        if (!(el as any).text?.toLowerCase().includes(query.text.toLowerCase())) return false;
+      }
+      if (query.strokeColor && el.strokeColor !== query.strokeColor) return false;
+      if (query.backgroundColor && el.backgroundColor !== query.backgroundColor) return false;
+      if (query.near && query.radius) {
+        const cx = el.x + el.width / 2;
+        const cy = el.y + el.height / 2;
+        const dx = cx - query.near.x;
+        const dy = cy - query.near.y;
+        if (Math.sqrt(dx * dx + dy * dy) > query.radius) return false;
+      }
+      return true;
+    });
+  }
+
+  /** Get a human-readable / AI-parseable summary of the scene. */
+  getSceneSummary(): string {
+    const elements = this.scene.getElements();
+    if (elements.length === 0) return 'Empty canvas.';
+    const byType: Record<string, number> = {};
+    for (const el of elements) byType[el.type] = (byType[el.type] || 0) + 1;
+    const typeSummary = Object.entries(byType).map(([t, n]) => `${n} ${t}${n > 1 ? 's' : ''}`).join(', ');
+    const texts = elements.filter(e => e.type === 'text').map(e => `"${(e as any).text}"`).join(', ');
+    let summary = `Canvas has ${elements.length} elements: ${typeSummary}.`;
+    if (texts) summary += ` Text elements: ${texts}.`;
+    return summary;
+  }
+
+  /** Get scene statistics. */
+  getSceneStats(): { totalElements: number; elementsByType: Record<string, number>; bounds: Bounds | null } {
+    const elements = this.scene.getElements();
+    const byType: Record<string, number> = {};
+    for (const el of elements) byType[el.type] = (byType[el.type] || 0) + 1;
+    if (elements.length === 0) return { totalElements: 0, elementsByType: byType, bounds: null };
+    const allBounds = elements.map(getElementBounds);
+    const minX = Math.min(...allBounds.map(b => b.x));
+    const minY = Math.min(...allBounds.map(b => b.y));
+    const maxX = Math.max(...allBounds.map(b => b.x + b.width));
+    const maxY = Math.max(...allBounds.map(b => b.y + b.height));
+    return { totalElements: elements.length, elementsByType: byType, bounds: { x: minX, y: minY, width: maxX - minX, height: maxY - minY } };
+  }
+
+  /** Move an element to absolute position. */
+  moveElement(id: string, x: number, y: number): void {
+    this.history.push(this.scene.getElements());
+    this.scene.updateElement(id, { x, y });
+    this.history.push(this.scene.getElements());
+    this.render();
+  }
+
+  /** Resize an element. */
+  resizeElement(id: string, width: number, height: number): void {
+    this.history.push(this.scene.getElements());
+    this.scene.updateElement(id, { width, height });
+    this.history.push(this.scene.getElements());
+    this.render();
+  }
+
+  /** Set stroke/fill color of an element. */
+  setElementColor(id: string, stroke?: string, fill?: string): void {
+    const changes: Partial<BoardierElement> = {};
+    if (stroke) changes.strokeColor = stroke;
+    if (fill) { changes.backgroundColor = fill; changes.fillStyle = fill === 'transparent' ? 'none' : 'solid'; }
+    this.history.push(this.scene.getElements());
+    this.scene.updateElement(id, changes);
+    this.history.push(this.scene.getElements());
+    this.render();
+  }
+
+  /** Delete all elements. */
+  deleteAll(): void {
+    this.history.push(this.scene.getElements());
+    this.scene.setElements([]);
+    this.history.push(this.scene.getElements());
+    this.render();
+  }
+
+  /** Pan the view to center on a world coordinate. */
+  panTo(x: number, y: number): void {
+    this.viewState.scrollX = this.canvas.clientWidth / 2 - x * this.viewState.zoom;
+    this.viewState.scrollY = this.canvas.clientHeight / 2 - y * this.viewState.zoom;
+    this._onView?.({ ...this.viewState });
+    this.render();
+  }
+
+  /** Select elements by IDs. */
+  selectElements(ids: string[]): void {
+    this.scene.setSelection(ids);
+    this.render();
+  }
+
+  /** Get the canvas element for direct access. */
+  getCanvas(): HTMLCanvasElement { return this.canvas; }
 }

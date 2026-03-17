@@ -8,20 +8,36 @@ interface ToolbarProps {
   theme: BoardierTheme;
 }
 
-const TOOLS: { type: BoardierToolType; label: string; shortcut: string; icon: string }[] = [
-  { type: 'select',    label: 'Select',    shortcut: 'V', icon: '⇲' },
-  { type: 'rectangle', label: 'Rectangle', shortcut: 'R', icon: '▭' },
-  { type: 'ellipse',   label: 'Ellipse',   shortcut: 'E', icon: '◯' },
-  { type: 'diamond',   label: 'Diamond',   shortcut: 'D', icon: '◇' },
-  { type: 'line',      label: 'Line',      shortcut: 'L', icon: '╱' },
-  { type: 'arrow',     label: 'Arrow',     shortcut: 'A', icon: '→' },
-  { type: 'freehand',  label: 'Pencil',    shortcut: 'P', icon: '✎' },
-  { type: 'text',      label: 'Text',      shortcut: 'T', icon: 'T' },
-  { type: 'eraser',    label: 'Eraser',    shortcut: 'X', icon: '⌫' },
-  { type: 'pan',       label: 'Pan',       shortcut: 'H', icon: '✋' },
+const Icon = ({ d, size = 16 }: { d: string; size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d={d} />
+  </svg>
+);
+
+const TOOLS: { type: BoardierToolType; label: string; shortcut: string; icon: React.ReactNode }[] = [
+  { type: 'select', label: 'Select', shortcut: 'V',
+    icon: <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 3l14 9-7 2-3 7z" /><path d="M12 14l5 5" /></svg> },
+  { type: 'rectangle', label: 'Rectangle', shortcut: 'R',
+    icon: <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2" /></svg> },
+  { type: 'ellipse', label: 'Ellipse', shortcut: 'E',
+    icon: <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><ellipse cx="12" cy="12" rx="9" ry="7" /></svg> },
+  { type: 'diamond', label: 'Diamond', shortcut: 'D',
+    icon: <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3l9 9-9 9-9-9z" /></svg> },
+  { type: 'line', label: 'Line', shortcut: 'L',
+    icon: <Icon d="M5 19L19 5" /> },
+  { type: 'arrow', label: 'Arrow', shortcut: 'A',
+    icon: <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 19L19 5" /><path d="M19 5h-6" /><path d="M19 5v6" /></svg> },
+  { type: 'freehand', label: 'Pencil', shortcut: 'P',
+    icon: <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3l4 4L7 21H3v-4z" /></svg> },
+  { type: 'text', label: 'Text', shortcut: 'T',
+    icon: <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 4h12" /><path d="M12 4v16" /></svg> },
+  { type: 'eraser', label: 'Eraser', shortcut: 'X',
+    icon: <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 20H7L3 16l10-10 8 8-4 4" /><path d="M6 20l5-5" /></svg> },
+  { type: 'pan', label: 'Pan', shortcut: 'H',
+    icon: <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 11V6a2 2 0 00-4 0v5" /><path d="M14 10V4a2 2 0 00-4 0v6" /><path d="M10 10.5V5a2 2 0 00-4 0v9" /><path d="M18 11a2 2 0 014 0v3a8 8 0 01-8 8h-2c-2.5 0-3.8-.6-5.5-2.3L3 15.5a2 2 0 013-2.7l2 2" /></svg> },
 ];
 
-export const Toolbar: React.FC<ToolbarProps> = ({ activeTool, onToolChange, theme }) => {
+export const Toolbar: React.FC<ToolbarProps> = React.memo(({ activeTool, onToolChange, theme }) => {
   return (
     <div
       style={{
@@ -61,12 +77,14 @@ export const Toolbar: React.FC<ToolbarProps> = ({ activeTool, onToolChange, them
             color: activeTool === t.type ? theme.selectionColor : theme.panelText,
             transition: 'background 0.1s, color 0.1s',
           }}
-          onMouseEnter={e => { if (activeTool !== t.type) (e.target as HTMLElement).style.background = theme.panelHover; }}
-          onMouseLeave={e => { if (activeTool !== t.type) (e.target as HTMLElement).style.background = 'transparent'; }}
+          onMouseEnter={e => { if (activeTool !== t.type) (e.currentTarget as HTMLElement).style.background = theme.panelHover; }}
+          onMouseLeave={e => { if (activeTool !== t.type) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
         >
           {t.icon}
         </button>
       ))}
     </div>
   );
-};
+});
+
+Toolbar.displayName = 'Toolbar';
