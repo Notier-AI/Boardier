@@ -161,7 +161,23 @@ export interface BoardierConfig {
   snapToGrid?: boolean;
   minZoom?: number;
   maxZoom?: number;
+  /** Layout configuration for UI panels (toolbar, zoom, export) */
+  layout?: BoardierLayoutConfig;
 }
+
+/** Configuration for the draggable layout system */
+export interface BoardierLayoutConfig {
+  /** When true, panels cannot be dragged by the user */
+  locked?: boolean;
+  /** Panel IDs to hide completely */
+  hidden?: BoardierPanelId[];
+  /** Rectangular zones where panels cannot be dropped (in % of container: 0-100) */
+  noDropZones?: Array<{ x: number; y: number; width: number; height: number }>;
+  /** Override default positions for panels */
+  positions?: Partial<Record<BoardierPanelId, { top?: number; left?: number; right?: number; bottom?: number }>>;
+}
+
+export type BoardierPanelId = 'toolbar' | 'zoom' | 'export' | 'backToContent';
 
 // ─── AI Config (Phase 3 — placeholder) ───────────────────────────────
 

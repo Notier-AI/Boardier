@@ -10,6 +10,8 @@ export type {
   BoardierElement,
   BoardierElementType,
   BoardierConfig,
+  BoardierLayoutConfig,
+  BoardierPanelId,
   BoardierSceneData,
   BoardierAIConfig,
   ViewState,

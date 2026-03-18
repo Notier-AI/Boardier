@@ -26,7 +26,10 @@ import { TextEditor } from './TextEditor';
 import { ExportDialog } from './ExportDialog';
 import { ShapeLabelEditor } from './ShapeLabelEditor';
 import { IconPicker } from './IconPicker';
+import { DraggablePanel } from './DraggablePanel';
 import { createIcon } from '../elements/base';
+import { getElementBounds } from '../elements/base';
+import { mermaidToBoardier } from '../utils/mermaidParser';
 import { measureText } from '../elements/text';
 
 /* ──────────────── public types ──────────────── */
@@ -73,6 +76,32 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
     const [showIconPicker, setShowIconPicker] = useState(false);
     const [editingIconId, setEditingIconId] = useState<string | null>(null);
     const [insertingIconForText, setInsertingIconForText] = useState(false);
+    const insertIconTargetRef = useRef<string | null>(null);
+    const [showMermaidDialog, setShowMermaidDialog] = useState(false);
+
+    // Track whether viewport has drifted from content
+    const isViewportDrifted = React.useMemo(() => {
+      const engine = engineRef.current;
+      if (!engine) return false;
+      const elements = engine.scene.getElements();
+      if (elements.length === 0) return false;
+      const allBounds = elements.map(getElementBounds);
+      const minX = Math.min(...allBounds.map(b => b.x));
+      const minY = Math.min(...allBounds.map(b => b.y));
+      const maxX = Math.max(...allBounds.map(b => b.x + b.width));
+      const maxY = Math.max(...allBounds.map(b => b.y + b.height));
+      const { scrollX, scrollY, zoom } = viewState;
+      const canvas = engine.getCanvas();
+      const vpW = canvas.clientWidth / zoom;
+      const vpH = canvas.clientHeight / zoom;
+      const vpLeft = -scrollX / zoom;
+      const vpTop = -scrollY / zoom;
+      const vpRight = vpLeft + vpW;
+      const vpBottom = vpTop + vpH;
+      // Content is visible if bounding boxes overlap
+      const overlaps = maxX > vpLeft && minX < vpRight && maxY > vpTop && minY < vpBottom;
+      return !overlaps;
+    }, [viewState]);
 
     const resolvedTheme = themeProp ?? (darkMode ? defaultDarkTheme : defaultTheme);
     const fullConfig: BoardierConfig = {
@@ -239,6 +268,8 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
       : undefined;
 
     const handleTextCommit = useCallback((id: string, text: string) => {
+      // If inserting an icon, just save text but keep editor open conceptually
+      if (insertIconTargetRef.current) return;
       const engine = engineRef.current;
       if (!engine) return;
       const el = engine.scene.getElementById(id) as TextElement | undefined;
@@ -251,6 +282,7 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
     }, []);
 
     const handleTextCancel = useCallback((id: string) => {
+      if (insertIconTargetRef.current) return;
       const engine = engineRef.current;
       if (!engine) return;
       // Remove element if it has no text (was just created)
@@ -288,19 +320,21 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
       const engine = engineRef.current;
       if (!engine) return;
 
-      if (insertingIconForText && editingTextId) {
+      if (insertingIconForText && insertIconTargetRef.current) {
         // Insert inline icon marker into the text element
-        const el = engine.scene.getElementById(editingTextId) as TextElement | undefined;
+        const targetId = insertIconTargetRef.current;
+        const el = engine.scene.getElementById(targetId) as TextElement | undefined;
         if (el) {
           const marker = `{{${iconName}}}`;
           const newText = el.text + marker;
           const inlineIcons = { ...(el.inlineIcons || {}), [iconName]: svgMarkup };
           const size = measureText(newText, el.fontSize, el.fontFamily, el.lineHeight);
           engine.history.push(engine.scene.getElements());
-          engine.scene.updateElement(editingTextId, { text: newText, inlineIcons, width: size.width, height: size.height } as any);
+          engine.scene.updateElement(targetId, { text: newText, inlineIcons, width: size.width, height: size.height } as any);
           engine.history.push(engine.scene.getElements());
           engine.render();
         }
+        insertIconTargetRef.current = null;
         setInsertingIconForText(false);
         setShowIconPicker(false);
         return;
@@ -331,7 +365,7 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
         engine.render();
       }
       setShowIconPicker(false);
-    }, [editingIconId, insertingIconForText, editingTextId]);
+    }, [editingIconId, insertingIconForText]);
 
     // ── Icon picker close ──────────────────────────
 
@@ -339,14 +373,16 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
       setShowIconPicker(false);
       setEditingIconId(null);
       setInsertingIconForText(false);
+      insertIconTargetRef.current = null;
     }, []);
 
     // ── Insert icon into text ────────────────────────
 
     const handleTextInsertIcon = useCallback(() => {
+      insertIconTargetRef.current = editingTextId;
       setInsertingIconForText(true);
       setShowIconPicker(true);
-    }, []);
+    }, [editingTextId]);
 
     // ── Context menu ─────────────────────────────────
 
@@ -385,6 +421,25 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
       setContextMenu(null);
     }, []);
 
+    // ── Mermaid converter ────────────────────────────
+
+    const handleMermaidConvert = useCallback((syntax: string) => {
+      const engine = engineRef.current;
+      if (!engine) return;
+      try {
+        const elements = mermaidToBoardier(syntax.trim());
+        if (elements.length > 0) {
+          engine.history.push(engine.scene.getElements());
+          engine.addElements(elements);
+          engine.history.push(engine.scene.getElements());
+          setTimeout(() => engine.zoomToFit(), 100);
+        }
+      } catch (e) {
+        console.warn('Mermaid conversion failed:', e);
+      }
+      setShowMermaidDialog(false);
+    }, []);
+
     // ── Selected elements for property panel ─────────
 
     const selectedElements = selectedIds
@@ -397,6 +452,7 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
       <div
         ref={containerRef}
         className={className}
+        data-boardier-container
         style={{
           position: 'relative',
           width: '100%',
@@ -418,7 +474,9 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
 
         {/* Toolbar */}
         {!readOnly && (
-          <Toolbar activeTool={activeTool} onToolChange={handleToolChange} theme={resolvedTheme} />
+          <DraggablePanel id="toolbar" layout={fullConfig.layout} theme={resolvedTheme}>
+            <Toolbar activeTool={activeTool} onToolChange={handleToolChange} theme={resolvedTheme} onMermaidConvert={() => setShowMermaidDialog(true)} />
+          </DraggablePanel>
         )}
 
         {/* Property Panel */}
@@ -432,14 +490,53 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
         )}
 
         {/* Zoom Controls */}
-        <ZoomControls
-          zoom={viewState.zoom}
-          onZoomIn={handleZoomIn}
-          onZoomOut={handleZoomOut}
-          onFitView={() => engineRef.current?.zoomToFit()}
-          onResetZoom={() => engineRef.current?.zoomTo(1)}
-          theme={resolvedTheme}
-        />
+        <DraggablePanel id="zoom" layout={fullConfig.layout} theme={resolvedTheme}>
+          <ZoomControls
+            zoom={viewState.zoom}
+            onZoomIn={handleZoomIn}
+            onZoomOut={handleZoomOut}
+            onFitView={() => engineRef.current?.zoomToFit()}
+            onResetZoom={() => engineRef.current?.zoomTo(1)}
+            theme={resolvedTheme}
+          />
+        </DraggablePanel>
+
+        {/* Back to content button */}
+        {isViewportDrifted && (
+          <DraggablePanel id="backToContent" layout={fullConfig.layout} theme={resolvedTheme}>
+            <button
+              onClick={() => engineRef.current?.zoomToFit()}
+              style={{
+              position: 'absolute',
+              bottom: 52,
+              right: 12,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '6px 12px',
+              border: `1px solid ${resolvedTheme.panelBorder}`,
+              borderRadius: resolvedTheme.borderRadius,
+              background: resolvedTheme.panelBackground,
+              boxShadow: resolvedTheme.shadow,
+              cursor: 'pointer',
+              color: resolvedTheme.selectionColor,
+              fontSize: 12,
+              fontWeight: 600,
+              fontFamily: resolvedTheme.uiFontFamily,
+              zIndex: 10,
+              whiteSpace: 'nowrap',
+              animation: 'boardier-fadein 0.2s ease',
+            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = resolvedTheme.panelHover; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = resolvedTheme.panelBackground; }}
+          >
+            <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M15 3h6v6" /><path d="M9 21H3v-6" /><path d="M21 3l-7 7" /><path d="M3 21l7-7" />
+            </svg>
+            Back to content
+          </button>
+          </DraggablePanel>
+        )}
 
         {/* Inline Text Editor */}
         {editingTextElement && (
@@ -498,33 +595,136 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
 
         {/* Export button (bottom-left) */}
         {!readOnly && (
-          <button
-            onClick={() => setShowExport(true)}
-            title="Export"
-            style={{
-              position: 'absolute',
-              bottom: 12,
-              left: 12,
-              width: 34,
-              height: 34,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              border: `1px solid ${resolvedTheme.panelBorder}`,
-              borderRadius: resolvedTheme.borderRadius,
-              background: resolvedTheme.panelBackground,
-              boxShadow: resolvedTheme.shadow,
-              cursor: 'pointer',
-              color: resolvedTheme.panelText,
-              zIndex: 10,
-            }}
-          >
-            <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><path d="M7 10l5 5 5-5" /><path d="M12 15V3" /></svg>
-          </button>
+          <DraggablePanel id="export" layout={fullConfig.layout} theme={resolvedTheme}>
+            <button
+              onClick={() => setShowExport(true)}
+              title="Export"
+              style={{
+                position: 'absolute',
+                bottom: 12,
+                left: 12,
+                width: 34,
+                height: 34,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: `1px solid ${resolvedTheme.panelBorder}`,
+                borderRadius: resolvedTheme.borderRadius,
+                background: resolvedTheme.panelBackground,
+                boxShadow: resolvedTheme.shadow,
+                cursor: 'pointer',
+                color: resolvedTheme.panelText,
+                zIndex: 10,
+              }}
+            >
+              <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><path d="M7 10l5 5 5-5" /><path d="M12 15V3" /></svg>
+            </button>
+          </DraggablePanel>
+        )}
+
+        {/* Mermaid Converter Dialog */}
+        {showMermaidDialog && (
+          <MermaidDialog
+            theme={resolvedTheme}
+            onConvert={handleMermaidConvert}
+            onClose={() => setShowMermaidDialog(false)}
+          />
         )}
       </div>
     );
   },
 );
+
+/* ──────────────── Mermaid Dialog ──────────────── */
+
+const MermaidDialog: React.FC<{
+  theme: BoardierTheme;
+  onConvert: (syntax: string) => void;
+  onClose: () => void;
+}> = ({ theme, onConvert, onClose }) => {
+  const [value, setValue] = useState('graph TB\n    A[Start] --> B[Process]\n    B --> C{Decision}\n    C -->|Yes| D[End]\n    C -->|No| B');
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    textareaRef.current?.focus();
+    textareaRef.current?.select();
+  }, []);
+
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        inset: 0,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'rgba(0,0,0,0.35)',
+        zIndex: 50,
+      }}
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div
+        style={{
+          background: theme.panelBackground,
+          border: `1px solid ${theme.panelBorder}`,
+          borderRadius: theme.borderRadius + 4,
+          boxShadow: theme.shadow,
+          padding: 20,
+          width: 440,
+          maxWidth: '90%',
+          fontFamily: theme.uiFontFamily,
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+          <span style={{ fontWeight: 600, fontSize: 15, color: theme.panelText }}>Mermaid Converter</span>
+          <button
+            onClick={onClose}
+            style={{ background: 'none', border: 'none', color: theme.panelText, cursor: 'pointer', opacity: 0.6, fontSize: 18, lineHeight: 1 }}
+          >&times;</button>
+        </div>
+        <div style={{ fontSize: 12, color: theme.panelText, opacity: 0.6, marginBottom: 8 }}>
+          Paste Mermaid flowchart syntax below. Supports graph/flowchart with TB, BT, LR, RL directions.
+        </div>
+        <textarea
+          ref={textareaRef}
+          value={value}
+          onChange={e => setValue(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); onConvert(value); } }}
+          spellCheck={false}
+          style={{
+            width: '100%',
+            height: 180,
+            padding: 10,
+            fontFamily: 'monospace',
+            fontSize: 13,
+            border: `1px solid ${theme.panelBorder}`,
+            borderRadius: theme.borderRadius,
+            background: theme.canvasBackground,
+            color: theme.panelText,
+            resize: 'vertical',
+            outline: 'none',
+            boxSizing: 'border-box',
+          }}
+        />
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 12 }}>
+          <button
+            onClick={onClose}
+            style={{
+              padding: '6px 16px', border: `1px solid ${theme.panelBorder}`, borderRadius: theme.borderRadius,
+              background: 'transparent', color: theme.panelText, cursor: 'pointer', fontSize: 13, fontFamily: 'inherit',
+            }}
+          >Cancel</button>
+          <button
+            onClick={() => onConvert(value)}
+            style={{
+              padding: '6px 16px', border: 'none', borderRadius: theme.borderRadius,
+              background: theme.selectionColor, color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 600, fontFamily: 'inherit',
+            }}
+          >Convert (Ctrl+Enter)</button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 BoardierCanvas.displayName = 'BoardierCanvas';
