@@ -51,6 +51,15 @@ function render(ctx: CanvasRenderingContext2D, el: DiamondElement): void {
       ctx.stroke();
     }
   }
+
+  // Render label text centered inside
+  if (el.label) {
+    ctx.font = `${Math.min(el.width * 0.5, 18)}px system-ui, sans-serif`;
+    ctx.fillStyle = el.strokeColor;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(el.label, 0, 0, el.width * 0.5);
+  }
   ctx.restore();
 }
 

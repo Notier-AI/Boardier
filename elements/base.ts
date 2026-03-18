@@ -8,6 +8,7 @@ import type {
   ArrowElement,
   FreehandElement,
   TextElement,
+  IconElement,
   Bounds,
   Vec2,
 } from '../core/types';
@@ -67,23 +68,23 @@ const BASE_DEFAULTS = {
 function newSeed() { return Math.floor(Math.random() * 2_000_000_000); }
 
 export function createRectangle(o: Partial<RectangleElement> = {}): RectangleElement {
-  return { ...BASE_DEFAULTS, seed: newSeed(), id: generateId(), type: 'rectangle', x: 0, y: 0, width: 100, height: 100, borderRadius: 0, ...o };
+  return { ...BASE_DEFAULTS, seed: newSeed(), id: generateId(), type: 'rectangle', x: 0, y: 0, width: 100, height: 100, borderRadius: 0, label: '', ...o };
 }
 
 export function createEllipse(o: Partial<EllipseElement> = {}): EllipseElement {
-  return { ...BASE_DEFAULTS, seed: newSeed(), id: generateId(), type: 'ellipse', x: 0, y: 0, width: 100, height: 100, ...o };
+  return { ...BASE_DEFAULTS, seed: newSeed(), id: generateId(), type: 'ellipse', x: 0, y: 0, width: 100, height: 100, label: '', ...o };
 }
 
 export function createDiamond(o: Partial<DiamondElement> = {}): DiamondElement {
-  return { ...BASE_DEFAULTS, seed: newSeed(), id: generateId(), type: 'diamond', x: 0, y: 0, width: 100, height: 100, ...o };
+  return { ...BASE_DEFAULTS, seed: newSeed(), id: generateId(), type: 'diamond', x: 0, y: 0, width: 100, height: 100, label: '', ...o };
 }
 
 export function createLine(o: Partial<LineElement> = {}): LineElement {
-  return { ...BASE_DEFAULTS, seed: newSeed(), id: generateId(), type: 'line', x: 0, y: 0, width: 0, height: 0, points: [{ x: 0, y: 0 }, { x: 100, y: 0 }], ...o };
+  return { ...BASE_DEFAULTS, seed: newSeed(), id: generateId(), type: 'line', x: 0, y: 0, width: 0, height: 0, points: [{ x: 0, y: 0 }, { x: 100, y: 0 }], controlPoint: null, ...o };
 }
 
 export function createArrow(o: Partial<ArrowElement> = {}): ArrowElement {
-  return { ...BASE_DEFAULTS, seed: newSeed(), id: generateId(), type: 'arrow', x: 0, y: 0, width: 0, height: 0, points: [{ x: 0, y: 0 }, { x: 100, y: 0 }], arrowheadStart: false, arrowheadEnd: true, ...o };
+  return { ...BASE_DEFAULTS, seed: newSeed(), id: generateId(), type: 'arrow', x: 0, y: 0, width: 0, height: 0, points: [{ x: 0, y: 0 }, { x: 100, y: 0 }], controlPoint: null, arrowheadStart: false, arrowheadEnd: true, ...o };
 }
 
 export function createFreehand(o: Partial<FreehandElement> = {}): FreehandElement {
@@ -92,6 +93,10 @@ export function createFreehand(o: Partial<FreehandElement> = {}): FreehandElemen
 
 export function createText(o: Partial<TextElement> = {}): TextElement {
   return { ...BASE_DEFAULTS, seed: newSeed(), id: generateId(), type: 'text', x: 0, y: 0, width: 10, height: 24, text: '', fontSize: 18, fontFamily: 'system-ui, sans-serif', textAlign: 'left', lineHeight: 1.4, ...o };
+}
+
+export function createIcon(o: Partial<IconElement> = {}): IconElement {
+  return { ...BASE_DEFAULTS, seed: newSeed(), id: generateId(), type: 'icon', x: 0, y: 0, width: 48, height: 48, iconName: '', iconSet: '', svgMarkup: '', ...o };
 }
 
 /** Generic factory — dispatches to the correct creator based on type. */
@@ -104,5 +109,6 @@ export function createElement(type: BoardierElementType, overrides: Partial<Boar
     case 'arrow':     return createArrow(overrides as any);
     case 'freehand':  return createFreehand(overrides as any);
     case 'text':      return createText(overrides as any);
+    case 'icon':      return createIcon(overrides as any);
   }
 }

@@ -3,7 +3,7 @@ import { BaseTool, type ToolContext } from './BaseTool';
 import { getElementBounds } from '../elements/base';
 import { normalizeBounds } from '../utils/math';
 
-type DragMode = 'none' | 'move' | 'boxSelect' | 'resize' | 'linePoint';
+type DragMode = 'none' | 'move' | 'boxSelect' | 'resize' | 'lineEndpoint' | 'lineControl';
 
 export class SelectTool extends BaseTool {
   readonly type = 'select' as const;
@@ -16,9 +16,9 @@ export class SelectTool extends BaseTool {
   private resizeElementId: string = '';
   private snapshotBeforeDrag: Map<string, { x: number; y: number; width: number; height: number }> = new Map();
   private boxSelectBounds: Bounds | null = null;
-  // Line point dragging
-  private linePointIndex: number = -1;
-  private linePointElementId: string = '';
+  // Line/arrow handle dragging
+  private lineHandleElementId: string = '';
+  private lineEndpointIndex: number = -1; // 0 = start, 1 = end
 
   getCursor(): string {
     return 'default';
@@ -29,19 +29,35 @@ export class SelectTool extends BaseTool {
     const vs = ctx.getViewState();
     const selected = scene.getSelectedElements();
 
-    // Check line point handles for line/arrow
+    // Check line/arrow handles (endpoints + control point)
     if (selected.length === 1 && (selected[0].type === 'line' || selected[0].type === 'arrow')) {
       const el = selected[0] as any;
-      const pts: Vec2[] = el.points || [];
       const tolerance = 8 / vs.zoom;
-      for (let i = 0; i < pts.length; i++) {
+      const pts: Vec2[] = el.points || [];
+
+      // Check control point handle (midpoint or actual control point)
+      const cp = el.controlPoint
+        ? { x: el.x + el.controlPoint.x, y: el.y + el.controlPoint.y }
+        : { x: el.x + (pts[0].x + pts[1].x) / 2, y: el.y + (pts[0].y + pts[1].y) / 2 };
+      const dcx = world.x - cp.x;
+      const dcy = world.y - cp.y;
+      if (Math.sqrt(dcx * dcx + dcy * dcy) <= tolerance) {
+        this.mode = 'lineControl';
+        this.lineHandleElementId = el.id;
+        this.dragStart = world;
+        ctx.history.push(scene.getElements());
+        return;
+      }
+
+      // Check start/end point handles
+      for (let i = 0; i < Math.min(pts.length, 2); i++) {
         const abs: Vec2 = { x: el.x + pts[i].x, y: el.y + pts[i].y };
         const dx = world.x - abs.x;
         const dy = world.y - abs.y;
         if (Math.sqrt(dx * dx + dy * dy) <= tolerance) {
-          this.mode = 'linePoint';
-          this.linePointIndex = i;
-          this.linePointElementId = el.id;
+          this.mode = 'lineEndpoint';
+          this.lineEndpointIndex = i;
+          this.lineHandleElementId = el.id;
           this.dragStart = world;
           ctx.history.push(scene.getElements());
           return;
@@ -113,8 +129,10 @@ export class SelectTool extends BaseTool {
       ctx.requestRender();
     } else if (this.mode === 'resize') {
       this.doResize(ctx, world);
-    } else if (this.mode === 'linePoint') {
-      this.doLinePointDrag(ctx, world);
+    } else if (this.mode === 'lineEndpoint') {
+      this.doLineEndpointDrag(ctx, world);
+    } else if (this.mode === 'lineControl') {
+      this.doLineControlDrag(ctx, world);
     } else {
       const hit = ctx.scene.hitTest(world);
       ctx.setCursor(hit ? 'move' : 'default');
@@ -122,13 +140,13 @@ export class SelectTool extends BaseTool {
   }
 
   onPointerUp(ctx: ToolContext, _world: Vec2, _e: PointerEvent): void {
-    if (this.mode === 'move' || this.mode === 'resize' || this.mode === 'linePoint') {
+    if (this.mode === 'move' || this.mode === 'resize' || this.mode === 'lineEndpoint' || this.mode === 'lineControl') {
       ctx.commitHistory();
     }
     this.mode = 'none';
     this.boxSelectBounds = null;
     this.snapshotBeforeDrag.clear();
-    this.linePointIndex = -1;
+    this.lineEndpointIndex = -1;
     ctx.requestRender();
   }
 
@@ -176,28 +194,32 @@ export class SelectTool extends BaseTool {
     ctx.requestRender();
   }
 
-  // ─── Line point dragging ───────────────────────────────────────
+  // ─── Line/arrow endpoint dragging ──────────────────────────────
 
-  private doLinePointDrag(ctx: ToolContext, world: Vec2): void {
-    const el = ctx.scene.getElementById(this.linePointElementId);
+  private doLineEndpointDrag(ctx: ToolContext, world: Vec2): void {
+    const el = ctx.scene.getElementById(this.lineHandleElementId);
     if (!el || (el.type !== 'line' && el.type !== 'arrow')) return;
     const pts = [...(el as any).points] as Vec2[];
-    pts[this.linePointIndex] = { x: world.x - el.x, y: world.y - el.y };
+    pts[this.lineEndpointIndex] = { x: world.x - el.x, y: world.y - el.y };
 
-    // Recompute width/height from points
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    for (const p of pts) {
-      if (p.x < minX) minX = p.x;
-      if (p.y < minY) minY = p.y;
-      if (p.x > maxX) maxX = p.x;
-      if (p.y > maxY) maxY = p.y;
-    }
+    const w = Math.max(Math.abs(pts[1].x - pts[0].x), 1);
+    const h = Math.max(Math.abs(pts[1].y - pts[0].y), 1);
 
-    ctx.scene.updateElement(this.linePointElementId, {
+    ctx.scene.updateElement(this.lineHandleElementId, {
       points: pts,
-      width: Math.max(maxX - minX, 1),
-      height: Math.max(maxY - minY, 1),
+      width: w,
+      height: h,
     });
+    ctx.requestRender();
+  }
+
+  // ─── Line/arrow control-point (bézier bend) ───────────────────
+
+  private doLineControlDrag(ctx: ToolContext, world: Vec2): void {
+    const el = ctx.scene.getElementById(this.lineHandleElementId);
+    if (!el || (el.type !== 'line' && el.type !== 'arrow')) return;
+    const cp: Vec2 = { x: world.x - el.x, y: world.y - el.y };
+    ctx.scene.updateElement(this.lineHandleElementId, { controlPoint: cp });
     ctx.requestRender();
   }
 }

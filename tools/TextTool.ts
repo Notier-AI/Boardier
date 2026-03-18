@@ -32,5 +32,6 @@ export class TextTool extends BaseTool {
     ctx.scene.addElement(el);
     ctx.scene.setSelection([el.id]);
     ctx.startTextEditing(el.id);
+    ctx.setToolType('select');
   }
 }

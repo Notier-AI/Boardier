@@ -155,3 +155,34 @@ export function roughPolyline(
   }
   ctx.stroke();
 }
+
+/**
+ * Draw a hand-drawn quadratic bézier curve.
+ * Samples the curve and applies jitter to intermediate points.
+ */
+export function roughBezier(
+  ctx: CanvasRenderingContext2D,
+  p0: { x: number; y: number },
+  cp: { x: number; y: number },
+  p1: { x: number; y: number },
+  seed: number, roughness: number,
+): void {
+  const rng = mulberry32(seed);
+  const segments = 24;
+  const amp = roughness * 1.5;
+
+  ctx.beginPath();
+  ctx.moveTo(
+    p0.x + jitter(rng, roughness * 0.5),
+    p0.y + jitter(rng, roughness * 0.5),
+  );
+  for (let i = 1; i <= segments; i++) {
+    const t = i / segments;
+    const it = 1 - t;
+    const px = it * it * p0.x + 2 * it * t * cp.x + t * t * p1.x;
+    const py = it * it * p0.y + 2 * it * t * cp.y + t * t * p1.y;
+    const j = i < segments ? amp : 0;
+    ctx.lineTo(px + jitter(rng, j), py + jitter(rng, j));
+  }
+  ctx.stroke();
+}

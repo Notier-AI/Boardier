@@ -65,6 +65,23 @@ export function distanceToPolyline(point: Vec2, points: Vec2[]): number {
   return minDist;
 }
 
+/** Sample a quadratic bézier (p0→cp→p1) into n segments and return min distance. */
+export function distanceToBezier(point: Vec2, p0: Vec2, cp: Vec2, p1: Vec2, samples = 32): number {
+  let minDist = Infinity;
+  let prev = p0;
+  for (let i = 1; i <= samples; i++) {
+    const t = i / samples;
+    const it = 1 - t;
+    const cur: Vec2 = {
+      x: it * it * p0.x + 2 * it * t * cp.x + t * t * p1.x,
+      y: it * it * p0.y + 2 * it * t * cp.y + t * t * p1.y,
+    };
+    minDist = Math.min(minDist, distanceToSegment(point, prev, cur));
+    prev = cur;
+  }
+  return minDist;
+}
+
 /** Ramer-Douglas-Peucker path simplification. */
 export function simplifyPath(points: Vec2[], epsilon: number): Vec2[] {
   if (points.length <= 2) return points;

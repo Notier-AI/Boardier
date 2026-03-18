@@ -24,6 +24,10 @@ import { ZoomControls } from './ZoomControls';
 import { ContextMenu } from './ContextMenu';
 import { TextEditor } from './TextEditor';
 import { ExportDialog } from './ExportDialog';
+import { ShapeLabelEditor } from './ShapeLabelEditor';
+import { IconPicker } from './IconPicker';
+import { createIcon } from '../elements/base';
+import { measureText } from '../elements/text';
 
 /* ──────────────── public types ──────────────── */
 
@@ -63,8 +67,10 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [viewState, setViewState] = useState<ViewState>({ scrollX: 0, scrollY: 0, zoom: 1 });
     const [editingTextId, setEditingTextId] = useState<string | null>(null);
+    const [editingLabelId, setEditingLabelId] = useState<string | null>(null);
     const [contextMenu, setContextMenu] = useState<{ position: Vec2 } | null>(null);
     const [showExport, setShowExport] = useState(false);
+    const [showIconPicker, setShowIconPicker] = useState(false);
 
     const resolvedTheme = themeProp ?? (darkMode ? defaultDarkTheme : defaultTheme);
     const fullConfig: BoardierConfig = {
@@ -96,6 +102,7 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
       engine.onViewChange(vs => setViewState({ ...vs }));
       engine.onToolChange(t => setActiveTool(t));
       engine.onTextEditRequest(id => setEditingTextId(id));
+      engine.onShapeLabelEditRequest(id => setEditingLabelId(id));
 
       // Initial data
       if (initialData) {
@@ -190,6 +197,10 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
     // ── Tool change ──────────────────────────────────
 
     const handleToolChange = useCallback((t: BoardierToolType) => {
+      if (t === 'icon') {
+        setShowIconPicker(true);
+        return;
+      }
       engineRef.current?.setTool(t);
     }, []);
 
@@ -224,7 +235,11 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
     const handleTextCommit = useCallback((id: string, text: string) => {
       const engine = engineRef.current;
       if (!engine) return;
-      engine.updateSelectedElements({ text } as any);
+      const el = engine.scene.getElementById(id) as TextElement | undefined;
+      if (el) {
+        const size = measureText(text, el.fontSize, el.fontFamily, el.lineHeight);
+        engine.scene.updateElement(id, { text, width: size.width, height: size.height });
+      }
       setEditingTextId(null);
       engine.render();
     }, []);
@@ -239,6 +254,48 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
         engine.render();
       }
       setEditingTextId(null);
+    }, []);
+
+    // ── Shape label editing ──────────────────────────
+
+    const editingLabelElement = editingLabelId
+      ? engineRef.current?.scene.getElementById(editingLabelId)
+      : undefined;
+
+    const handleLabelCommit = useCallback((text: string) => {
+      const engine = engineRef.current;
+      if (!engine || !editingLabelId) return;
+      engine.history.push(engine.scene.getElements());
+      engine.scene.updateElement(editingLabelId, { label: text } as any);
+      engine.history.push(engine.scene.getElements());
+      setEditingLabelId(null);
+      engine.render();
+    }, [editingLabelId]);
+
+    const handleLabelCancel = useCallback(() => {
+      setEditingLabelId(null);
+    }, []);
+
+    // ── Icon picker ──────────────────────────────────
+
+    const handleIconPick = useCallback((iconName: string, iconSet: string, svgMarkup: string) => {
+      const engine = engineRef.current;
+      if (!engine) return;
+      const vs = engine.getViewState();
+      const canvas = engine.getCanvas();
+      const cx = (-vs.scrollX + canvas.width / 2 / (window.devicePixelRatio || 1)) / vs.zoom;
+      const cy = (-vs.scrollY + canvas.height / 2 / (window.devicePixelRatio || 1)) / vs.zoom;
+      const el = createIcon({
+        x: cx - 24, y: cy - 24, width: 48, height: 48,
+        iconName, iconSet, svgMarkup,
+        strokeColor: engine.getTheme().elementDefaults.strokeColor,
+      });
+      engine.history.push(engine.scene.getElements());
+      engine.scene.addElement(el);
+      engine.scene.setSelection([el.id]);
+      engine.history.push(engine.scene.getElements());
+      engine.render();
+      setShowIconPicker(false);
     }, []);
 
     // ── Context menu ─────────────────────────────────
@@ -345,6 +402,17 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
           />
         )}
 
+        {/* Shape Label Editor */}
+        {editingLabelElement && (
+          <ShapeLabelEditor
+            element={editingLabelElement}
+            viewState={viewState}
+            theme={resolvedTheme}
+            onCommit={handleLabelCommit}
+            onCancel={handleLabelCancel}
+          />
+        )}
+
         {/* Context Menu */}
         {contextMenu && (
           <ContextMenu
@@ -365,6 +433,15 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
             backgroundColor={resolvedTheme.canvasBackground}
             theme={resolvedTheme}
             onClose={() => setShowExport(false)}
+          />
+        )}
+
+        {/* Icon Picker */}
+        {showIconPicker && (
+          <IconPicker
+            theme={resolvedTheme}
+            onPick={handleIconPick}
+            onClose={() => setShowIconPicker(false)}
           />
         )}
 

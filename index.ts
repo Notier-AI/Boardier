@@ -24,6 +24,7 @@ export type {
   ArrowElement,
   FreehandElement,
   TextElement,
+  IconElement,
   SceneChangeHandler,
   SelectionChangeHandler,
   ViewChangeHandler,
@@ -47,6 +48,7 @@ export {
   createArrow,
   createFreehand,
   createText,
+  createIcon,
 } from './elements/base';
 
 // Utils
@@ -55,4 +57,4 @@ export { generateId } from './utils/id';
 export { STROKE_COLORS, FILL_COLORS, CANVAS_BACKGROUNDS, STROKE_WIDTHS, FONT_SIZES } from './utils/colors';
 
 // Hand-drawn rendering utilities
-export { roughRect, roughEllipse, roughDiamond, roughPolyline, roughLineTo } from './utils/roughDraw';
+export { roughRect, roughEllipse, roughDiamond, roughPolyline, roughLineTo, roughBezier } from './utils/roughDraw';

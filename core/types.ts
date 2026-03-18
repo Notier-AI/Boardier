@@ -23,7 +23,8 @@ export type BoardierElementType =
   | 'line'
   | 'arrow'
   | 'freehand'
-  | 'text';
+  | 'text'
+  | 'icon';
 
 export type FillStyle = 'none' | 'solid';
 
@@ -50,29 +51,35 @@ export interface BoardierElementBase {
 export interface RectangleElement extends BoardierElementBase {
   type: 'rectangle';
   borderRadius: number;
+  label: string;
 }
 
 export interface EllipseElement extends BoardierElementBase {
   type: 'ellipse';
+  label: string;
 }
 
 export interface DiamondElement extends BoardierElementBase {
   type: 'diamond';
+  label: string;
 }
 
 /**
  * Line & Arrow share a `points` array.
  * Points are relative to (x, y).
  * width/height = extent of those points.
+ * controlPoint (optional, relative) bends the line into a quadratic bezier.
  */
 export interface LineElement extends BoardierElementBase {
   type: 'line';
   points: Vec2[];
+  controlPoint: Vec2 | null;
 }
 
 export interface ArrowElement extends BoardierElementBase {
   type: 'arrow';
   points: Vec2[];
+  controlPoint: Vec2 | null;
   arrowheadStart: boolean;
   arrowheadEnd: boolean;
 }
@@ -91,6 +98,16 @@ export interface TextElement extends BoardierElementBase {
   lineHeight: number;
 }
 
+export interface IconElement extends BoardierElementBase {
+  type: 'icon';
+  /** react-icons identifier, e.g. "FiSearch" */
+  iconName: string;
+  /** Icon set prefix, e.g. "fi", "md", "fa" */
+  iconSet: string;
+  /** Pre-rendered SVG markup for canvas rendering */
+  svgMarkup: string;
+}
+
 /** Discriminated union of all element shapes. */
 export type BoardierElement =
   | RectangleElement
@@ -99,7 +116,8 @@ export type BoardierElement =
   | LineElement
   | ArrowElement
   | FreehandElement
-  | TextElement;
+  | TextElement
+  | IconElement;
 
 // ─── Tool Types ──────────────────────────────────────────────────────
 
@@ -112,6 +130,7 @@ export type BoardierToolType =
   | 'arrow'
   | 'freehand'
   | 'text'
+  | 'icon'
   | 'pan'
   | 'eraser';
 

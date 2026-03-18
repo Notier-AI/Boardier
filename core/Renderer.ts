@@ -11,6 +11,7 @@ import '../elements/line';
 import '../elements/arrow';
 import '../elements/freehand';
 import '../elements/text';
+import '../elements/icon';
 
 const HANDLE_SIZE = 8;
 
@@ -219,21 +220,49 @@ export class Renderer {
     }
   }
 
-  /** Draw circle handles at each point of a line/arrow. */
-  private drawLinePointHandles(ctx: CanvasRenderingContext2D, el: { x: number; y: number; points: Vec2[] }, theme: BoardierTheme, zoom: number): void {
+  /** Draw circle handles at start, control, and end points of a line/arrow. */
+  private drawLinePointHandles(ctx: CanvasRenderingContext2D, el: { x: number; y: number; points: Vec2[]; controlPoint?: Vec2 | null }, theme: BoardierTheme, zoom: number): void {
+    if (el.points.length < 2) return;
     const radius = 4 / zoom;
-    ctx.fillStyle = '#ffffff';
-    ctx.strokeStyle = theme.selectionColor;
+    const cpRadius = 5 / zoom;
     ctx.lineWidth = 1.5 / zoom;
 
-    for (const p of el.points) {
-      const ax = el.x + p.x;
-      const ay = el.y + p.y;
+    const p0 = { x: el.x + el.points[0].x, y: el.y + el.points[0].y };
+    const p1 = { x: el.x + el.points[1].x, y: el.y + el.points[1].y };
+    const cp = el.controlPoint
+      ? { x: el.x + el.controlPoint.x, y: el.y + el.controlPoint.y }
+      : { x: (p0.x + p1.x) / 2, y: (p0.y + p1.y) / 2 };
+
+    // Draw dashed guidelines from control to endpoints
+    ctx.strokeStyle = theme.selectionColor;
+    ctx.setLineDash([3 / zoom, 3 / zoom]);
+    ctx.beginPath();
+    ctx.moveTo(p0.x, p0.y);
+    ctx.lineTo(cp.x, cp.y);
+    ctx.lineTo(p1.x, p1.y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Start and end point handles
+    ctx.fillStyle = '#ffffff';
+    ctx.strokeStyle = theme.selectionColor;
+    for (const p of [p0, p1]) {
       ctx.beginPath();
-      ctx.arc(ax, ay, radius, 0, Math.PI * 2);
+      ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
     }
+
+    // Control point handle (diamond-shaped for distinction)
+    ctx.fillStyle = el.controlPoint ? theme.selectionColor : '#ffffff';
+    ctx.beginPath();
+    ctx.moveTo(cp.x, cp.y - cpRadius);
+    ctx.lineTo(cp.x + cpRadius, cp.y);
+    ctx.lineTo(cp.x, cp.y + cpRadius);
+    ctx.lineTo(cp.x - cpRadius, cp.y);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
   }
 
   // ─── Box-select ───────────────────────────────────────────────────

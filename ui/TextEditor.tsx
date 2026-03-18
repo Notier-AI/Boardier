@@ -16,11 +16,14 @@ export const TextEditor: React.FC<TextEditorProps> = ({ element, viewState, them
   useEffect(() => {
     const ta = ref.current;
     if (!ta) return;
-    ta.focus();
-    ta.value = element.text;
-    // Select all if new (empty text)
-    if (!element.text) ta.setSelectionRange(0, 0);
-    else ta.select();
+    // Delay focus to avoid conflict with canvas pointer events
+    const timer = setTimeout(() => {
+      ta.focus();
+      ta.value = element.text;
+      if (!element.text) ta.setSelectionRange(0, 0);
+      else ta.select();
+    }, 50);
+    return () => clearTimeout(timer);
   }, [element.id]);
 
   // Position the textarea at the element's screen position

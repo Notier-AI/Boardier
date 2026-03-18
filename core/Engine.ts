@@ -20,6 +20,7 @@ import { FreehandTool } from '../tools/FreehandTool';
 import { TextTool } from '../tools/TextTool';
 import { PanTool } from '../tools/PanTool';
 import { EraseTool } from '../tools/EraseTool';
+import { IconTool } from '../tools/IconTool';
 import { clamp } from '../utils/math';
 import { getElementBounds } from '../elements/base';
 
@@ -50,6 +51,7 @@ export class BoardierEngine {
   private _onView?: (vs: ViewState) => void;
   private _onTool?: (t: BoardierToolType) => void;
   private _onTextEdit?: (id: string) => void;
+  private _onShapeLabelEdit?: (id: string) => void;
 
   constructor(canvas: HTMLCanvasElement, config: BoardierConfig, theme: BoardierTheme) {
     this.canvas = canvas;
@@ -69,6 +71,7 @@ export class BoardierEngine {
       ['text', new TextTool()],
       ['pan', new PanTool()],
       ['eraser', new EraseTool()],
+      ['icon', new IconTool()],
     ]);
 
     // Wire scene events → external callbacks
@@ -382,7 +385,7 @@ export class BoardierEngine {
     const screen: Vec2 = { x: e.clientX - rect.left, y: e.clientY - rect.top };
     const world = this.renderer.screenToWorld(screen, this.viewState);
 
-    // If the active tool supports double-click (e.g., LineTool to finish)
+    // If the active tool supports double-click, delegate
     const tool = this.activeTool as any;
     if (tool.onDoubleClick) {
       tool.onDoubleClick(this.toolCtx, world);
@@ -390,9 +393,15 @@ export class BoardierEngine {
     }
 
     const hit = this.scene.hitTest(world);
-    if (hit?.type === 'text') {
+    if (!hit) return;
+
+    if (hit.type === 'text') {
       this.scene.setSelection([hit.id]);
       this._onTextEdit?.(hit.id);
+    } else if (hit.type === 'rectangle' || hit.type === 'ellipse' || hit.type === 'diamond') {
+      // Double-click a shape → edit its label
+      this.scene.setSelection([hit.id]);
+      this._onShapeLabelEdit?.(hit.id);
     }
   }
 
@@ -436,6 +445,7 @@ export class BoardierEngine {
   onViewChange(cb: (vs: ViewState) => void): void { this._onView = cb; }
   onToolChange(cb: (t: BoardierToolType) => void): void { this._onTool = cb; }
   onTextEditRequest(cb: (id: string) => void): void { this._onTextEdit = cb; }
+  onShapeLabelEditRequest(cb: (id: string) => void): void { this._onShapeLabelEdit = cb; }
 
   dispose(): void {
     cancelAnimationFrame(this._rafId);
@@ -444,6 +454,7 @@ export class BoardierEngine {
     this._onView = undefined;
     this._onTool = undefined;
     this._onTextEdit = undefined;
+    this._onShapeLabelEdit = undefined;
   }
 
   // ─── AI-Facing API ──────────────────────────────────────────────

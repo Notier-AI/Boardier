@@ -9,6 +9,7 @@ import '../elements/line';
 import '../elements/arrow';
 import '../elements/freehand';
 import '../elements/text';
+import '../elements/icon';
 
 /** Export scene to a PNG Blob. */
 export async function exportToPNG(

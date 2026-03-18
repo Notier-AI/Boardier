@@ -3,8 +3,10 @@ import { BaseTool, type ToolContext } from './BaseTool';
 import { createLine, createArrow } from '../elements/base';
 
 /**
- * Multi-point line / arrow tool.
- * Click to place points, double-click or Enter to finish.
+ * Click-drag line / arrow tool.
+ * Press to set start, drag to set end, release to finish.
+ * A control point is created at the midpoint — the user can drag it in
+ * the SelectTool to curve the line (quadratic bézier), just like Excalidraw.
  */
 export class LineTool extends BaseTool {
   readonly type;
@@ -21,68 +23,68 @@ export class LineTool extends BaseTool {
 
   getCursor(): string { return 'crosshair'; }
 
-  onPointerDown(ctx: ToolContext, world: Vec2, e: PointerEvent): void {
-    if (!this.drawing) {
-      // Start a new line with first two points (second is rubber-banded)
-      this.originPos = world;
-      this.drawing = true;
+  onPointerDown(ctx: ToolContext, world: Vec2, _e: PointerEvent): void {
+    this.originPos = world;
+    this.drawing = true;
 
-      const defaults = ctx.theme.elementDefaults;
-      const el = this.isArrow
-        ? createArrow({
-            x: world.x, y: world.y, width: 0, height: 0,
-            points: [{ x: 0, y: 0 }, { x: 0, y: 0 }],
-            strokeColor: defaults.strokeColor, strokeWidth: defaults.strokeWidth,
-          })
-        : createLine({
-            x: world.x, y: world.y, width: 0, height: 0,
-            points: [{ x: 0, y: 0 }, { x: 0, y: 0 }],
-            strokeColor: defaults.strokeColor, strokeWidth: defaults.strokeWidth,
-          });
+    const defaults = ctx.theme.elementDefaults;
+    const el = this.isArrow
+      ? createArrow({
+          x: world.x, y: world.y, width: 0, height: 0,
+          points: [{ x: 0, y: 0 }, { x: 0, y: 0 }],
+          controlPoint: null,
+          strokeColor: defaults.strokeColor, strokeWidth: defaults.strokeWidth,
+        })
+      : createLine({
+          x: world.x, y: world.y, width: 0, height: 0,
+          points: [{ x: 0, y: 0 }, { x: 0, y: 0 }],
+          controlPoint: null,
+          strokeColor: defaults.strokeColor, strokeWidth: defaults.strokeWidth,
+        });
 
-      ctx.history.push(ctx.scene.getElements());
-      ctx.scene.addElement(el);
-      ctx.scene.setSelection([el.id]);
-      this.activeId = el.id;
-      ctx.requestRender();
-    } else if (this.activeId) {
-      // Add a new point at current position
-      const el = ctx.scene.getElementById(this.activeId);
-      if (!el || (el.type !== 'line' && el.type !== 'arrow')) return;
-      const pts = [...(el as any).points];
-      // Fix the rubber-band point and add a new rubber-band
-      const rel: Vec2 = { x: world.x - this.originPos.x, y: world.y - this.originPos.y };
-      pts[pts.length - 1] = rel;
-      pts.push({ ...rel }); // new rubber-band point
-      this.updateLineFromPoints(ctx, pts);
-      ctx.requestRender();
-    }
+    ctx.history.push(ctx.scene.getElements());
+    ctx.scene.addElement(el);
+    ctx.scene.setSelection([el.id]);
+    this.activeId = el.id;
+    ctx.requestRender();
   }
 
   onPointerMove(ctx: ToolContext, world: Vec2, _e: PointerEvent): void {
     if (!this.drawing || !this.activeId) return;
-    const el = ctx.scene.getElementById(this.activeId);
-    if (!el || (el.type !== 'line' && el.type !== 'arrow')) return;
-    const pts = [...(el as any).points];
     const rel: Vec2 = { x: world.x - this.originPos.x, y: world.y - this.originPos.y };
-    pts[pts.length - 1] = rel;
-    this.updateLineFromPoints(ctx, pts);
+    const w = Math.max(Math.abs(rel.x), 1);
+    const h = Math.max(Math.abs(rel.y), 1);
+    ctx.scene.updateElement(this.activeId, {
+      points: [{ x: 0, y: 0 }, rel],
+      width: w,
+      height: h,
+    });
     ctx.requestRender();
   }
 
-  onPointerUp(_ctx: ToolContext, _world: Vec2, _e: PointerEvent): void {
-    // Nothing — point is committed on next click or finish
-  }
-
-  /** Finish the line on double-click. */
-  onDoubleClick(ctx: ToolContext, _world: Vec2): void {
-    this.finishLine(ctx);
+  onPointerUp(ctx: ToolContext, _world: Vec2, _e: PointerEvent): void {
+    if (!this.drawing || !this.activeId) return;
+    const el = ctx.scene.getElementById(this.activeId);
+    if (!el || (el.type !== 'line' && el.type !== 'arrow')) {
+      this.drawing = false;
+      this.activeId = null;
+      return;
+    }
+    const pts = (el as any).points as Vec2[];
+    const dx = pts[1].x;
+    const dy = pts[1].y;
+    // Remove zero-length lines
+    if (Math.abs(dx) < 3 && Math.abs(dy) < 3) {
+      ctx.scene.removeElement(this.activeId);
+    } else {
+      ctx.commitHistory();
+    }
+    this.drawing = false;
+    this.activeId = null;
+    ctx.setToolType('select');
   }
 
   onKeyDown(ctx: ToolContext, e: KeyboardEvent): void {
-    if (e.key === 'Enter') {
-      this.finishLine(ctx);
-    }
     if (e.key === 'Escape' && this.drawing && this.activeId) {
       ctx.scene.removeElement(this.activeId);
       this.drawing = false;
@@ -93,48 +95,17 @@ export class LineTool extends BaseTool {
 
   onDeactivate(ctx: ToolContext): void {
     if (this.drawing && this.activeId) {
-      this.finishLine(ctx);
-    }
-  }
-
-  private finishLine(ctx: ToolContext): void {
-    if (!this.activeId) return;
-    const el = ctx.scene.getElementById(this.activeId);
-    if (!el || (el.type !== 'line' && el.type !== 'arrow')) return;
-    const pts = [...(el as any).points];
-    // Remove the rubber-band point if it duplicates the previous
-    if (pts.length > 2) {
-      const last = pts[pts.length - 1];
-      const prev = pts[pts.length - 2];
-      if (Math.abs(last.x - prev.x) < 2 && Math.abs(last.y - prev.y) < 2) {
-        pts.pop();
+      const el = ctx.scene.getElementById(this.activeId);
+      if (el) {
+        const pts = (el as any).points as Vec2[];
+        if (Math.abs(pts[1].x) < 3 && Math.abs(pts[1].y) < 3) {
+          ctx.scene.removeElement(this.activeId);
+        } else {
+          ctx.commitHistory();
+        }
       }
+      this.drawing = false;
+      this.activeId = null;
     }
-    if (pts.length < 2 || (pts.length === 2 && Math.abs(pts[1].x) < 2 && Math.abs(pts[1].y) < 2)) {
-      ctx.scene.removeElement(this.activeId);
-    } else {
-      this.updateLineFromPoints(ctx, pts);
-      ctx.commitHistory();
-    }
-    this.drawing = false;
-    this.activeId = null;
-    ctx.setToolType('select');
-  }
-
-  private updateLineFromPoints(ctx: ToolContext, pts: Vec2[]): void {
-    if (!this.activeId) return;
-    // Compute bounding dimensions from points
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    for (const p of pts) {
-      if (p.x < minX) minX = p.x;
-      if (p.y < minY) minY = p.y;
-      if (p.x > maxX) maxX = p.x;
-      if (p.y > maxY) maxY = p.y;
-    }
-    ctx.scene.updateElement(this.activeId, {
-      points: pts,
-      width: Math.max(maxX - minX, 1),
-      height: Math.max(maxY - minY, 1),
-    });
   }
 }

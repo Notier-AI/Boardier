@@ -31,6 +31,8 @@ const TOOLS: { type: BoardierToolType; label: string; shortcut: string; icon: Re
     icon: <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3l4 4L7 21H3v-4z" /></svg> },
   { type: 'text', label: 'Text', shortcut: 'T',
     icon: <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 4h12" /><path d="M12 4v16" /></svg> },
+  { type: 'icon', label: 'Icon', shortcut: 'I',
+    icon: <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4" /><path d="M12 2v2" /><path d="M12 20v2" /><path d="M4.93 4.93l1.41 1.41" /><path d="M17.66 17.66l1.41 1.41" /><path d="M2 12h2" /><path d="M20 12h2" /><path d="M6.34 17.66l-1.41 1.41" /><path d="M19.07 4.93l-1.41 1.41" /></svg> },
   { type: 'eraser', label: 'Eraser', shortcut: 'X',
     icon: <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 20H7L3 16l10-10 8 8-4 4" /><path d="M6 20l5-5" /></svg> },
   { type: 'pan', label: 'Pan', shortcut: 'H',
