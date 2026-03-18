@@ -37,6 +37,11 @@ export function createNotierTheme(
       panelHover: isElegant ? '#22243a' : '#2c2e33',
       panelActive: '#312e81',
 
+      tooltipBackground: '#e9ecef',
+      tooltipText: '#1e1e1e',
+      tooltipBorder: '#ced4da',
+      tooltipShadow: '0 2px 8px rgba(0,0,0,0.35)',
+
       fontFamily,
       uiFontFamily: isWhiteboard ? fontFamily : 'system-ui, sans-serif',
 
@@ -76,6 +81,11 @@ export function createNotierTheme(
     panelTextSecondary: '#6b7280',
     panelHover: isElegant ? '#f5f5f5' : '#f1f3f5',
     panelActive: '#eef2ff',
+
+    tooltipBackground: '#1e1e1e',
+    tooltipText: '#ffffff',
+    tooltipBorder: '#333333',
+    tooltipShadow: '0 2px 8px rgba(0,0,0,0.25)',
 
     fontFamily,
     uiFontFamily: isWhiteboard ? fontFamily : 'system-ui, sans-serif',

@@ -5,6 +5,9 @@
 export { BoardierCanvas } from './ui/BoardierCanvas';
 export type { BoardierCanvasProps, BoardierCanvasRef } from './ui/BoardierCanvas';
 
+// Tooltip component (for developer theming)
+export { Tooltip } from './ui/Tooltip';
+
 // Core types
 export type {
   BoardierElement,
@@ -27,6 +30,10 @@ export type {
   FreehandElement,
   TextElement,
   IconElement,
+  MarkerElement,
+  CheckboxElement,
+  RadioGroupElement,
+  FrameElement,
   SceneChangeHandler,
   SelectionChangeHandler,
   ViewChangeHandler,
@@ -51,6 +58,10 @@ export {
   createFreehand,
   createText,
   createIcon,
+  createMarker,
+  createCheckbox,
+  createRadioGroup,
+  createFrame,
 } from './elements/base';
 
 // Utils

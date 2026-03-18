@@ -24,7 +24,11 @@ export type BoardierElementType =
   | 'arrow'
   | 'freehand'
   | 'text'
-  | 'icon';
+  | 'icon'
+  | 'marker'
+  | 'checkbox'
+  | 'radiogroup'
+  | 'frame';
 
 export type FillStyle = 'none' | 'solid';
 
@@ -46,6 +50,8 @@ export interface BoardierElementBase {
   seed: number;              // stable random seed for hand-drawn consistency
   locked: boolean;
   groupIds: string[];
+  /** Optional shadow: CSS-style "offsetX offsetY blur color" */
+  shadow?: string;
 }
 
 export interface RectangleElement extends BoardierElementBase {
@@ -110,6 +116,53 @@ export interface IconElement extends BoardierElementBase {
   svgMarkup: string;
 }
 
+/** Marker / highlighter stroke. Like freehand but with wide, translucent strokes. */
+export interface MarkerElement extends BoardierElementBase {
+  type: 'marker';
+  points: Vec2[];
+  /** Marker tip width in pixels */
+  markerWidth: number;
+}
+
+/** Interactive checkbox element. */
+export interface CheckboxElement extends BoardierElementBase {
+  type: 'checkbox';
+  checked: boolean;
+  label: string;
+  /** Checkbox box size in pixels */
+  checkSize: number;
+  /** Color of the checkmark / checked fill */
+  checkColor: string;
+}
+
+/** Interactive radio-button group. */
+export interface RadioGroupElement extends BoardierElementBase {
+  type: 'radiogroup';
+  options: string[];
+  /** Index of the selected option (-1 = none) */
+  selectedIndex: number;
+  /** Radio circle size in pixels */
+  radioSize: number;
+  /** Layout direction */
+  direction: 'vertical' | 'horizontal';
+}
+
+/** Frame container that groups child elements and optionally scrolls. */
+export interface FrameElement extends BoardierElementBase {
+  type: 'frame';
+  label: string;
+  /** IDs of elements visually grouped inside this frame */
+  childIds: string[];
+  /** Whether X-axis content clips / scrolls */
+  clipX: boolean;
+  /** Whether Y-axis content clips / scrolls */
+  clipY: boolean;
+  /** Frame padding in pixels */
+  padding: number;
+  /** Background color of the frame body */
+  frameBackground: string;
+}
+
 /** Discriminated union of all element shapes. */
 export type BoardierElement =
   | RectangleElement
@@ -119,7 +172,11 @@ export type BoardierElement =
   | ArrowElement
   | FreehandElement
   | TextElement
-  | IconElement;
+  | IconElement
+  | MarkerElement
+  | CheckboxElement
+  | RadioGroupElement
+  | FrameElement;
 
 // ─── Tool Types ──────────────────────────────────────────────────────
 
@@ -133,6 +190,10 @@ export type BoardierToolType =
   | 'freehand'
   | 'text'
   | 'icon'
+  | 'marker'
+  | 'checkbox'
+  | 'radiogroup'
+  | 'frame'
   | 'pan'
   | 'eraser';
 

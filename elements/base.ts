@@ -9,6 +9,10 @@ import type {
   FreehandElement,
   TextElement,
   IconElement,
+  MarkerElement,
+  CheckboxElement,
+  RadioGroupElement,
+  FrameElement,
   Bounds,
   Vec2,
 } from '../core/types';
@@ -99,6 +103,22 @@ export function createIcon(o: Partial<IconElement> = {}): IconElement {
   return { ...BASE_DEFAULTS, seed: newSeed(), id: generateId(), type: 'icon', x: 0, y: 0, width: 48, height: 48, iconName: '', iconSet: '', svgMarkup: '', ...o };
 }
 
+export function createMarker(o: Partial<MarkerElement> = {}): MarkerElement {
+  return { ...BASE_DEFAULTS, seed: newSeed(), id: generateId(), type: 'marker', x: 0, y: 0, width: 0, height: 0, points: [], markerWidth: 16, strokeColor: '#ffe066', ...o };
+}
+
+export function createCheckbox(o: Partial<CheckboxElement> = {}): CheckboxElement {
+  return { ...BASE_DEFAULTS, seed: newSeed(), id: generateId(), type: 'checkbox', x: 0, y: 0, width: 140, height: 28, checked: false, label: 'Checkbox', checkSize: 20, checkColor: '#4f83ff', ...o };
+}
+
+export function createRadioGroup(o: Partial<RadioGroupElement> = {}): RadioGroupElement {
+  return { ...BASE_DEFAULTS, seed: newSeed(), id: generateId(), type: 'radiogroup', x: 0, y: 0, width: 140, height: 80, options: ['Option A', 'Option B', 'Option C'], selectedIndex: 0, radioSize: 16, direction: 'vertical', ...o };
+}
+
+export function createFrame(o: Partial<FrameElement> = {}): FrameElement {
+  return { ...BASE_DEFAULTS, seed: newSeed(), id: generateId(), type: 'frame', x: 0, y: 0, width: 300, height: 200, label: 'Frame', childIds: [], clipX: false, clipY: false, padding: 12, frameBackground: 'transparent', backgroundColor: 'transparent', ...o };
+}
+
 /** Generic factory — dispatches to the correct creator based on type. */
 export function createElement(type: BoardierElementType, overrides: Partial<BoardierElement> = {}): BoardierElement {
   switch (type) {
@@ -110,5 +130,9 @@ export function createElement(type: BoardierElementType, overrides: Partial<Boar
     case 'freehand':  return createFreehand(overrides as any);
     case 'text':      return createText(overrides as any);
     case 'icon':      return createIcon(overrides as any);
+    case 'marker':    return createMarker(overrides as any);
+    case 'checkbox':  return createCheckbox(overrides as any);
+    case 'radiogroup': return createRadioGroup(overrides as any);
+    case 'frame':     return createFrame(overrides as any);
   }
 }

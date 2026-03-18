@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import type { BoardierElement } from '../core/types';
 import type { BoardierTheme } from '../themes/types';
 import { STROKE_COLORS, FILL_COLORS, FONT_SIZES, FONT_FAMILIES, HANDWRITTEN_FONT } from '../utils/colors';
@@ -51,26 +51,30 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = React.memo(({ element
   };
 
   const customColorBtn = (currentColor: string, onPick: (c: string) => void, pickerRef: React.RefObject<HTMLInputElement | null>) => (
-    <span style={{ position: 'relative' }}>
-      <button
-        onClick={() => pickerRef.current?.click()}
-        style={{
-          width: 18, height: 18, borderRadius: 4,
-          border: `1px dashed ${theme.panelBorder}`,
-          background: 'transparent', cursor: 'pointer', padding: 0,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          color: theme.panelTextSecondary, fontSize: 12,
-        }}
-      >
-        <svg width={10} height={10} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
-      </button>
+    <span style={{ position: 'relative', display: 'inline-block', width: 18, height: 18 }}>
       <input
         ref={pickerRef}
         type="color"
         value={currentColor === 'transparent' ? '#000000' : currentColor}
         onChange={e => onPick(e.target.value)}
-        style={{ position: 'absolute', width: 0, height: 0, opacity: 0, pointerEvents: 'none' }}
+        tabIndex={-1}
+        style={{
+          position: 'absolute', inset: 0, width: '100%', height: '100%',
+          opacity: 0, cursor: 'pointer', border: 'none', padding: 0,
+        }}
       />
+      <span
+        style={{
+          width: 18, height: 18, borderRadius: 4,
+          border: `1px dashed ${theme.panelBorder}`,
+          background: 'transparent',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          color: theme.panelTextSecondary, fontSize: 12,
+          pointerEvents: 'none',
+        }}
+      >
+        <svg width={10} height={10} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
+      </span>
     </span>
   );
 
@@ -136,7 +140,7 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = React.memo(({ element
       {hasText && (
         <div style={sectionStyle}>
           <span>Size</span>
-          <div style={{ display: 'flex', gap: 4 }}>
+          <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
             {FONT_SIZES.map(s => (
               <button
                 key={s}
@@ -151,6 +155,19 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = React.memo(({ element
                 {s}
               </button>
             ))}
+            <input
+              type="number"
+              min={8}
+              max={200}
+              value={(first as any).fontSize ?? 18}
+              onChange={e => { const v = parseInt(e.target.value); if (v >= 8 && v <= 200) onUpdate({ fontSize: v } as any); }}
+              style={{
+                width: 38, height: 24, textAlign: 'center', fontSize: 10, fontWeight: 700,
+                border: `1px solid ${theme.panelBorder}`, borderRadius: 4,
+                background: 'transparent', color: theme.panelText,
+                outline: 'none', fontFamily: 'inherit',
+              }}
+            />
           </div>
         </div>
       )}
@@ -257,6 +274,36 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = React.memo(({ element
           onChange={e => onUpdate({ opacity: parseFloat(e.target.value) })}
           style={{ width: 55, accentColor: theme.selectionColor }}
         />
+      </div>
+
+      {/* Shadow */}
+      <div style={sectionStyle}>
+        <span>Shadow</span>
+        <div style={{ display: 'flex', gap: 3 }}>
+          {[
+            { label: 'None', value: '' },
+            { label: 'S', value: '2 2 4 rgba(0,0,0,0.2)' },
+            { label: 'M', value: '4 4 10 rgba(0,0,0,0.25)' },
+            { label: 'L', value: '6 6 20 rgba(0,0,0,0.3)' },
+          ].map(s => {
+            const current = first.shadow || '';
+            const isActive = current === s.value;
+            return (
+              <button
+                key={s.label}
+                onClick={() => onUpdate({ shadow: s.value || undefined } as any)}
+                style={{
+                  padding: '2px 6px', fontSize: 10, fontWeight: 600,
+                  border: `1px solid ${isActive ? theme.selectionColor : theme.panelBorder}`,
+                  borderRadius: 4, background: isActive ? theme.panelActive : 'transparent',
+                  cursor: 'pointer', color: theme.panelText, fontFamily: 'inherit',
+                }}
+              >
+                {s.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Delete */}

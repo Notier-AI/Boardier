@@ -13,6 +13,10 @@ import '../elements/arrow';
 import '../elements/freehand';
 import '../elements/text';
 import '../elements/icon';
+import '../elements/marker';
+import '../elements/checkbox';
+import '../elements/radiogroup';
+import '../elements/frame';
 
 const HANDLE_SIZE = 8;
 
@@ -124,6 +128,17 @@ export class Renderer {
         height: visibleWorld.height + 100,
       })) continue;
 
+      // Apply element shadow
+      if (el.shadow) {
+        const parts = el.shadow.split(' ');
+        if (parts.length >= 4) {
+          ctx.shadowOffsetX = (parseFloat(parts[0]) || 0);
+          ctx.shadowOffsetY = (parseFloat(parts[1]) || 0);
+          ctx.shadowBlur = (parseFloat(parts[2]) || 0);
+          ctx.shadowColor = parts.slice(3).join(' ');
+        }
+      }
+
       // Apply color adaptation for dark/light theme
       const adaptedStroke = adaptColor(el.strokeColor, theme);
       const needsAdapt = adaptedStroke !== el.strokeColor;
@@ -132,6 +147,14 @@ export class Renderer {
         renderElement(ctx, adapted);
       } else {
         renderElement(ctx, el);
+      }
+
+      // Reset shadow
+      if (el.shadow) {
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+        ctx.shadowBlur = 0;
+        ctx.shadowColor = 'transparent';
       }
     }
 

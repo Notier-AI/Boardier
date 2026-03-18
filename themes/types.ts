@@ -22,6 +22,12 @@ export interface BoardierTheme {
   panelHover: string;
   panelActive: string;
 
+  // Tooltips
+  tooltipBackground: string;
+  tooltipText: string;
+  tooltipBorder: string;
+  tooltipShadow: string;
+
   // Fonts
   fontFamily: string;
   uiFontFamily: string;

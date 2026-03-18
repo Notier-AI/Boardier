@@ -19,6 +19,11 @@ export const defaultTheme: BoardierTheme = {
   panelHover: '#f1f3f5',
   panelActive: '#e7f0ff',
 
+  tooltipBackground: '#1e1e1e',
+  tooltipText: '#ffffff',
+  tooltipBorder: '#333333',
+  tooltipShadow: '0 2px 8px rgba(0,0,0,0.25)',
+
   fontFamily: 'system-ui, -apple-system, sans-serif',
   uiFontFamily: 'system-ui, -apple-system, sans-serif',
 
@@ -53,6 +58,11 @@ export const defaultDarkTheme: BoardierTheme = {
   panelTextSecondary: '#868e96',
   panelHover: '#2c2e33',
   panelActive: '#2b3a52',
+
+  tooltipBackground: '#e9ecef',
+  tooltipText: '#1e1e1e',
+  tooltipBorder: '#ced4da',
+  tooltipShadow: '0 2px 8px rgba(0,0,0,0.35)',
 
   fontFamily: 'system-ui, -apple-system, sans-serif',
   uiFontFamily: 'system-ui, -apple-system, sans-serif',

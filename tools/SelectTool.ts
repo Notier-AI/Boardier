@@ -132,42 +132,22 @@ export class SelectTool extends BaseTool {
       const dx = world.x - this.dragStart.x;
       const dy = world.y - this.dragStart.y;
 
-      // Compute smart guides
-      this.smartGuides = this.computeSmartGuides(ctx, dx, dy);
-
-      // Apply snap from guides
-      let snapDx = dx;
-      let snapDy = dy;
-      for (const g of this.smartGuides) {
-        if (g.axis === 'x') {
-          // Find the moving element edge/center that matched
-          for (const [, orig] of this.snapshotBeforeDrag) {
-            const b = { x: orig.x + dx, y: orig.y + dy, width: orig.width, height: orig.height };
-            const cx = b.x + b.width / 2;
-            const edges = [b.x, cx, b.x + b.width];
-            for (const ex of edges) {
-              if (Math.abs(ex - g.position) < 5 / (ctx.getViewState().zoom || 1)) {
-                snapDx = dx + (g.position - ex);
-              }
-            }
-          }
-        } else {
-          for (const [, orig] of this.snapshotBeforeDrag) {
-            const b = { x: orig.x + dx, y: orig.y + dy, width: orig.width, height: orig.height };
-            const cy = b.y + b.height / 2;
-            const edges = [b.y, cy, b.y + b.height];
-            for (const ey of edges) {
-              if (Math.abs(ey - g.position) < 5 / (ctx.getViewState().zoom || 1)) {
-                snapDy = dy + (g.position - ey);
-              }
-            }
-          }
-        }
+      // Build tentative bounds for all selected elements
+      const movingBounds: { x: number; y: number; width: number; height: number }[] = [];
+      for (const [, orig] of this.snapshotBeforeDrag) {
+        movingBounds.push({ x: orig.x + dx, y: orig.y + dy, width: orig.width, height: orig.height });
       }
+
+      // Compute guides + snap in a single pass
+      const { guides, snapDx, snapDy } = this.computeSmartGuidesAndSnap(ctx, movingBounds);
+      this.smartGuides = guides;
+
+      const finalDx = dx + snapDx;
+      const finalDy = dy + snapDy;
 
       const updates: { id: string; changes: Partial<BoardierElement> }[] = [];
       for (const [id, orig] of this.snapshotBeforeDrag) {
-        updates.push({ id, changes: { x: orig.x + snapDx, y: orig.y + snapDy } });
+        updates.push({ id, changes: { x: orig.x + finalDx, y: orig.y + finalDy } });
       }
       ctx.scene.updateElements(updates);
       ctx.requestRender();
@@ -216,6 +196,7 @@ export class SelectTool extends BaseTool {
     this.smartGuides = [];
     this.snapshotBeforeDrag.clear();
     this.lineEndpointIndex = -1;
+    this._refEdgesCache = null;
     ctx.requestRender();
   }
 
@@ -249,60 +230,89 @@ export class SelectTool extends BaseTool {
 
   // ─── Smart Guides computation ──────────────────────────────────
 
-  private computeSmartGuides(ctx: ToolContext, dx: number, dy: number): SmartGuide[] {
-    const zoom = ctx.getViewState().zoom || 1;
-    const threshold = 5 / zoom;
-    const guides: SmartGuide[] = [];
+  /** Pre-computed reference edges from non-selected elements. Cached once per drag. */
+  private _refEdgesCache: { x: number[]; y: number[]; yMin: number; yMax: number; xMin: number; xMax: number } | null = null;
+
+  private buildRefEdges(ctx: ToolContext): typeof this._refEdgesCache {
+    if (this._refEdgesCache) return this._refEdgesCache;
     const selectedIds = new Set(ctx.scene.getSelectedIds());
     const allElements = ctx.scene.getElements();
-
-    // Collect reference edges/centers from non-selected elements
-    const refs: { x: number[]; y: number[] } = { x: [], y: [] };
+    const rx: number[] = [];
+    const ry: number[] = [];
+    let yMin = Infinity, yMax = -Infinity, xMin = Infinity, xMax = -Infinity;
     for (const el of allElements) {
       if (selectedIds.has(el.id)) continue;
       const b = getElementBounds(el);
-      const cx = b.x + b.width / 2;
-      const cy = b.y + b.height / 2;
-      refs.x.push(b.x, cx, b.x + b.width);
-      refs.y.push(b.y, cy, b.y + b.height);
+      const cxv = b.x + b.width / 2;
+      const cyv = b.y + b.height / 2;
+      rx.push(b.x, cxv, b.x + b.width);
+      ry.push(b.y, cyv, b.y + b.height);
+      if (b.y < yMin) yMin = b.y;
+      if (b.y + b.height > yMax) yMax = b.y + b.height;
+      if (b.x < xMin) xMin = b.x;
+      if (b.x + b.width > xMax) xMax = b.x + b.width;
     }
+    this._refEdgesCache = { x: rx, y: ry, yMin, yMax, xMin, xMax };
+    return this._refEdgesCache;
+  }
 
-    // Check moving elements' edges/centers against references
-    for (const [, orig] of this.snapshotBeforeDrag) {
-      const b = { x: orig.x + dx, y: orig.y + dy, width: orig.width, height: orig.height };
+  /**
+   * Compute smart guides AND the snap delta for a set of moving bounds.
+   * Returns { guides, snapDx, snapDy } — caller should apply snap offsets.
+   */
+  private computeSmartGuidesAndSnap(
+    ctx: ToolContext,
+    movingBounds: { x: number; y: number; width: number; height: number }[],
+  ): { guides: SmartGuide[]; snapDx: number; snapDy: number } {
+    const zoom = ctx.getViewState().zoom || 1;
+    const threshold = 5 / zoom;
+    const refs = this.buildRefEdges(ctx)!;
+    const guides: SmartGuide[] = [];
+    let bestSnapX = Infinity;
+    let bestSnapY = Infinity;
+    let snapDx = 0;
+    let snapDy = 0;
+
+    for (const b of movingBounds) {
       const cx = b.x + b.width / 2;
       const cy = b.y + b.height / 2;
-      const movingX = [b.x, cx, b.x + b.width];
-      const movingY = [b.y, cy, b.y + b.height];
+      const movX = [b.x, cx, b.x + b.width];
+      const movY = [b.y, cy, b.y + b.height];
 
-      for (const mx of movingX) {
-        for (const rx of refs.x) {
-          if (Math.abs(mx - rx) < threshold) {
-            // Vertical guide line at rx
-            const allY = [...refs.y, b.y, b.y + b.height];
-            guides.push({ axis: 'x', position: rx, from: Math.min(...allY) - 20, to: Math.max(...allY) + 20 });
+      for (const mx of movX) {
+        for (let j = 0; j < refs.x.length; j++) {
+          const diff = mx - refs.x[j];
+          const absDiff = diff < 0 ? -diff : diff;
+          if (absDiff < threshold) {
+            const lo = b.y < refs.yMin ? b.y : refs.yMin;
+            const hi = (b.y + b.height) > refs.yMax ? (b.y + b.height) : refs.yMax;
+            guides.push({ axis: 'x', position: refs.x[j], from: lo - 20, to: hi + 20 });
+            if (absDiff < bestSnapX) { bestSnapX = absDiff; snapDx = -diff; }
           }
         }
       }
-      for (const my of movingY) {
-        for (const ry of refs.y) {
-          if (Math.abs(my - ry) < threshold) {
-            // Horizontal guide line at ry
-            const allX = [...refs.x, b.x, b.x + b.width];
-            guides.push({ axis: 'y', position: ry, from: Math.min(...allX) - 20, to: Math.max(...allX) + 20 });
+      for (const my of movY) {
+        for (let j = 0; j < refs.y.length; j++) {
+          const diff = my - refs.y[j];
+          const absDiff = diff < 0 ? -diff : diff;
+          if (absDiff < threshold) {
+            const lo = b.x < refs.xMin ? b.x : refs.xMin;
+            const hi = (b.x + b.width) > refs.xMax ? (b.x + b.width) : refs.xMax;
+            guides.push({ axis: 'y', position: refs.y[j], from: lo - 20, to: hi + 20 });
+            if (absDiff < bestSnapY) { bestSnapY = absDiff; snapDy = -diff; }
           }
         }
       }
     }
 
-    // Deduplicate by axis+position (within threshold)
+    // Quick dedup
+    const seen = new Set<string>();
     const unique: SmartGuide[] = [];
     for (const g of guides) {
-      if (!unique.some(u => u.axis === g.axis && Math.abs(u.position - g.position) < 0.5)) {
-        unique.push(g);
-      }
+      const key = `${g.axis}:${Math.round(g.position * 2)}`;
+      if (!seen.has(key)) { seen.add(key); unique.push(g); }
     }
-    return unique;
+    return { guides: unique, snapDx, snapDy };
   }
 
   // ─── Resize logic (shapes only) ────────────────────────────────
@@ -324,6 +334,20 @@ export class SelectTool extends BaseTool {
 
     if (nw < 5) { nw = 5; if (this.resizeHandle === 0 || this.resizeHandle === 3) nx = ob.x + ob.width - 5; }
     if (nh < 5) { nh = 5; if (this.resizeHandle === 0 || this.resizeHandle === 1) ny = ob.y + ob.height - 5; }
+
+    // Snap resized bounds against reference edges
+    const { guides, snapDx, snapDy } = this.computeSmartGuidesAndSnap(ctx, [{ x: nx, y: ny, width: nw, height: nh }]);
+    this.smartGuides = guides;
+
+    // Apply snap to the moving edges only
+    const h = this.resizeHandle;
+    if (h === 0 || h === 3) { nx += snapDx; nw -= snapDx; }  // left edge moves
+    else { nw += snapDx; }                                    // right edge moves
+    if (h === 0 || h === 1) { ny += snapDy; nh -= snapDy; }  // top edge moves
+    else { nh += snapDy; }                                    // bottom edge moves
+
+    if (nw < 5) nw = 5;
+    if (nh < 5) nh = 5;
 
     ctx.scene.updateElement(this.resizeElementId, { x: nx, y: ny, width: nw, height: nh });
     ctx.requestRender();

@@ -21,6 +21,8 @@ import { TextTool } from '../tools/TextTool';
 import { PanTool } from '../tools/PanTool';
 import { EraseTool } from '../tools/EraseTool';
 import { IconTool } from '../tools/IconTool';
+import { MarkerTool } from '../tools/MarkerTool';
+import { WidgetTool } from '../tools/WidgetTool';
 import { clamp } from '../utils/math';
 import { getElementBounds } from '../elements/base';
 import { setIconImageLoadCallback } from '../elements/icon';
@@ -74,6 +76,10 @@ export class BoardierEngine {
       ['pan', new PanTool()],
       ['eraser', new EraseTool()],
       ['icon', new IconTool()],
+      ['marker', new MarkerTool()],
+      ['checkbox', new WidgetTool('checkbox', 140, 28)],
+      ['radiogroup', new WidgetTool('radiogroup', 140, 80)],
+      ['frame', new WidgetTool('frame', 300, 200)],
     ]);
 
     // Wire scene events → external callbacks
@@ -365,7 +371,7 @@ export class BoardierEngine {
       const toolMap: Record<string, BoardierToolType> = {
         v: 'select', r: 'rectangle', e: 'ellipse', d: 'diamond',
         l: 'line', a: 'arrow', p: 'freehand', t: 'text',
-        h: 'pan', x: 'eraser',
+        h: 'pan', x: 'eraser', m: 'marker', f: 'frame',
       };
       if (toolMap[e.key]) { this.setTool(toolMap[e.key]); return; }
 
@@ -411,6 +417,20 @@ export class BoardierEngine {
       // Double-click an icon → open picker to replace it
       this.scene.setSelection([hit.id]);
       this._onIconEdit?.(hit.id);
+    } else if (hit.type === 'checkbox') {
+      // Toggle checked state
+      this.history.push(this.scene.getElements());
+      this.scene.updateElement(hit.id, { checked: !(hit as any).checked } as any);
+      this.history.push(this.scene.getElements());
+      this.render();
+    } else if (hit.type === 'radiogroup') {
+      // Cycle selected index
+      const el = hit as any;
+      const next = (el.selectedIndex + 1) % el.options.length;
+      this.history.push(this.scene.getElements());
+      this.scene.updateElement(hit.id, { selectedIndex: next } as any);
+      this.history.push(this.scene.getElements());
+      this.render();
     }
   }
 

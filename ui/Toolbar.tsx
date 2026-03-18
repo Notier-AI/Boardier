@@ -1,6 +1,7 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import type { BoardierToolType } from '../core/types';
 import type { BoardierTheme } from '../themes/types';
+import { Tooltip } from './Tooltip';
 
 interface ToolbarProps {
   activeTool: BoardierToolType;
@@ -30,10 +31,18 @@ const DEFAULT_TOOLS: { type: BoardierToolType; label: string; shortcut: string; 
     icon: <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 19L19 5" /><path d="M19 5h-6" /><path d="M19 5v6" /></svg> },
   { type: 'freehand', label: 'Pencil', shortcut: 'P',
     icon: <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3l4 4L7 21H3v-4z" /></svg> },
+  { type: 'marker', label: 'Marker', shortcut: 'M',
+    icon: <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15.5 3l5.5 5.5-11 11H4.5v-5.5z" /><path d="M14 6l4 4" /><path d="M4 20h5" /></svg> },
   { type: 'text', label: 'Text', shortcut: 'T',
     icon: <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 4h12" /><path d="M12 4v16" /></svg> },
   { type: 'icon', label: 'Icon', shortcut: 'I',
     icon: <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z" /></svg> },
+  { type: 'checkbox', label: 'Checkbox', shortcut: '',
+    icon: <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="3" /><path d="M9 12l2 2 4-4" /></svg> },
+  { type: 'radiogroup', label: 'Radio Group', shortcut: '',
+    icon: <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="6" r="4" /><circle cx="12" cy="6" r="1.5" fill="currentColor" /><circle cx="12" cy="18" r="4" /></svg> },
+  { type: 'frame', label: 'Frame', shortcut: 'F',
+    icon: <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="2" /><path d="M2 8h20" /></svg> },
   { type: 'eraser', label: 'Eraser', shortcut: 'X',
     icon: <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 20H7L3 16l10-10 8 8-4 4" /><path d="M6 20l5-5" /></svg> },
   { type: 'pan', label: 'Pan', shortcut: 'H',
@@ -235,17 +244,17 @@ export const Toolbar: React.FC<ToolbarProps> = React.memo(({ activeTool, onToolC
         const isDragging = dragIdx === i;
         const isDropTarget = dragIdx !== null && overIdx === i && dragIdx !== i;
         return (
-          <button
-            key={t.type}
-            title={`${t.label} (${t.shortcut}) — right-click to hide`}
-            onPointerDown={e => handlePointerDown(e, i)}
-            onContextMenu={e => { e.preventDefault(); e.stopPropagation(); moveToOverflow(t.type); }}
-            style={btnStyle(activeTool === t.type, isDragging, isDropTarget)}
-            onMouseEnter={e => { if (activeTool !== t.type && dragIdx === null) (e.currentTarget as HTMLElement).style.background = theme.panelHover; }}
-            onMouseLeave={e => { if (activeTool !== t.type && dragIdx === null) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
-          >
-            {t.icon}
-          </button>
+          <Tooltip key={t.type} text={t.label} shortcut={t.shortcut || undefined} theme={theme} placement="right">
+            <button
+              onPointerDown={e => handlePointerDown(e, i)}
+              onContextMenu={e => { e.preventDefault(); e.stopPropagation(); moveToOverflow(t.type); }}
+              style={btnStyle(activeTool === t.type, isDragging, isDropTarget)}
+              onMouseEnter={e => { if (activeTool !== t.type && dragIdx === null) (e.currentTarget as HTMLElement).style.background = theme.panelHover; }}
+              onMouseLeave={e => { if (activeTool !== t.type && dragIdx === null) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+            >
+              {t.icon}
+            </button>
+          </Tooltip>
         );
       })}
 
