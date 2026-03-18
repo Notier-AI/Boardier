@@ -43,3 +43,13 @@ export const STROKE_WIDTHS = [1, 2, 4] as const;
 
 /** Font size options for text elements. */
 export const FONT_SIZES = [14, 18, 24, 32] as const;
+
+/** Font family options. */
+export const FONT_FAMILIES = [
+  { value: 'system-ui, -apple-system, sans-serif', label: 'Sans' },
+  { value: 'Georgia, "Times New Roman", serif', label: 'Serif' },
+  { value: '"Courier New", Courier, monospace', label: 'Mono' },
+] as const;
+
+/** Handwritten font used when roughness > 0. */
+export const HANDWRITTEN_FONT = '"Segoe Print", "Bradley Hand", Chilanka, TSCu_Comic, casual, cursive';

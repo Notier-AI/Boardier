@@ -96,6 +96,8 @@ export interface TextElement extends BoardierElementBase {
   fontFamily: string;
   textAlign: 'left' | 'center' | 'right';
   lineHeight: number;
+  /** Map of icon placeholder key → SVG markup for inline icons. e.g. { "FiSearch": "<svg...>" } */
+  inlineIcons?: Record<string, string>;
 }
 
 export interface IconElement extends BoardierElementBase {

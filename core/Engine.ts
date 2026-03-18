@@ -23,6 +23,7 @@ import { EraseTool } from '../tools/EraseTool';
 import { IconTool } from '../tools/IconTool';
 import { clamp } from '../utils/math';
 import { getElementBounds } from '../elements/base';
+import { setIconImageLoadCallback } from '../elements/icon';
 
 export class BoardierEngine {
   readonly scene = new Scene();
@@ -52,6 +53,7 @@ export class BoardierEngine {
   private _onTool?: (t: BoardierToolType) => void;
   private _onTextEdit?: (id: string) => void;
   private _onShapeLabelEdit?: (id: string) => void;
+  private _onIconEdit?: (id: string) => void;
 
   constructor(canvas: HTMLCanvasElement, config: BoardierConfig, theme: BoardierTheme) {
     this.canvas = canvas;
@@ -77,6 +79,9 @@ export class BoardierEngine {
     // Wire scene events → external callbacks
     this.scene.onChange(els => { this._onChange?.(els); });
     this.scene.onSelectionChange(ids => { this._onSelection?.(ids); });
+
+    // Re-render when icon images finish loading (fixes color change causing invisible icons)
+    setIconImageLoadCallback(() => this.render());
   }
 
   // ─── Tool context (passed to tools) ──────────────────────────────
@@ -402,6 +407,10 @@ export class BoardierEngine {
       // Double-click a shape → edit its label
       this.scene.setSelection([hit.id]);
       this._onShapeLabelEdit?.(hit.id);
+    } else if (hit.type === 'icon') {
+      // Double-click an icon → open picker to replace it
+      this.scene.setSelection([hit.id]);
+      this._onIconEdit?.(hit.id);
     }
   }
 
@@ -446,6 +455,7 @@ export class BoardierEngine {
   onToolChange(cb: (t: BoardierToolType) => void): void { this._onTool = cb; }
   onTextEditRequest(cb: (id: string) => void): void { this._onTextEdit = cb; }
   onShapeLabelEditRequest(cb: (id: string) => void): void { this._onShapeLabelEdit = cb; }
+  onIconEditRequest(cb: (id: string) => void): void { this._onIconEdit = cb; }
 
   dispose(): void {
     cancelAnimationFrame(this._rafId);
@@ -455,6 +465,7 @@ export class BoardierEngine {
     this._onTool = undefined;
     this._onTextEdit = undefined;
     this._onShapeLabelEdit = undefined;
+    this._onIconEdit = undefined;
   }
 
   // ─── AI-Facing API ──────────────────────────────────────────────

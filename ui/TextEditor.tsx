@@ -8,9 +8,10 @@ interface TextEditorProps {
   theme: BoardierTheme;
   onCommit: (id: string, text: string) => void;
   onCancel: (id: string) => void;
+  onInsertIcon?: () => void;
 }
 
-export const TextEditor: React.FC<TextEditorProps> = ({ element, viewState, theme, onCommit, onCancel }) => {
+export const TextEditor: React.FC<TextEditorProps> = ({ element, viewState, theme, onCommit, onCancel, onInsertIcon }) => {
   const ref = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -54,41 +55,58 @@ export const TextEditor: React.FC<TextEditorProps> = ({ element, viewState, them
   }, [element.id, onCancel, handleBlur]);
 
   return (
-    <textarea
-      ref={ref}
-      onBlur={handleBlur}
-      onKeyDown={handleKeyDown}
-      style={{
-        position: 'absolute',
-        left: screenX,
-        top: screenY,
-        minWidth: Math.max(60, element.width * viewState.zoom),
-        minHeight: Math.max(scaledFontSize * element.lineHeight, 24),
-        font: `${scaledFontSize}px ${element.fontFamily}`,
-        lineHeight: `${element.lineHeight}`,
-        color: element.strokeColor,
-        background: 'transparent',
-        border: `1.5px dashed ${theme.selectionColor}`,
-        borderRadius: 2,
-        outline: 'none',
-        resize: 'none',
-        overflow: 'hidden',
-        padding: '0 2px',
-        margin: 0,
-        whiteSpace: 'pre-wrap',
-        wordBreak: 'break-word',
-        zIndex: 20,
-        boxSizing: 'border-box',
-        fontFamily: element.fontFamily,
-      }}
-      // Auto-grow
-      onInput={e => {
-        const ta = e.target as HTMLTextAreaElement;
-        ta.style.height = 'auto';
-        ta.style.height = ta.scrollHeight + 'px';
-        ta.style.width = 'auto';
-        ta.style.width = Math.max(60, ta.scrollWidth + 4) + 'px';
-      }}
-    />
+    <div style={{ position: 'absolute', left: screenX, top: screenY, zIndex: 20 }}>
+      <textarea
+        ref={ref}
+        onBlur={handleBlur}
+        onKeyDown={handleKeyDown}
+        style={{
+          display: 'block',
+          minWidth: Math.max(60, element.width * viewState.zoom),
+          minHeight: Math.max(scaledFontSize * element.lineHeight, 24),
+          font: `${scaledFontSize}px ${element.fontFamily}`,
+          lineHeight: `${element.lineHeight}`,
+          color: element.strokeColor,
+          background: 'transparent',
+          border: `1.5px dashed ${theme.selectionColor}`,
+          borderRadius: 2,
+          outline: 'none',
+          resize: 'none',
+          overflow: 'hidden',
+          padding: '0 2px',
+          margin: 0,
+          whiteSpace: 'pre-wrap',
+          wordBreak: 'break-word',
+          boxSizing: 'border-box',
+          fontFamily: element.fontFamily,
+        }}
+        // Auto-grow
+        onInput={e => {
+          const ta = e.target as HTMLTextAreaElement;
+          ta.style.height = 'auto';
+          ta.style.height = ta.scrollHeight + 'px';
+          ta.style.width = 'auto';
+          ta.style.width = Math.max(60, ta.scrollWidth + 4) + 'px';
+        }}
+      />
+      {onInsertIcon && (
+        <button
+          title="Insert icon"
+          onMouseDown={e => { e.preventDefault(); e.stopPropagation(); onInsertIcon(); }}
+          style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            width: 22, height: 22, marginTop: 3,
+            border: `1px solid ${theme.panelBorder}`,
+            borderRadius: 4,
+            background: theme.panelBackground,
+            cursor: 'pointer',
+            color: theme.panelTextSecondary,
+            padding: 0,
+          }}
+        >
+          <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z" /></svg>
+        </button>
+      )}
+    </div>
   );
 };

@@ -1,6 +1,9 @@
 import type { TextElement, Vec2, Bounds } from '../core/types';
 import { registerElement } from './base';
 import { rotatePoint } from '../utils/math';
+import { getIconImage } from './icon';
+
+const ICON_MARKER_RE = /\{\{([^}]+)\}\}/g;
 
 function render(ctx: CanvasRenderingContext2D, el: TextElement): void {
   if (!el.text) return;
@@ -14,15 +17,62 @@ function render(ctx: CanvasRenderingContext2D, el: TextElement): void {
   ctx.font = `${el.fontSize}px ${el.fontFamily}`;
   ctx.fillStyle = el.strokeColor;
   ctx.textBaseline = 'top';
-  ctx.textAlign = el.textAlign;
+  ctx.textAlign = 'left'; // Always left-align for segment rendering
 
   const lines = el.text.split('\n');
   const lineH = el.fontSize * el.lineHeight;
   const startY = -el.height / 2;
-  const alignX = el.textAlign === 'center' ? 0 : el.textAlign === 'right' ? el.width / 2 : -el.width / 2;
+  const iconSize = el.fontSize;
+  const hasInline = el.inlineIcons && Object.keys(el.inlineIcons).length > 0;
 
   for (let i = 0; i < lines.length; i++) {
-    ctx.fillText(lines[i], alignX, startY + i * lineH);
+    const lineY = startY + i * lineH;
+
+    if (hasInline && ICON_MARKER_RE.test(lines[i])) {
+      // Render line with inline icons
+      ICON_MARKER_RE.lastIndex = 0;
+      const segments: { type: 'text' | 'icon'; value: string }[] = [];
+      let lastIdx = 0;
+      let match: RegExpExecArray | null;
+      while ((match = ICON_MARKER_RE.exec(lines[i])) !== null) {
+        if (match.index > lastIdx) segments.push({ type: 'text', value: lines[i].slice(lastIdx, match.index) });
+        segments.push({ type: 'icon', value: match[1] });
+        lastIdx = match.index + match[0].length;
+      }
+      if (lastIdx < lines[i].length) segments.push({ type: 'text', value: lines[i].slice(lastIdx) });
+
+      // Calculate total width for alignment
+      let totalW = 0;
+      for (const seg of segments) {
+        if (seg.type === 'text') { totalW += ctx.measureText(seg.value).width; }
+        else { totalW += iconSize; }
+      }
+
+      let drawX: number;
+      if (el.textAlign === 'center') drawX = -totalW / 2;
+      else if (el.textAlign === 'right') drawX = el.width / 2 - totalW;
+      else drawX = -el.width / 2;
+
+      for (const seg of segments) {
+        if (seg.type === 'text') {
+          ctx.fillText(seg.value, drawX, lineY);
+          drawX += ctx.measureText(seg.value).width;
+        } else {
+          const svg = el.inlineIcons?.[seg.value];
+          if (svg) {
+            const img = getIconImage(svg, el.strokeColor);
+            if (img) ctx.drawImage(img, drawX, lineY, iconSize, iconSize);
+          }
+          drawX += iconSize;
+        }
+      }
+    } else {
+      // Normal text line — use textAlign directly
+      ctx.textAlign = el.textAlign;
+      const alignX = el.textAlign === 'center' ? 0 : el.textAlign === 'right' ? el.width / 2 : -el.width / 2;
+      ctx.fillText(lines[i], alignX, lineY);
+      ctx.textAlign = 'left'; // reset for next line
+    }
   }
 
   ctx.restore();

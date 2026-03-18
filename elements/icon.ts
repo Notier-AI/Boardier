@@ -4,7 +4,11 @@ import { rotatePoint } from '../utils/math';
 
 const imageCache = new Map<string, HTMLImageElement>();
 
-function getImage(svgMarkup: string, color: string): HTMLImageElement | null {
+// Callback to request a re-render when an icon image finishes loading.
+let _onImageLoad: (() => void) | null = null;
+export function setIconImageLoadCallback(cb: () => void): void { _onImageLoad = cb; }
+
+export function getIconImage(svgMarkup: string, color: string): HTMLImageElement | null {
   const key = svgMarkup + '|' + color;
   const cached = imageCache.get(key);
   if (cached) return cached.complete ? cached : null;
@@ -14,10 +18,14 @@ function getImage(svgMarkup: string, color: string): HTMLImageElement | null {
   const blob = new Blob([coloredSvg], { type: 'image/svg+xml' });
   const url = URL.createObjectURL(blob);
   const img = new Image();
-  img.onload = () => { URL.revokeObjectURL(url); };
+  img.onload = () => { URL.revokeObjectURL(url); _onImageLoad?.(); };
   img.src = url;
   imageCache.set(key, img);
   return img.complete ? img : null;
+}
+
+function getImage(svgMarkup: string, color: string): HTMLImageElement | null {
+  return getIconImage(svgMarkup, color);
 }
 
 function render(ctx: CanvasRenderingContext2D, el: IconElement): void {

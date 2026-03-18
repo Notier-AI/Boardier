@@ -71,6 +71,8 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
     const [contextMenu, setContextMenu] = useState<{ position: Vec2 } | null>(null);
     const [showExport, setShowExport] = useState(false);
     const [showIconPicker, setShowIconPicker] = useState(false);
+    const [editingIconId, setEditingIconId] = useState<string | null>(null);
+    const [insertingIconForText, setInsertingIconForText] = useState(false);
 
     const resolvedTheme = themeProp ?? (darkMode ? defaultDarkTheme : defaultTheme);
     const fullConfig: BoardierConfig = {
@@ -103,6 +105,10 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
       engine.onToolChange(t => setActiveTool(t));
       engine.onTextEditRequest(id => setEditingTextId(id));
       engine.onShapeLabelEditRequest(id => setEditingLabelId(id));
+      engine.onIconEditRequest(id => {
+        setEditingIconId(id);
+        setShowIconPicker(true);
+      });
 
       // Initial data
       if (initialData) {
@@ -281,21 +287,65 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
     const handleIconPick = useCallback((iconName: string, iconSet: string, svgMarkup: string) => {
       const engine = engineRef.current;
       if (!engine) return;
-      const vs = engine.getViewState();
-      const canvas = engine.getCanvas();
-      const cx = (-vs.scrollX + canvas.width / 2 / (window.devicePixelRatio || 1)) / vs.zoom;
-      const cy = (-vs.scrollY + canvas.height / 2 / (window.devicePixelRatio || 1)) / vs.zoom;
-      const el = createIcon({
-        x: cx - 24, y: cy - 24, width: 48, height: 48,
-        iconName, iconSet, svgMarkup,
-        strokeColor: engine.getTheme().elementDefaults.strokeColor,
-      });
-      engine.history.push(engine.scene.getElements());
-      engine.scene.addElement(el);
-      engine.scene.setSelection([el.id]);
-      engine.history.push(engine.scene.getElements());
-      engine.render();
+
+      if (insertingIconForText && editingTextId) {
+        // Insert inline icon marker into the text element
+        const el = engine.scene.getElementById(editingTextId) as TextElement | undefined;
+        if (el) {
+          const marker = `{{${iconName}}}`;
+          const newText = el.text + marker;
+          const inlineIcons = { ...(el.inlineIcons || {}), [iconName]: svgMarkup };
+          const size = measureText(newText, el.fontSize, el.fontFamily, el.lineHeight);
+          engine.history.push(engine.scene.getElements());
+          engine.scene.updateElement(editingTextId, { text: newText, inlineIcons, width: size.width, height: size.height } as any);
+          engine.history.push(engine.scene.getElements());
+          engine.render();
+        }
+        setInsertingIconForText(false);
+        setShowIconPicker(false);
+        return;
+      }
+
+      if (editingIconId) {
+        // Replace existing icon
+        engine.history.push(engine.scene.getElements());
+        engine.scene.updateElement(editingIconId, { iconName, iconSet, svgMarkup } as any);
+        engine.history.push(engine.scene.getElements());
+        engine.render();
+        setEditingIconId(null);
+      } else {
+        // Create new icon at viewport center
+        const vs = engine.getViewState();
+        const canvas = engine.getCanvas();
+        const cx = (-vs.scrollX + canvas.width / 2 / (window.devicePixelRatio || 1)) / vs.zoom;
+        const cy = (-vs.scrollY + canvas.height / 2 / (window.devicePixelRatio || 1)) / vs.zoom;
+        const el = createIcon({
+          x: cx - 24, y: cy - 24, width: 48, height: 48,
+          iconName, iconSet, svgMarkup,
+          strokeColor: engine.getTheme().elementDefaults.strokeColor,
+        });
+        engine.history.push(engine.scene.getElements());
+        engine.scene.addElement(el);
+        engine.scene.setSelection([el.id]);
+        engine.history.push(engine.scene.getElements());
+        engine.render();
+      }
       setShowIconPicker(false);
+    }, [editingIconId, insertingIconForText, editingTextId]);
+
+    // ── Icon picker close ──────────────────────────
+
+    const handleIconPickerClose = useCallback(() => {
+      setShowIconPicker(false);
+      setEditingIconId(null);
+      setInsertingIconForText(false);
+    }, []);
+
+    // ── Insert icon into text ────────────────────────
+
+    const handleTextInsertIcon = useCallback(() => {
+      setInsertingIconForText(true);
+      setShowIconPicker(true);
     }, []);
 
     // ── Context menu ─────────────────────────────────
@@ -399,6 +449,7 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
             theme={resolvedTheme}
             onCommit={handleTextCommit}
             onCancel={handleTextCancel}
+            onInsertIcon={handleTextInsertIcon}
           />
         )}
 
@@ -441,7 +492,7 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
           <IconPicker
             theme={resolvedTheme}
             onPick={handleIconPick}
-            onClose={() => setShowIconPicker(false)}
+            onClose={handleIconPickerClose}
           />
         )}
 

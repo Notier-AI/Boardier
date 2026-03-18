@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import type { BoardierElement } from '../core/types';
 import type { BoardierTheme } from '../themes/types';
-import { STROKE_COLORS, FILL_COLORS, FONT_SIZES } from '../utils/colors';
+import { STROKE_COLORS, FILL_COLORS, FONT_SIZES, FONT_FAMILIES, HANDWRITTEN_FONT } from '../utils/colors';
 
 interface PropertyPanelProps {
   elements: BoardierElement[];
@@ -17,6 +17,8 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = React.memo(({ element
 
   const first = elements[0];
   const hasText = elements.some(e => e.type === 'text');
+  const hasLabel = elements.some(e => 'label' in e);
+  const hasTextOrLabel = hasText || hasLabel;
   const isNotLine = elements.every(e => e.type !== 'line' && e.type !== 'arrow' && e.type !== 'freehand');
 
   const swatch = (color: string, active: boolean, onClick: () => void) => (
@@ -147,6 +149,75 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = React.memo(({ element
                 }}
               >
                 {s}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Font family for text / shapes with labels */}
+      {hasTextOrLabel && (
+        <div style={sectionStyle}>
+          <span>Font</span>
+          <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+            {FONT_FAMILIES.map(f => {
+              const currentFont = hasText ? (first as any).fontFamily : undefined;
+              const isActive = currentFont === f.value;
+              return (
+                <button
+                  key={f.label}
+                  onClick={() => onUpdate({ fontFamily: f.value } as any)}
+                  style={{
+                    padding: '2px 6px', fontSize: 10, fontWeight: 600,
+                    border: `1px solid ${isActive ? theme.selectionColor : theme.panelBorder}`,
+                    borderRadius: 4, background: isActive ? theme.panelActive : 'transparent',
+                    cursor: 'pointer', color: theme.panelText,
+                    fontFamily: f.value,
+                  }}
+                >
+                  {f.label}
+                </button>
+              );
+            })}
+            {first.roughness > 0 && (
+              <button
+                onClick={() => onUpdate({ fontFamily: HANDWRITTEN_FONT } as any)}
+                style={{
+                  padding: '2px 6px', fontSize: 10, fontWeight: 600,
+                  border: `1px solid ${(first as any).fontFamily === HANDWRITTEN_FONT ? theme.selectionColor : theme.panelBorder}`,
+                  borderRadius: 4, background: (first as any).fontFamily === HANDWRITTEN_FONT ? theme.panelActive : 'transparent',
+                  cursor: 'pointer', color: theme.panelText,
+                  fontFamily: HANDWRITTEN_FONT,
+                }}
+              >
+                Hand
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Text alignment */}
+      {hasText && (
+        <div style={sectionStyle}>
+          <span>Align</span>
+          <div style={{ display: 'flex', gap: 3 }}>
+            {(['left', 'center', 'right'] as const).map(a => (
+              <button
+                key={a}
+                onClick={() => onUpdate({ textAlign: a } as any)}
+                style={{
+                  width: 26, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  border: `1px solid ${(first as any).textAlign === a ? theme.selectionColor : theme.panelBorder}`,
+                  borderRadius: 4, background: (first as any).textAlign === a ? theme.panelActive : 'transparent',
+                  cursor: 'pointer', color: theme.panelText, padding: 0,
+                }}
+              >
+                <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  {a === 'left' && <><path d="M3 6h18" /><path d="M3 12h12" /><path d="M3 18h16" /></>}
+                  {a === 'center' && <><path d="M3 6h18" /><path d="M6 12h12" /><path d="M4 18h16" /></>}
+                  {a === 'right' && <><path d="M3 6h18" /><path d="M9 12h12" /><path d="M5 18h16" /></>}
+                </svg>
               </button>
             ))}
           </div>

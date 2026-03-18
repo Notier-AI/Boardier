@@ -49,22 +49,93 @@ function iconToSvg(Component: React.ComponentType<{ size?: number; color?: strin
 
 const GRID_SIZE = 200; // Show 200 icons at a time for performance
 
+// Cache for already-loaded icon sets (survives across picker open/close)
+const allIconsCache = new Map<string, IconEntry[]>();
+
 export const IconPicker: React.FC<IconPickerProps> = ({ theme, onPick, onClose }) => {
   const [search, setSearch] = useState('');
-  const [activeSet, setActiveSet] = useState(ICON_SETS[0].id);
+  const [activeSet, setActiveSet] = useState('all');
   const [icons, setIcons] = useState<IconEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(0);
   const searchRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const [debouncedSearch, setDebouncedSearch] = useState('');
 
-  // Load icon set
+  // Debounce search for the "All" tab to avoid expensive filtering on every keystroke
+  useEffect(() => {
+    clearTimeout(searchTimerRef.current);
+    if (activeSet === 'all') {
+      searchTimerRef.current = setTimeout(() => setDebouncedSearch(search), 200);
+    } else {
+      setDebouncedSearch(search);
+    }
+    return () => clearTimeout(searchTimerRef.current);
+  }, [search, activeSet]);
+
+  // Load icon set (or all sets)
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
     setPage(0);
+
+    if (activeSet === 'all') {
+      // Load all icon sets in parallel
+      const cachedEntries: IconEntry[] = [];
+      const toLoad: typeof ICON_SETS = [];
+      for (const setDef of ICON_SETS) {
+        const cached = allIconsCache.get(setDef.id);
+        if (cached) { cachedEntries.push(...cached); } else { toLoad.push(setDef); }
+      }
+
+      if (toLoad.length === 0) {
+        if (!cancelled) { setIcons(cachedEntries); setLoading(false); }
+        return () => { cancelled = true; };
+      }
+
+      // Show cached icons immediately, then progressively add more
+      if (cachedEntries.length > 0 && !cancelled) {
+        setIcons(cachedEntries);
+        setLoading(true); // still loading more
+      }
+
+      Promise.all(
+        toLoad.map(setDef =>
+          setDef.loader().then(mod => {
+            const entries: IconEntry[] = [];
+            for (const [name, comp] of Object.entries(mod)) {
+              if (typeof comp === 'function' && name !== 'default') {
+                entries.push({ name, set: setDef.id, component: comp as any });
+              }
+            }
+            allIconsCache.set(setDef.id, entries);
+            return entries;
+          }).catch(() => [] as IconEntry[])
+        )
+      ).then(results => {
+        if (cancelled) return;
+        const allEntries: IconEntry[] = [];
+        for (const setDef of ICON_SETS) {
+          const cached = allIconsCache.get(setDef.id);
+          if (cached) allEntries.push(...cached);
+        }
+        setIcons(allEntries);
+        setLoading(false);
+      });
+
+      return () => { cancelled = true; };
+    }
+
+    // Single set
     const setDef = ICON_SETS.find(s => s.id === activeSet);
     if (!setDef) return;
+
+    const cached = allIconsCache.get(activeSet);
+    if (cached) {
+      if (!cancelled) { setIcons(cached); setLoading(false); }
+      return () => { cancelled = true; };
+    }
 
     setDef.loader().then(mod => {
       if (cancelled) return;
@@ -74,6 +145,7 @@ export const IconPicker: React.FC<IconPickerProps> = ({ theme, onPick, onClose }
           entries.push({ name, set: activeSet, component: comp as any });
         }
       }
+      allIconsCache.set(activeSet, entries);
       setIcons(entries);
       setLoading(false);
     }).catch(() => {
@@ -86,13 +158,13 @@ export const IconPicker: React.FC<IconPickerProps> = ({ theme, onPick, onClose }
   useEffect(() => { searchRef.current?.focus(); }, []);
 
   // Reset page when search changes
-  useEffect(() => { setPage(0); }, [search]);
+  useEffect(() => { setPage(0); }, [debouncedSearch]);
 
   const filtered = useMemo(() => {
-    if (!search) return icons;
-    const q = search.toLowerCase();
+    if (!debouncedSearch) return icons;
+    const q = debouncedSearch.toLowerCase();
     return icons.filter(i => i.name.toLowerCase().includes(q));
-  }, [icons, search]);
+  }, [icons, debouncedSearch]);
 
   const paged = useMemo(() => filtered.slice(0, (page + 1) * GRID_SIZE), [filtered, page]);
   const hasMore = paged.length < filtered.length;
@@ -166,6 +238,23 @@ export const IconPicker: React.FC<IconPickerProps> = ({ theme, onPick, onClose }
 
         {/* Icon set tabs */}
         <div style={{ display: 'flex', gap: 0, overflowX: 'auto', padding: '0 16px', borderBottom: `1px solid ${theme.panelBorder}` }}>
+          <button
+            onClick={() => setActiveSet('all')}
+            style={{
+              padding: '6px 10px',
+              fontSize: 11,
+              fontWeight: activeSet === 'all' ? 700 : 500,
+              color: activeSet === 'all' ? theme.selectionColor : theme.panelTextSecondary,
+              background: 'transparent',
+              border: 'none',
+              borderBottom: activeSet === 'all' ? `2px solid ${theme.selectionColor}` : '2px solid transparent',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              fontFamily: 'inherit',
+            }}
+          >
+            All
+          </button>
           {ICON_SETS.map(s => (
             <button
               key={s.id}

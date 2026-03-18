@@ -2,6 +2,7 @@ import type { EllipseElement, Vec2, Bounds } from '../core/types';
 import { registerElement } from './base';
 import { rotatePoint } from '../utils/math';
 import { roughEllipse, mulberry32 } from '../utils/roughDraw';
+import { HANDWRITTEN_FONT } from '../utils/colors';
 
 function render(ctx: CanvasRenderingContext2D, el: EllipseElement): void {
   ctx.save();
@@ -53,7 +54,8 @@ function render(ctx: CanvasRenderingContext2D, el: EllipseElement): void {
 
   // Render label text centered inside
   if (el.label) {
-    ctx.font = `${Math.min(el.width * 0.7, 18)}px system-ui, sans-serif`;
+    const labelFont = el.roughness > 0 ? HANDWRITTEN_FONT : 'system-ui, sans-serif';
+    ctx.font = `${Math.min(el.width * 0.7, 18)}px ${labelFont}`;
     ctx.fillStyle = el.strokeColor;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
