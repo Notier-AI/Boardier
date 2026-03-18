@@ -24,6 +24,8 @@ interface DraggablePanelProps {
   id: BoardierPanelId;
   layout?: BoardierLayoutConfig;
   theme: BoardierTheme;
+  /** Absolute positioning for the wrapper (replaces child internal positioning) */
+  defaultStyle: React.CSSProperties;
   children: React.ReactNode;
 }
 
@@ -31,14 +33,14 @@ export const DraggablePanel: React.FC<DraggablePanelProps> = ({
   id,
   layout,
   theme,
+  defaultStyle,
   children,
 }) => {
   const panelRef = useRef<HTMLDivElement>(null);
   const [offset, setOffset] = useState<{ dx: number; dy: number }>(() => {
-    // Priority: layout config override > localStorage > default (0,0)
     const configPos = layout?.positions?.[id];
     if (configPos) {
-      return { dx: configPos.left ?? configPos.right ?? 0, dy: configPos.top ?? configPos.bottom ?? 0 };
+      return { dx: configPos.left ?? 0, dy: configPos.top ?? 0 };
     }
     const stored = loadPositions()[id];
     if (stored) return stored;
@@ -49,11 +51,10 @@ export const DraggablePanel: React.FC<DraggablePanelProps> = ({
   const isLocked = layout?.locked ?? false;
   const isHidden = layout?.hidden?.includes(id) ?? false;
 
-  // Reset offset when layout positions change from config
   useEffect(() => {
     const configPos = layout?.positions?.[id];
     if (configPos) {
-      setOffset({ dx: configPos.left ?? configPos.right ?? 0, dy: configPos.top ?? configPos.bottom ?? 0 });
+      setOffset({ dx: configPos.left ?? 0, dy: configPos.top ?? 0 });
     }
   }, [layout?.positions, id]);
 
@@ -79,7 +80,6 @@ export const DraggablePanel: React.FC<DraggablePanelProps> = ({
       const newDx = startDx + (ev.clientX - startX);
       const newDy = startDy + (ev.clientY - startY);
 
-      // Check no-drop zones if container exists
       if (containerRect && noZones.length > 0) {
         const panel = panelRef.current;
         if (panel) {
@@ -100,7 +100,6 @@ export const DraggablePanel: React.FC<DraggablePanelProps> = ({
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('pointerup', onUp);
       setIsDragging(false);
-      // Save
       setOffset(cur => {
         const stored = loadPositions();
         stored[id] = cur;
@@ -121,12 +120,10 @@ export const DraggablePanel: React.FC<DraggablePanelProps> = ({
     <div
       ref={panelRef}
       style={{
-        // display: 'contents' doesn't work well with transforms, so use inline-block wrapper
-        position: 'relative',
-        display: 'inline-block',
-        transform: hasOffset ? `translate(${offset.dx}px, ${offset.dy}px)` : undefined,
-        // Keep existing positioning from children
-        pointerEvents: 'auto',
+        position: 'absolute',
+        zIndex: 10,
+        ...defaultStyle,
+        ...(hasOffset ? { transform: `translate(${offset.dx}px, ${offset.dy}px)` } : {}),
       }}
     >
       {!isLocked && (

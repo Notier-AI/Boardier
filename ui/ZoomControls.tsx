@@ -38,9 +38,6 @@ export const ZoomControls: React.FC<ZoomControlsProps> = React.memo(({ zoom, onZ
   return (
     <div
       style={{
-        position: 'absolute',
-        bottom: 12,
-        right: 12,
         display: 'flex',
         alignItems: 'center',
         gap: 2,
@@ -49,7 +46,6 @@ export const ZoomControls: React.FC<ZoomControlsProps> = React.memo(({ zoom, onZ
         border: `1px solid ${theme.panelBorder}`,
         borderRadius: theme.borderRadius,
         boxShadow: theme.shadow,
-        zIndex: 10,
         fontFamily: theme.uiFontFamily,
       }}
     >

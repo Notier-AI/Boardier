@@ -25,6 +25,11 @@ export function createNotierTheme(
       selectionColor: '#6366f1',
       selectionFill: 'rgba(99,102,241,0.12)',
 
+      guideColor: '#f06595',
+      guideDash: [4, 4],
+      lassoColor: '#6366f1',
+      lassoFill: 'rgba(99,102,241,0.10)',
+
       panelBackground: isElegant ? '#1a1b26' : '#25262b',
       panelBorder: isElegant ? '#2a2b3d' : '#373a40',
       panelText: '#e9ecef',
@@ -59,6 +64,11 @@ export function createNotierTheme(
     gridColor: isWhiteboard ? 'rgba(0,0,0,0.05)' : 'rgba(0,0,0,0.07)',
     selectionColor: '#6366f1',
     selectionFill: 'rgba(99,102,241,0.08)',
+
+    guideColor: '#f06595',
+    guideDash: [4, 4],
+    lassoColor: '#6366f1',
+    lassoFill: 'rgba(99,102,241,0.06)',
 
     panelBackground: '#ffffff',
     panelBorder: isWhiteboard ? '#1e1e1e' : isElegant ? '#e5e7eb' : '#e2e2e2',

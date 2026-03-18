@@ -219,10 +219,6 @@ export const Toolbar: React.FC<ToolbarProps> = React.memo(({ activeTool, onToolC
     <div
       ref={containerRef}
       style={{
-        position: 'absolute',
-        left: 12,
-        top: '50%',
-        transform: 'translateY(-50%)',
         display: 'flex',
         flexDirection: 'column',
         gap: GAP,
@@ -231,7 +227,6 @@ export const Toolbar: React.FC<ToolbarProps> = React.memo(({ activeTool, onToolC
         border: `1px solid ${theme.panelBorder}`,
         borderRadius: theme.borderRadius,
         boxShadow: theme.shadow,
-        zIndex: 10,
         fontFamily: theme.uiFontFamily,
         touchAction: 'none',
       }}

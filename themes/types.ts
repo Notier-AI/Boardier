@@ -6,6 +6,14 @@ export interface BoardierTheme {
   selectionColor: string;
   selectionFill: string;
 
+  // Smart guides (alignment lines shown during drag)
+  guideColor: string;
+  guideDash: number[];
+
+  // Lasso selection
+  lassoColor: string;
+  lassoFill: string;
+
   // UI panels
   panelBackground: string;
   panelBorder: string;

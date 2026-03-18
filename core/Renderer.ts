@@ -1,5 +1,6 @@
 import type { BoardierElement, Vec2, ViewState, Bounds } from './types';
 import type { BoardierTheme } from '../themes/types';
+import type { SmartGuide } from '../tools/SelectTool';
 import { renderElement, getElementBounds } from '../elements/base';
 import { boundsIntersect } from '../utils/math';
 
@@ -86,7 +87,7 @@ export class Renderer {
     viewState: ViewState,
     selectedIds: Set<string>,
     theme: BoardierTheme,
-    options?: { showGrid?: boolean; gridSize?: number; boxSelect?: Bounds | null },
+    options?: { showGrid?: boolean; gridSize?: number; boxSelect?: Bounds | null; lassoPath?: Vec2[] | null; smartGuides?: SmartGuide[] },
   ): void {
     const ctx = this.ctx;
     const { zoom, scrollX, scrollY } = viewState;
@@ -142,6 +143,14 @@ export class Renderer {
 
     if (options?.boxSelect) {
       this.drawBoxSelect(ctx, options.boxSelect, theme);
+    }
+
+    if (options?.lassoPath && options.lassoPath.length > 2) {
+      this.drawLassoSelect(ctx, options.lassoPath, theme);
+    }
+
+    if (options?.smartGuides && options.smartGuides.length > 0) {
+      this.drawSmartGuides(ctx, options.smartGuides, theme);
     }
 
     ctx.restore();
@@ -274,6 +283,48 @@ export class Renderer {
     ctx.setLineDash([4, 3]);
     ctx.fillRect(b.x, b.y, b.width, b.height);
     ctx.strokeRect(b.x, b.y, b.width, b.height);
+    ctx.setLineDash([]);
+  }
+
+  // ─── Lasso-select ─────────────────────────────────────────────────
+
+  private drawLassoSelect(ctx: CanvasRenderingContext2D, path: Vec2[], theme: BoardierTheme): void {
+    ctx.fillStyle = theme.lassoFill;
+    ctx.strokeStyle = theme.lassoColor;
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.moveTo(path[0].x, path[0].y);
+    for (let i = 1; i < path.length; i++) {
+      ctx.lineTo(path[i].x, path[i].y);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // ─── Smart Guides ────────────────────────────────────────────────
+
+  private drawSmartGuides(ctx: CanvasRenderingContext2D, guides: SmartGuide[], theme: BoardierTheme): void {
+    ctx.strokeStyle = theme.guideColor;
+    ctx.lineWidth = 1;
+    ctx.setLineDash(theme.guideDash);
+
+    for (const g of guides) {
+      ctx.beginPath();
+      if (g.axis === 'x') {
+        // Vertical guide
+        ctx.moveTo(g.position, g.from);
+        ctx.lineTo(g.position, g.to);
+      } else {
+        // Horizontal guide
+        ctx.moveTo(g.from, g.position);
+        ctx.lineTo(g.to, g.position);
+      }
+      ctx.stroke();
+    }
+
     ctx.setLineDash([]);
   }
 

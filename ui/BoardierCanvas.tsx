@@ -474,7 +474,7 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
 
         {/* Toolbar */}
         {!readOnly && (
-          <DraggablePanel id="toolbar" layout={fullConfig.layout} theme={resolvedTheme}>
+          <DraggablePanel id="toolbar" layout={fullConfig.layout} theme={resolvedTheme} defaultStyle={{ left: 12, top: '50%', transform: 'translateY(-50%)' }}>
             <Toolbar activeTool={activeTool} onToolChange={handleToolChange} theme={resolvedTheme} onMermaidConvert={() => setShowMermaidDialog(true)} />
           </DraggablePanel>
         )}
@@ -490,7 +490,7 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
         )}
 
         {/* Zoom Controls */}
-        <DraggablePanel id="zoom" layout={fullConfig.layout} theme={resolvedTheme}>
+        <DraggablePanel id="zoom" layout={fullConfig.layout} theme={resolvedTheme} defaultStyle={{ bottom: 12, right: 12 }}>
           <ZoomControls
             zoom={viewState.zoom}
             onZoomIn={handleZoomIn}
@@ -503,30 +503,25 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
 
         {/* Back to content button */}
         {isViewportDrifted && (
-          <DraggablePanel id="backToContent" layout={fullConfig.layout} theme={resolvedTheme}>
+          <DraggablePanel id="backToContent" layout={fullConfig.layout} theme={resolvedTheme} defaultStyle={{ bottom: 52, right: 12 }}>
             <button
               onClick={() => engineRef.current?.zoomToFit()}
               style={{
-              position: 'absolute',
-              bottom: 52,
-              right: 12,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              padding: '6px 12px',
-              border: `1px solid ${resolvedTheme.panelBorder}`,
-              borderRadius: resolvedTheme.borderRadius,
-              background: resolvedTheme.panelBackground,
-              boxShadow: resolvedTheme.shadow,
-              cursor: 'pointer',
-              color: resolvedTheme.selectionColor,
-              fontSize: 12,
-              fontWeight: 600,
-              fontFamily: resolvedTheme.uiFontFamily,
-              zIndex: 10,
-              whiteSpace: 'nowrap',
-              animation: 'boardier-fadein 0.2s ease',
-            }}
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '6px 12px',
+                border: `1px solid ${resolvedTheme.panelBorder}`,
+                borderRadius: resolvedTheme.borderRadius,
+                background: resolvedTheme.panelBackground,
+                boxShadow: resolvedTheme.shadow,
+                cursor: 'pointer',
+                color: resolvedTheme.selectionColor,
+                fontSize: 12,
+                fontWeight: 600,
+                fontFamily: resolvedTheme.uiFontFamily,
+                whiteSpace: 'nowrap',
+              }}
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = resolvedTheme.panelHover; }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = resolvedTheme.panelBackground; }}
           >
@@ -595,14 +590,11 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
 
         {/* Export button (bottom-left) */}
         {!readOnly && (
-          <DraggablePanel id="export" layout={fullConfig.layout} theme={resolvedTheme}>
+          <DraggablePanel id="export" layout={fullConfig.layout} theme={resolvedTheme} defaultStyle={{ bottom: 12, left: 12 }}>
             <button
               onClick={() => setShowExport(true)}
               title="Export"
               style={{
-                position: 'absolute',
-                bottom: 12,
-                left: 12,
                 width: 34,
                 height: 34,
                 display: 'flex',
@@ -614,7 +606,6 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
                 boxShadow: resolvedTheme.shadow,
                 cursor: 'pointer',
                 color: resolvedTheme.panelText,
-                zIndex: 10,
               }}
             >
               <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><path d="M7 10l5 5 5-5" /><path d="M12 15V3" /></svg>

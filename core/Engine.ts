@@ -438,6 +438,8 @@ export class BoardierEngine {
         showGrid: this.config.showGrid ?? true,
         gridSize: this.config.gridSize ?? 20,
         boxSelect: selectTool?.getBoxSelectBounds?.() ?? null,
+        lassoPath: selectTool?.getLassoPath?.() ?? null,
+        smartGuides: selectTool?.getSmartGuides?.() ?? [],
       },
     );
   }

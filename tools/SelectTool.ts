@@ -1,9 +1,17 @@
 import type { Vec2, Bounds, BoardierElement } from '../core/types';
 import { BaseTool, type ToolContext } from './BaseTool';
 import { getElementBounds } from '../elements/base';
-import { normalizeBounds } from '../utils/math';
+import { normalizeBounds, pointInPolygon, boundsCenter } from '../utils/math';
 
-type DragMode = 'none' | 'move' | 'boxSelect' | 'resize' | 'lineEndpoint' | 'lineControl';
+type DragMode = 'none' | 'move' | 'boxSelect' | 'lassoSelect' | 'resize' | 'lineEndpoint' | 'lineControl';
+
+/** A single smart guide line (horizontal or vertical) */
+export interface SmartGuide {
+  axis: 'x' | 'y';
+  position: number;  // world coord of the guide line
+  from: number;      // start of line on the other axis
+  to: number;        // end of line on the other axis
+}
 
 export class SelectTool extends BaseTool {
   readonly type = 'select' as const;
@@ -16,6 +24,10 @@ export class SelectTool extends BaseTool {
   private resizeElementId: string = '';
   private snapshotBeforeDrag: Map<string, { x: number; y: number; width: number; height: number }> = new Map();
   private boxSelectBounds: Bounds | null = null;
+  // Lasso selection path
+  private lassoPath: Vec2[] = [];
+  // Smart guides visible during drag
+  private smartGuides: SmartGuide[] = [];
   // Line/arrow handle dragging
   private lineHandleElementId: string = '';
   private lineEndpointIndex: number = -1; // 0 = start, 1 = end
@@ -84,7 +96,8 @@ export class SelectTool extends BaseTool {
     const hit = scene.hitTest(world);
 
     if (hit) {
-      if (e.shiftKey) {
+      // Ctrl+Click or Shift+Click toggles multi-select
+      if (e.shiftKey || e.ctrlKey || e.metaKey) {
         if (scene.isSelected(hit.id)) scene.setSelection(scene.getSelectedIds().filter(id => id !== hit.id));
         else scene.addToSelection(hit.id);
       } else if (!scene.isSelected(hit.id)) {
@@ -99,10 +112,16 @@ export class SelectTool extends BaseTool {
       }
       ctx.history.push(scene.getElements());
     } else {
-      if (!e.shiftKey) scene.clearSelection();
-      this.mode = 'boxSelect';
+      if (!e.shiftKey && !e.ctrlKey && !e.metaKey) scene.clearSelection();
+      // Alt+drag = lasso select, otherwise box select
+      if (e.altKey) {
+        this.mode = 'lassoSelect';
+        this.lassoPath = [world];
+      } else {
+        this.mode = 'boxSelect';
+        this.boxSelectBounds = null;
+      }
       this.dragStart = world;
-      this.boxSelectBounds = null;
     }
 
     ctx.requestRender();
@@ -112,9 +131,43 @@ export class SelectTool extends BaseTool {
     if (this.mode === 'move') {
       const dx = world.x - this.dragStart.x;
       const dy = world.y - this.dragStart.y;
+
+      // Compute smart guides
+      this.smartGuides = this.computeSmartGuides(ctx, dx, dy);
+
+      // Apply snap from guides
+      let snapDx = dx;
+      let snapDy = dy;
+      for (const g of this.smartGuides) {
+        if (g.axis === 'x') {
+          // Find the moving element edge/center that matched
+          for (const [, orig] of this.snapshotBeforeDrag) {
+            const b = { x: orig.x + dx, y: orig.y + dy, width: orig.width, height: orig.height };
+            const cx = b.x + b.width / 2;
+            const edges = [b.x, cx, b.x + b.width];
+            for (const ex of edges) {
+              if (Math.abs(ex - g.position) < 5 / (ctx.getViewState().zoom || 1)) {
+                snapDx = dx + (g.position - ex);
+              }
+            }
+          }
+        } else {
+          for (const [, orig] of this.snapshotBeforeDrag) {
+            const b = { x: orig.x + dx, y: orig.y + dy, width: orig.width, height: orig.height };
+            const cy = b.y + b.height / 2;
+            const edges = [b.y, cy, b.y + b.height];
+            for (const ey of edges) {
+              if (Math.abs(ey - g.position) < 5 / (ctx.getViewState().zoom || 1)) {
+                snapDy = dy + (g.position - ey);
+              }
+            }
+          }
+        }
+      }
+
       const updates: { id: string; changes: Partial<BoardierElement> }[] = [];
       for (const [id, orig] of this.snapshotBeforeDrag) {
-        updates.push({ id, changes: { x: orig.x + dx, y: orig.y + dy } });
+        updates.push({ id, changes: { x: orig.x + snapDx, y: orig.y + snapDy } });
       }
       ctx.scene.updateElements(updates);
       ctx.requestRender();
@@ -126,6 +179,20 @@ export class SelectTool extends BaseTool {
       this.boxSelectBounds = box;
       const inside = ctx.scene.getElementsInBounds(box);
       ctx.scene.setSelection(inside.map(e => e.id));
+      ctx.requestRender();
+    } else if (this.mode === 'lassoSelect') {
+      this.lassoPath.push(world);
+      // Select elements whose center is inside the lasso
+      const allElements = ctx.scene.getElements();
+      const selectedIds: string[] = [];
+      for (const el of allElements) {
+        const b = getElementBounds(el);
+        const center = boundsCenter(b);
+        if (pointInPolygon(center, this.lassoPath)) {
+          selectedIds.push(el.id);
+        }
+      }
+      ctx.scene.setSelection(selectedIds);
       ctx.requestRender();
     } else if (this.mode === 'resize') {
       this.doResize(ctx, world);
@@ -145,6 +212,8 @@ export class SelectTool extends BaseTool {
     }
     this.mode = 'none';
     this.boxSelectBounds = null;
+    this.lassoPath = [];
+    this.smartGuides = [];
     this.snapshotBeforeDrag.clear();
     this.lineEndpointIndex = -1;
     ctx.requestRender();
@@ -168,6 +237,72 @@ export class SelectTool extends BaseTool {
 
   getBoxSelectBounds(): Bounds | null {
     return this.boxSelectBounds;
+  }
+
+  getLassoPath(): Vec2[] | null {
+    return this.lassoPath.length > 2 ? this.lassoPath : null;
+  }
+
+  getSmartGuides(): SmartGuide[] {
+    return this.smartGuides;
+  }
+
+  // ─── Smart Guides computation ──────────────────────────────────
+
+  private computeSmartGuides(ctx: ToolContext, dx: number, dy: number): SmartGuide[] {
+    const zoom = ctx.getViewState().zoom || 1;
+    const threshold = 5 / zoom;
+    const guides: SmartGuide[] = [];
+    const selectedIds = new Set(ctx.scene.getSelectedIds());
+    const allElements = ctx.scene.getElements();
+
+    // Collect reference edges/centers from non-selected elements
+    const refs: { x: number[]; y: number[] } = { x: [], y: [] };
+    for (const el of allElements) {
+      if (selectedIds.has(el.id)) continue;
+      const b = getElementBounds(el);
+      const cx = b.x + b.width / 2;
+      const cy = b.y + b.height / 2;
+      refs.x.push(b.x, cx, b.x + b.width);
+      refs.y.push(b.y, cy, b.y + b.height);
+    }
+
+    // Check moving elements' edges/centers against references
+    for (const [, orig] of this.snapshotBeforeDrag) {
+      const b = { x: orig.x + dx, y: orig.y + dy, width: orig.width, height: orig.height };
+      const cx = b.x + b.width / 2;
+      const cy = b.y + b.height / 2;
+      const movingX = [b.x, cx, b.x + b.width];
+      const movingY = [b.y, cy, b.y + b.height];
+
+      for (const mx of movingX) {
+        for (const rx of refs.x) {
+          if (Math.abs(mx - rx) < threshold) {
+            // Vertical guide line at rx
+            const allY = [...refs.y, b.y, b.y + b.height];
+            guides.push({ axis: 'x', position: rx, from: Math.min(...allY) - 20, to: Math.max(...allY) + 20 });
+          }
+        }
+      }
+      for (const my of movingY) {
+        for (const ry of refs.y) {
+          if (Math.abs(my - ry) < threshold) {
+            // Horizontal guide line at ry
+            const allX = [...refs.x, b.x, b.x + b.width];
+            guides.push({ axis: 'y', position: ry, from: Math.min(...allX) - 20, to: Math.max(...allX) + 20 });
+          }
+        }
+      }
+    }
+
+    // Deduplicate by axis+position (within threshold)
+    const unique: SmartGuide[] = [];
+    for (const g of guides) {
+      if (!unique.some(u => u.axis === g.axis && Math.abs(u.position - g.position) < 0.5)) {
+        unique.push(g);
+      }
+    }
+    return unique;
   }
 
   // ─── Resize logic (shapes only) ────────────────────────────────

@@ -7,6 +7,11 @@ export const defaultTheme: BoardierTheme = {
   selectionColor: '#4f83ff',
   selectionFill: 'rgba(79,131,255,0.08)',
 
+  guideColor: '#f06595',
+  guideDash: [4, 4],
+  lassoColor: '#4f83ff',
+  lassoFill: 'rgba(79,131,255,0.06)',
+
   panelBackground: '#ffffff',
   panelBorder: '#e2e2e2',
   panelText: '#1e1e1e',
@@ -36,6 +41,11 @@ export const defaultDarkTheme: BoardierTheme = {
   gridColor: 'rgba(255,255,255,0.06)',
   selectionColor: '#4f83ff',
   selectionFill: 'rgba(79,131,255,0.12)',
+
+  guideColor: '#f06595',
+  guideDash: [4, 4],
+  lassoColor: '#4f83ff',
+  lassoFill: 'rgba(79,131,255,0.10)',
 
   panelBackground: '#25262b',
   panelBorder: '#373a40',
