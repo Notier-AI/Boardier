@@ -8,6 +8,11 @@ export type { BoardierCanvasProps, BoardierCanvasRef } from './ui/BoardierCanvas
 // Tooltip component (for developer theming)
 export { Tooltip } from './ui/Tooltip';
 
+// New UI components
+export { Minimap } from './ui/Minimap';
+export { PageNavigator } from './ui/PageNavigator';
+export { PresentationMode } from './ui/PresentationMode';
+
 // Core types
 export type {
   BoardierElement,
@@ -34,6 +39,13 @@ export type {
   CheckboxElement,
   RadioGroupElement,
   FrameElement,
+  ConnectorElement,
+  StickyNoteElement,
+  ImageElement,
+  EmbedElement,
+  TableElement,
+  CommentElement,
+  BoardierPage,
   SceneChangeHandler,
   SelectionChangeHandler,
   ViewChangeHandler,
@@ -62,10 +74,16 @@ export {
   createCheckbox,
   createRadioGroup,
   createFrame,
+  createConnector,
+  createStickyNote,
+  createImage,
+  createEmbed,
+  createTable,
+  createComment,
 } from './elements/base';
 
 // Utils
-export { exportToPNG, exportToJSON } from './utils/export';
+export { exportToPNG, exportToJSON, exportToSVG } from './utils/export';
 export { generateId } from './utils/id';
 export { STROKE_COLORS, FILL_COLORS, CANVAS_BACKGROUNDS, STROKE_WIDTHS, FONT_SIZES, FONT_FAMILIES, HANDWRITTEN_FONT } from './utils/colors';
 

@@ -1,4 +1,4 @@
-import type { BoardierElement, Vec2, Bounds, ViewState } from './types';
+import type { BoardierElement, Vec2, Bounds, ViewState, BoardierSceneData } from './types';
 import { hitTestElement, getElementBounds } from '../elements/base';
 import { boundsIntersect, boundsContainsPoint } from '../utils/math';
 
@@ -135,7 +135,7 @@ export class Scene {
 
   // ─── Serialization ───────────────────────────────────────────────
 
-  toJSON(viewState: ViewState): { engine: 'boardier'; elements: BoardierElement[]; viewState: ViewState } {
+  toJSON(viewState: ViewState): BoardierSceneData {
     return {
       engine: 'boardier',
       elements: structuredClone(this.elements),

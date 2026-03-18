@@ -1,4 +1,4 @@
-import type { BoardierToolType, Vec2 } from '../core/types';
+import type { BoardierToolType, BoardierConfig, Vec2 } from '../core/types';
 import type { Scene } from '../core/Scene';
 import type { History } from '../core/History';
 import type { Renderer } from '../core/Renderer';
@@ -12,6 +12,7 @@ export interface ToolContext {
   renderer: Renderer;
   clipboard: Clipboard;
   theme: BoardierTheme;
+  config: BoardierConfig;
   getViewState(): { scrollX: number; scrollY: number; zoom: number };
   setViewState(update: Partial<{ scrollX: number; scrollY: number; zoom: number }>): void;
   screenToWorld(screen: Vec2): Vec2;

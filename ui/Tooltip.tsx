@@ -18,7 +18,7 @@ interface TooltipProps {
  */
 export const Tooltip: React.FC<TooltipProps> = React.memo(({ text, shortcut, theme, children, placement = 'right', delay = 400 }) => {
   const [visible, setVisible] = useState(false);
-  const timer = useRef<ReturnType<typeof setTimeout>>();
+  const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const show = useCallback(() => {
     timer.current = setTimeout(() => setVisible(true), delay);

@@ -28,7 +28,13 @@ export type BoardierElementType =
   | 'marker'
   | 'checkbox'
   | 'radiogroup'
-  | 'frame';
+  | 'frame'
+  | 'connector'
+  | 'stickynote'
+  | 'image'
+  | 'embed'
+  | 'table'
+  | 'comment';
 
 export type FillStyle = 'none' | 'solid';
 
@@ -93,6 +99,8 @@ export interface ArrowElement extends BoardierElementBase {
 export interface FreehandElement extends BoardierElementBase {
   type: 'freehand';
   points: Vec2[];
+  /** Per-point pressure values from stylus (0–1). If present, strokeWidth varies. */
+  pressures?: number[];
 }
 
 export interface TextElement extends BoardierElementBase {
@@ -163,6 +171,93 @@ export interface FrameElement extends BoardierElementBase {
   frameBackground: string;
 }
 
+/** Smart connector that links two elements with auto-routing. */
+export interface ConnectorElement extends BoardierElementBase {
+  type: 'connector';
+  /** Source element ID */
+  startId: string;
+  /** Target element ID */
+  endId: string;
+  /** Anchor port on source: 'top' | 'right' | 'bottom' | 'left' | 'auto' */
+  startPort: 'top' | 'right' | 'bottom' | 'left' | 'auto';
+  /** Anchor port on target */
+  endPort: 'top' | 'right' | 'bottom' | 'left' | 'auto';
+  /** Computed path points (world coords, relative to x,y) */
+  pathPoints: Vec2[];
+  /** Arrowhead at end */
+  arrowheadEnd: boolean;
+  /** Arrowhead at start */
+  arrowheadStart: boolean;
+  /** Line style: straight, elbow, or curved */
+  lineStyle: 'straight' | 'elbow' | 'curved';
+  /** Label on the connector */
+  label: string;
+}
+
+/** Sticky note element — colored square with editable text. */
+export interface StickyNoteElement extends BoardierElementBase {
+  type: 'stickynote';
+  text: string;
+  fontSize: number;
+  fontFamily: string;
+  /** Note color presets */
+  noteColor: string;
+}
+
+/** Image element rendered on the canvas. */
+export interface ImageElement extends BoardierElementBase {
+  type: 'image';
+  /** Data URL or external URL of the image */
+  src: string;
+  /** Alt text for accessibility */
+  alt: string;
+  /** Object-fit style */
+  objectFit: 'contain' | 'cover' | 'fill';
+}
+
+/** Embedded web content element (rendered as a placeholder on canvas). */
+export interface EmbedElement extends BoardierElementBase {
+  type: 'embed';
+  /** URL to embed */
+  url: string;
+  /** Display title */
+  title: string;
+}
+
+/** Grid / table element with rows and columns. */
+export interface TableElement extends BoardierElementBase {
+  type: 'table';
+  /** Number of columns */
+  cols: number;
+  /** Number of rows */
+  rows: number;
+  /** 2D array of cell text values [row][col] */
+  cells: string[][];
+  /** Column widths (proportional) */
+  colWidths: number[];
+  /** Row heights (proportional) */
+  rowHeights: number[];
+  /** Whether to show header row with distinct styling */
+  showHeader: boolean;
+  /** Header background color */
+  headerBackground: string;
+}
+
+/** Comment / annotation pinned to a location. */
+export interface CommentElement extends BoardierElementBase {
+  type: 'comment';
+  /** Comment text content */
+  text: string;
+  /** Author name / identifier */
+  author: string;
+  /** ISO timestamp */
+  timestamp: string;
+  /** Whether the comment is resolved */
+  resolved: boolean;
+  /** Comment marker color */
+  markerColor: string;
+}
+
 /** Discriminated union of all element shapes. */
 export type BoardierElement =
   | RectangleElement
@@ -176,7 +271,13 @@ export type BoardierElement =
   | MarkerElement
   | CheckboxElement
   | RadioGroupElement
-  | FrameElement;
+  | FrameElement
+  | ConnectorElement
+  | StickyNoteElement
+  | ImageElement
+  | EmbedElement
+  | TableElement
+  | CommentElement;
 
 // ─── Tool Types ──────────────────────────────────────────────────────
 
@@ -194,6 +295,12 @@ export type BoardierToolType =
   | 'checkbox'
   | 'radiogroup'
   | 'frame'
+  | 'connector'
+  | 'stickynote'
+  | 'image'
+  | 'embed'
+  | 'table'
+  | 'comment'
   | 'pan'
   | 'eraser';
 
@@ -207,10 +314,21 @@ export interface ViewState {
 
 // ─── Scene Data (serialisation format stored in DB) ──────────────────
 
+/** A single page/slide within the scene. */
+export interface BoardierPage {
+  id: string;
+  name: string;
+  elements: BoardierElement[];
+}
+
 export interface BoardierSceneData {
   engine: 'boardier';
-  elements: BoardierElement[];
+  elements: BoardierElement[];  // default page elements (backwards compat)
   viewState: ViewState;
+  /** Multi-page data. If absent, single-page mode. */
+  pages?: BoardierPage[];
+  /** Active page ID for multi-page mode. */
+  activePageId?: string;
 }
 
 // ─── Config ──────────────────────────────────────────────────────────

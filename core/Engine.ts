@@ -23,9 +23,14 @@ import { EraseTool } from '../tools/EraseTool';
 import { IconTool } from '../tools/IconTool';
 import { MarkerTool } from '../tools/MarkerTool';
 import { WidgetTool } from '../tools/WidgetTool';
+import { ConnectorTool } from '../tools/ConnectorTool';
+import { ImageTool } from '../tools/ImageTool';
+import { CommentTool } from '../tools/CommentTool';
 import { clamp } from '../utils/math';
 import { getElementBounds } from '../elements/base';
 import { setIconImageLoadCallback } from '../elements/icon';
+import { generateId } from '../utils/id';
+import type { BoardierPage } from './types';
 
 export class BoardierEngine {
   readonly scene = new Scene();
@@ -80,6 +85,12 @@ export class BoardierEngine {
       ['checkbox', new WidgetTool('checkbox', 140, 28)],
       ['radiogroup', new WidgetTool('radiogroup', 140, 80)],
       ['frame', new WidgetTool('frame', 300, 200)],
+      ['connector', new ConnectorTool()],
+      ['stickynote', new WidgetTool('stickynote' as any, 160, 160)],
+      ['image', new ImageTool()],
+      ['embed', new WidgetTool('embed' as any, 280, 60)],
+      ['table', new WidgetTool('table' as any, 300, 120)],
+      ['comment', new CommentTool()],
     ]);
 
     // Wire scene events → external callbacks
@@ -99,6 +110,7 @@ export class BoardierEngine {
       renderer: this.renderer,
       clipboard: this.clipboard,
       theme: this.theme,
+      config: this.config,
       getViewState: () => this.viewState,
       setViewState: (u) => {
         Object.assign(this.viewState, u);
@@ -203,6 +215,89 @@ export class BoardierEngine {
     this.scene.addElements(elements);
     this.history.push(this.scene.getElements());
     this.render();
+  }
+
+  // ─── Multi-page ──────────────────────────────────────────────────
+
+  private pages: BoardierPage[] = [];
+  private activePageId: string = '';
+  private _onPageChange?: (pages: BoardierPage[], activeId: string) => void;
+
+  onPageChange(cb: (pages: BoardierPage[], activeId: string) => void): void { this._onPageChange = cb; }
+
+  getPages(): BoardierPage[] { return this.pages; }
+  getActivePageId(): string { return this.activePageId; }
+
+  /** Initialize pages from loaded scene data or create default page. */
+  initPages(pages?: BoardierPage[], activeId?: string): void {
+    if (pages && pages.length > 0) {
+      this.pages = pages;
+      this.activePageId = activeId || pages[0].id;
+    } else {
+      const pageId = generateId();
+      this.pages = [{ id: pageId, name: 'Page 1', elements: this.scene.getElements() }];
+      this.activePageId = pageId;
+    }
+    this._onPageChange?.(this.pages, this.activePageId);
+  }
+
+  addPage(name?: string): string {
+    // Save current page elements
+    this.saveCurrentPage();
+    const id = generateId();
+    this.pages.push({ id, name: name || `Page ${this.pages.length + 1}`, elements: [] });
+    this.switchToPage(id);
+    return id;
+  }
+
+  deletePage(pageId: string): void {
+    if (this.pages.length <= 1) return; // Always keep at least one page
+    const idx = this.pages.findIndex(p => p.id === pageId);
+    if (idx === -1) return;
+    this.pages.splice(idx, 1);
+    if (this.activePageId === pageId) {
+      const newIdx = Math.min(idx, this.pages.length - 1);
+      this.switchToPage(this.pages[newIdx].id);
+    }
+    this._onPageChange?.(this.pages, this.activePageId);
+  }
+
+  renamePage(pageId: string, name: string): void {
+    const page = this.pages.find(p => p.id === pageId);
+    if (page) {
+      page.name = name;
+      this._onPageChange?.(this.pages, this.activePageId);
+    }
+  }
+
+  switchToPage(pageId: string): void {
+    if (pageId === this.activePageId) return;
+    this.saveCurrentPage();
+    const page = this.pages.find(p => p.id === pageId);
+    if (!page) return;
+    this.activePageId = pageId;
+    this.scene.setElements(page.elements);
+    this.scene.clearSelection();
+    this.history.clear();
+    this.history.push(this.scene.getElements());
+    this._onPageChange?.(this.pages, this.activePageId);
+    this.render();
+  }
+
+  private saveCurrentPage(): void {
+    const page = this.pages.find(p => p.id === this.activePageId);
+    if (page) {
+      page.elements = this.scene.getElements();
+    }
+  }
+
+  /** Get scene data including all pages. */
+  getSceneDataWithPages(): BoardierSceneData {
+    this.saveCurrentPage();
+    const data = this.scene.toJSON(this.viewState);
+    data.pages = this.pages;
+    data.activePageId = this.activePageId;
+    return data;
   }
 
   // ─── View ────────────────────────────────────────────────────────
@@ -372,6 +467,7 @@ export class BoardierEngine {
         v: 'select', r: 'rectangle', e: 'ellipse', d: 'diamond',
         l: 'line', a: 'arrow', p: 'freehand', t: 'text',
         h: 'pan', x: 'eraser', m: 'marker', f: 'frame',
+        c: 'connector', n: 'stickynote',
       };
       if (toolMap[e.key]) { this.setTool(toolMap[e.key]); return; }
 
@@ -429,6 +525,16 @@ export class BoardierEngine {
       const next = (el.selectedIndex + 1) % el.options.length;
       this.history.push(this.scene.getElements());
       this.scene.updateElement(hit.id, { selectedIndex: next } as any);
+      this.history.push(this.scene.getElements());
+      this.render();
+    } else if (hit.type === 'stickynote') {
+      // Open text editing for sticky note
+      this.scene.setSelection([hit.id]);
+      this._onTextEdit?.(hit.id);
+    } else if (hit.type === 'comment') {
+      // Toggle comment resolved state
+      this.history.push(this.scene.getElements());
+      this.scene.updateElement(hit.id, { resolved: !(hit as any).resolved } as any);
       this.history.push(this.scene.getElements());
       this.render();
     }

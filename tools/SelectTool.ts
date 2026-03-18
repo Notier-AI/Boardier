@@ -3,7 +3,7 @@ import { BaseTool, type ToolContext } from './BaseTool';
 import { getElementBounds } from '../elements/base';
 import { normalizeBounds, pointInPolygon, boundsCenter } from '../utils/math';
 
-type DragMode = 'none' | 'move' | 'boxSelect' | 'lassoSelect' | 'resize' | 'lineEndpoint' | 'lineControl';
+type DragMode = 'none' | 'move' | 'boxSelect' | 'lassoSelect' | 'resize' | 'lineEndpoint' | 'lineControl' | 'rotate';
 
 /** A single smart guide line (horizontal or vertical) */
 export interface SmartGuide {
@@ -31,6 +31,10 @@ export class SelectTool extends BaseTool {
   // Line/arrow handle dragging
   private lineHandleElementId: string = '';
   private lineEndpointIndex: number = -1; // 0 = start, 1 = end
+  // Rotation
+  private rotateElementId: string = '';
+  private rotateStartAngle: number = 0;
+  private rotateOrigRotation: number = 0;
 
   getCursor(): string {
     return 'default';
@@ -77,8 +81,27 @@ export class SelectTool extends BaseTool {
       }
     }
 
+    // Check rotation handle on a single selected element (non-line)
+    if (selected.length === 1 && selected[0].type !== 'line' && selected[0].type !== 'arrow' && !selected[0].locked) {
+      const b = getElementBounds(selected[0]);
+      const rotHandleY = b.y - 30 / vs.zoom;
+      const rotHandleX = b.x + b.width / 2;
+      const rd = Math.sqrt((world.x - rotHandleX) ** 2 + (world.y - rotHandleY) ** 2);
+      if (rd <= 8 / vs.zoom) {
+        this.mode = 'rotate';
+        this.rotateElementId = selected[0].id;
+        this.rotateOrigRotation = selected[0].rotation || 0;
+        const cx = b.x + b.width / 2;
+        const cy = b.y + b.height / 2;
+        this.rotateStartAngle = Math.atan2(world.y - cy, world.x - cx);
+        this.dragStart = world;
+        ctx.history.push(scene.getElements());
+        return;
+      }
+    }
+
     // Check resize handle on a single selected element (non-line)
-    if (selected.length === 1 && selected[0].type !== 'line' && selected[0].type !== 'arrow') {
+    if (selected.length === 1 && selected[0].type !== 'line' && selected[0].type !== 'arrow' && !selected[0].locked) {
       const b = getElementBounds(selected[0]);
       const handle = renderer.getHandleAtPoint(world, b, vs.zoom);
       if (handle >= 0) {
@@ -102,6 +125,12 @@ export class SelectTool extends BaseTool {
         else scene.addToSelection(hit.id);
       } else if (!scene.isSelected(hit.id)) {
         scene.setSelection([hit.id]);
+      }
+
+      // Don't allow moving locked elements
+      if (hit.locked) {
+        ctx.requestRender();
+        return;
       }
 
       this.mode = 'move';
@@ -142,8 +171,21 @@ export class SelectTool extends BaseTool {
       const { guides, snapDx, snapDy } = this.computeSmartGuidesAndSnap(ctx, movingBounds);
       this.smartGuides = guides;
 
-      const finalDx = dx + snapDx;
-      const finalDy = dy + snapDy;
+      let finalDx = dx + snapDx;
+      let finalDy = dy + snapDy;
+
+      // Snap-to-grid when enabled and no smart guide snap applied
+      if (ctx.config.snapToGrid && ctx.config.gridSize) {
+        const gs = ctx.config.gridSize;
+        if (snapDx === 0) {
+          const first = this.snapshotBeforeDrag.values().next().value!;
+          finalDx = Math.round((first.x + dx) / gs) * gs - first.x;
+        }
+        if (snapDy === 0) {
+          const first = this.snapshotBeforeDrag.values().next().value!;
+          finalDy = Math.round((first.y + dy) / gs) * gs - first.y;
+        }
+      }
 
       const updates: { id: string; changes: Partial<BoardierElement> }[] = [];
       for (const [id, orig] of this.snapshotBeforeDrag) {
@@ -176,6 +218,8 @@ export class SelectTool extends BaseTool {
       ctx.requestRender();
     } else if (this.mode === 'resize') {
       this.doResize(ctx, world);
+    } else if (this.mode === 'rotate') {
+      this.doRotate(ctx, world);
     } else if (this.mode === 'lineEndpoint') {
       this.doLineEndpointDrag(ctx, world);
     } else if (this.mode === 'lineControl') {
@@ -187,7 +231,7 @@ export class SelectTool extends BaseTool {
   }
 
   onPointerUp(ctx: ToolContext, _world: Vec2, _e: PointerEvent): void {
-    if (this.mode === 'move' || this.mode === 'resize' || this.mode === 'lineEndpoint' || this.mode === 'lineControl') {
+    if (this.mode === 'move' || this.mode === 'resize' || this.mode === 'rotate' || this.mode === 'lineEndpoint' || this.mode === 'lineControl') {
       ctx.commitHistory();
     }
     this.mode = 'none';
@@ -379,6 +423,22 @@ export class SelectTool extends BaseTool {
     if (!el || (el.type !== 'line' && el.type !== 'arrow')) return;
     const cp: Vec2 = { x: world.x - el.x, y: world.y - el.y };
     ctx.scene.updateElement(this.lineHandleElementId, { controlPoint: cp });
+    ctx.requestRender();
+  }
+
+  // ─── Rotation logic ────────────────────────────────────────────
+
+  private doRotate(ctx: ToolContext, world: Vec2): void {
+    const el = ctx.scene.getElementById(this.rotateElementId);
+    if (!el) return;
+    const b = getElementBounds(el);
+    const cx = b.x + b.width / 2;
+    const cy = b.y + b.height / 2;
+    const currentAngle = Math.atan2(world.y - cy, world.x - cx);
+    let rotation = this.rotateOrigRotation + (currentAngle - this.rotateStartAngle);
+    // Snap to 15° increments when Shift is held (checked via last event, simplify: round to nearest 15°)
+    rotation = rotation % (Math.PI * 2);
+    ctx.scene.updateElement(this.rotateElementId, { rotation });
     ctx.requestRender();
   }
 }

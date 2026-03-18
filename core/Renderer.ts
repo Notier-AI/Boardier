@@ -17,6 +17,12 @@ import '../elements/marker';
 import '../elements/checkbox';
 import '../elements/radiogroup';
 import '../elements/frame';
+import '../elements/connector';
+import '../elements/stickynote';
+import '../elements/image';
+import '../elements/embed';
+import '../elements/table';
+import '../elements/comment';
 
 const HANDLE_SIZE = 8;
 
@@ -139,6 +145,18 @@ export class Renderer {
         }
       }
 
+      // Apply rotation transform
+      const hasRotation = el.rotation && el.rotation !== 0;
+      if (hasRotation) {
+        const elB = getElementBounds(el);
+        const cx = elB.x + elB.width / 2;
+        const cy = elB.y + elB.height / 2;
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(el.rotation);
+        ctx.translate(-cx, -cy);
+      }
+
       // Apply color adaptation for dark/light theme
       const adaptedStroke = adaptColor(el.strokeColor, theme);
       const needsAdapt = adaptedStroke !== el.strokeColor;
@@ -147,6 +165,10 @@ export class Renderer {
         renderElement(ctx, adapted);
       } else {
         renderElement(ctx, el);
+      }
+
+      if (hasRotation) {
+        ctx.restore();
       }
 
       // Reset shadow
@@ -250,6 +272,35 @@ export class Renderer {
       ctx.fillRect(p.x - hh, p.y - hh, hs, hs);
       ctx.strokeRect(p.x - hh, p.y - hh, hs, hs);
     }
+
+    // Rotation handle (circle above top-center)
+    const rotX = b.x + b.width / 2;
+    const rotY = b.y - 30 / zoom;
+    const rotR = 5 / zoom;
+
+    // Stem line from top-center to rotation handle
+    ctx.strokeStyle = theme.selectionColor;
+    ctx.lineWidth = 1 / zoom;
+    ctx.beginPath();
+    ctx.moveTo(b.x + b.width / 2, b.y);
+    ctx.lineTo(rotX, rotY);
+    ctx.stroke();
+
+    // Rotation circle
+    ctx.fillStyle = '#ffffff';
+    ctx.strokeStyle = theme.selectionColor;
+    ctx.lineWidth = 1.5 / zoom;
+    ctx.beginPath();
+    ctx.arc(rotX, rotY, rotR, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // Small rotation icon (curved arrow inside)
+    ctx.strokeStyle = theme.selectionColor;
+    ctx.lineWidth = 1 / zoom;
+    ctx.beginPath();
+    ctx.arc(rotX, rotY, rotR * 0.6, -Math.PI * 0.6, Math.PI * 0.3);
+    ctx.stroke();
   }
 
   /** Draw circle handles at start, control, and end points of a line/arrow. */

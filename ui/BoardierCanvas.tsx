@@ -27,6 +27,9 @@ import { ExportDialog } from './ExportDialog';
 import { ShapeLabelEditor } from './ShapeLabelEditor';
 import { IconPicker } from './IconPicker';
 import { DraggablePanel } from './DraggablePanel';
+import { Minimap } from './Minimap';
+import { PageNavigator } from './PageNavigator';
+import { PresentationMode } from './PresentationMode';
 import { createIcon } from '../elements/base';
 import { getElementBounds } from '../elements/base';
 import { mermaidToBoardier } from '../utils/mermaidParser';
@@ -78,6 +81,10 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
     const [insertingIconForText, setInsertingIconForText] = useState(false);
     const insertIconTargetRef = useRef<string | null>(null);
     const [showMermaidDialog, setShowMermaidDialog] = useState(false);
+    const [showMinimap, setShowMinimap] = useState(true);
+    const [showPresentation, setShowPresentation] = useState(false);
+    const [pages, setPages] = useState<{ id: string; name: string; elements: BoardierElement[] }[]>([]);
+    const [activePageId, setActivePageId] = useState('');
 
     // Track whether viewport has drifted from content
     const isViewportDrifted = React.useMemo(() => {
@@ -138,12 +145,15 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
         setEditingIconId(id);
         setShowIconPicker(true);
       });
+      engine.onPageChange((p, a) => { setPages([...p]); setActivePageId(a); });
 
       // Initial data
       if (initialData) {
         engine.loadScene(initialData);
+        engine.initPages(initialData.pages, initialData.activePageId);
       } else {
         engine.loadScene(null);
+        engine.initPages();
       }
 
       // Set initial size
@@ -440,6 +450,30 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
       setShowMermaidDialog(false);
     }, []);
 
+    // ── Minimap navigation ───────────────────────────
+
+    const handleMinimapNavigate = useCallback((scrollX: number, scrollY: number) => {
+      engineRef.current?.setViewState({ scrollX, scrollY });
+    }, []);
+
+    // ── Page operations ──────────────────────────────
+
+    const handleSwitchPage = useCallback((pageId: string) => {
+      engineRef.current?.switchToPage(pageId);
+    }, []);
+
+    const handleAddPage = useCallback(() => {
+      engineRef.current?.addPage();
+    }, []);
+
+    const handleDeletePage = useCallback((pageId: string) => {
+      engineRef.current?.deletePage(pageId);
+    }, []);
+
+    const handleRenamePage = useCallback((pageId: string, name: string) => {
+      engineRef.current?.renamePage(pageId, name);
+    }, []);
+
     // ── Selected elements for property panel ─────────
 
     const selectedElements = selectedIds
@@ -619,6 +653,40 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
             theme={resolvedTheme}
             onConvert={handleMermaidConvert}
             onClose={() => setShowMermaidDialog(false)}
+          />
+        )}
+
+        {/* Minimap */}
+        {showMinimap && !showPresentation && (
+          <Minimap
+            elements={engineRef.current?.scene.getElements() ?? []}
+            viewState={viewState}
+            canvasWidth={containerRef.current?.clientWidth ?? 800}
+            canvasHeight={containerRef.current?.clientHeight ?? 600}
+            theme={resolvedTheme}
+            onNavigate={handleMinimapNavigate}
+          />
+        )}
+
+        {/* Page Navigator */}
+        {!readOnly && pages.length > 0 && !showPresentation && (
+          <PageNavigator
+            pages={pages}
+            activePageId={activePageId}
+            onSwitchPage={handleSwitchPage}
+            onAddPage={handleAddPage}
+            onDeletePage={handleDeletePage}
+            onRenamePage={handleRenamePage}
+            theme={resolvedTheme}
+          />
+        )}
+
+        {/* Presentation Mode */}
+        {showPresentation && (
+          <PresentationMode
+            elements={engineRef.current?.scene.getElements() ?? []}
+            theme={resolvedTheme}
+            onExit={() => setShowPresentation(false)}
           />
         )}
       </div>

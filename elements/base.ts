@@ -13,6 +13,12 @@ import type {
   CheckboxElement,
   RadioGroupElement,
   FrameElement,
+  ConnectorElement,
+  StickyNoteElement,
+  ImageElement,
+  EmbedElement,
+  TableElement,
+  CommentElement,
   Bounds,
   Vec2,
 } from '../core/types';
@@ -119,6 +125,30 @@ export function createFrame(o: Partial<FrameElement> = {}): FrameElement {
   return { ...BASE_DEFAULTS, seed: newSeed(), id: generateId(), type: 'frame', x: 0, y: 0, width: 300, height: 200, label: 'Frame', childIds: [], clipX: false, clipY: false, padding: 12, frameBackground: 'transparent', backgroundColor: 'transparent', ...o };
 }
 
+export function createConnector(o: Partial<ConnectorElement> = {}): ConnectorElement {
+  return { ...BASE_DEFAULTS, seed: newSeed(), id: generateId(), type: 'connector', x: 0, y: 0, width: 0, height: 0, startId: null, endId: null, startPort: 'auto', endPort: 'auto', pathPoints: [], arrowheadEnd: true, arrowheadStart: false, lineStyle: 'straight', label: '', ...o };
+}
+
+export function createStickyNote(o: Partial<StickyNoteElement> = {}): StickyNoteElement {
+  return { ...BASE_DEFAULTS, seed: newSeed(), id: generateId(), type: 'stickynote', x: 0, y: 0, width: 160, height: 160, text: '', fontSize: 14, fontFamily: 'system-ui, sans-serif', noteColor: '#fff9c4', ...o };
+}
+
+export function createImage(o: Partial<ImageElement> = {}): ImageElement {
+  return { ...BASE_DEFAULTS, seed: newSeed(), id: generateId(), type: 'image', x: 0, y: 0, width: 200, height: 200, src: '', alt: '', objectFit: 'contain', ...o };
+}
+
+export function createEmbed(o: Partial<EmbedElement> = {}): EmbedElement {
+  return { ...BASE_DEFAULTS, seed: newSeed(), id: generateId(), type: 'embed', x: 0, y: 0, width: 280, height: 60, url: '', title: 'Embed', ...o };
+}
+
+export function createTable(o: Partial<TableElement> = {}): TableElement {
+  return { ...BASE_DEFAULTS, seed: newSeed(), id: generateId(), type: 'table', x: 0, y: 0, width: 300, height: 120, cols: 3, rows: 3, cells: [['', '', ''], ['', '', ''], ['', '', '']], colWidths: [100, 100, 100], rowHeights: [40, 40, 40], showHeader: true, headerBackground: 'rgba(0,0,0,0.06)', ...o };
+}
+
+export function createComment(o: Partial<CommentElement> = {}): CommentElement {
+  return { ...BASE_DEFAULTS, seed: newSeed(), id: generateId(), type: 'comment', x: 0, y: 0, width: 24, height: 28, text: '', author: '', timestamp: new Date().toISOString(), resolved: false, markerColor: '#f59e0b', ...o };
+}
+
 /** Generic factory — dispatches to the correct creator based on type. */
 export function createElement(type: BoardierElementType, overrides: Partial<BoardierElement> = {}): BoardierElement {
   switch (type) {
@@ -134,5 +164,11 @@ export function createElement(type: BoardierElementType, overrides: Partial<Boar
     case 'checkbox':  return createCheckbox(overrides as any);
     case 'radiogroup': return createRadioGroup(overrides as any);
     case 'frame':     return createFrame(overrides as any);
+    case 'connector': return createConnector(overrides as any);
+    case 'stickynote': return createStickyNote(overrides as any);
+    case 'image':     return createImage(overrides as any);
+    case 'embed':     return createEmbed(overrides as any);
+    case 'table':     return createTable(overrides as any);
+    case 'comment':   return createComment(overrides as any);
   }
 }
