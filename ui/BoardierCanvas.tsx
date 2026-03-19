@@ -569,7 +569,7 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
 
         {/* Toolbar */}
         {!readOnly && (
-          <DraggablePanel id="toolbar" layout={fullConfig.layout} theme={resolvedTheme} defaultStyle={{ left: 12, top: '50%', transform: 'translateY(-50%)' }}>
+          <DraggablePanel id="toolbar" layout={fullConfig.layout} theme={resolvedTheme} defaultStyle={{ top: 12, left: '50%', transform: 'translateX(-50%)' }}>
             <Toolbar activeTool={activeTool} onToolChange={handleToolChange} theme={resolvedTheme} onMermaidConvert={() => setShowMermaidDialog(true)} />
           </DraggablePanel>
         )}

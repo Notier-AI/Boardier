@@ -240,7 +240,7 @@ export const Toolbar: React.FC<ToolbarProps> = React.memo(({ activeTool, onToolC
       ref={containerRef}
       style={{
         display: 'flex',
-        flexDirection: 'column',
+        flexDirection: 'row',
         gap: GAP,
         padding: 6,
         background: theme.panelBackground,
@@ -255,7 +255,7 @@ export const Toolbar: React.FC<ToolbarProps> = React.memo(({ activeTool, onToolC
         const isDragging = dragIdx === i;
         const isDropTarget = dragIdx !== null && overIdx === i && dragIdx !== i;
         return (
-          <Tooltip key={t.type} text={t.label} shortcut={t.shortcut || undefined} theme={theme} placement="right">
+          <Tooltip key={t.type} text={t.label} shortcut={t.shortcut || undefined} theme={theme} placement="bottom">
             <button
               onPointerDown={e => handlePointerDown(e, i)}
               onContextMenu={e => { e.preventDefault(); e.stopPropagation(); moveToOverflow(t.type); }}
@@ -270,7 +270,7 @@ export const Toolbar: React.FC<ToolbarProps> = React.memo(({ activeTool, onToolC
       })}
 
       {/* Separator + More button */}
-      <div style={{ width: ITEM_SIZE, height: 1, background: theme.panelBorder, margin: '2px 0' }} />
+      <div style={{ width: 1, height: ITEM_SIZE, background: theme.panelBorder, margin: '0 2px' }} />
       <button
         title="More tools..."
         onClick={() => setShowMore(v => !v)}
@@ -283,7 +283,7 @@ export const Toolbar: React.FC<ToolbarProps> = React.memo(({ activeTool, onToolC
         onMouseLeave={e => { if (!showMore) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
       >
         <svg width={16} height={16} viewBox="0 0 24 24" fill="currentColor" stroke="none">
-          <circle cx="12" cy="5" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="12" cy="19" r="2" />
+          <circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" />
         </svg>
       </button>
 
@@ -293,9 +293,9 @@ export const Toolbar: React.FC<ToolbarProps> = React.memo(({ activeTool, onToolC
           ref={moreRef}
           style={{
             position: 'absolute',
-            left: '100%',
-            bottom: 0,
-            marginLeft: 8,
+            top: '100%',
+            left: 0,
+            marginTop: 8,
             display: 'flex',
             flexDirection: 'column',
             gap: 4,

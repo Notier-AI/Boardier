@@ -98,7 +98,7 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
     </span>
   );
 
-  const sep = <div style={{ width: 1, alignSelf: 'stretch', background: theme.panelBorder, flexShrink: 0 }} />;
+  const sep = <div style={{ height: 1, alignSelf: 'stretch', background: theme.panelBorder, flexShrink: 0 }} />;
   const lbl: React.CSSProperties = { fontSize: 8, fontWeight: 700, color: theme.panelTextSecondary, letterSpacing: 0.3, textTransform: 'uppercase', lineHeight: 1, whiteSpace: 'nowrap' };
   const grp: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'center' };
   const trackBg = theme.panelBorder;
@@ -126,8 +126,8 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
     <>
       <style>{sliderCSS}</style>
       <div style={{
-        position: 'absolute', top: 8, left: '50%', transform: 'translateX(-50%)',
-        display: 'flex', gap: 12, padding: '10px 14px',
+        position: 'absolute', top: '50%', left: 12, transform: 'translateY(-50%)',
+        display: 'flex', flexDirection: 'column', gap: 12, padding: '14px 10px',
         background: theme.panelBackground, border: `1px solid ${theme.panelBorder}`,
         borderRadius: theme.borderRadius, boxShadow: theme.shadow, zIndex: 10,
         alignItems: 'center', fontFamily: theme.uiFontFamily,
@@ -173,7 +173,7 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
         {sep}
 
         {/* ── Sliders: width, sloppiness, opacity ── */}
-        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center' }}>
           <div style={grp}>
             <span style={lbl}>{first.strokeWidth}px</span>
             {slider(first.strokeWidth, 1, 12, 1, v => onUpdate({ strokeWidth: v }))}
