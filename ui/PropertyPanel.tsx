@@ -76,22 +76,22 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
   /* ── helpers ──────────────────────────────────────── */
   const swatch = (color: string, active: boolean, onClick: () => void) => (
     <button key={color} onClick={onClick} style={{
-      width: 14, height: 14, borderRadius: 3,
+      width: 18, height: 18, borderRadius: 3,
       border: active ? `2px solid ${theme.selectionColor}` : `1px solid ${theme.panelBorder}`,
       background: color === 'transparent'
-        ? `repeating-conic-gradient(${theme.panelBorder} 0% 25%, transparent 0% 50%) 50% / 6px 6px`
+        ? `repeating-conic-gradient(${theme.panelBorder} 0% 25%, transparent 0% 50%) 50% / 8px 8px`
         : color,
       cursor: 'pointer', padding: 0, flexShrink: 0,
     }} />
   );
 
   const customPicker = (currentColor: string, onPick: (c: string) => void, ref: React.RefObject<HTMLInputElement | null>) => (
-    <span style={{ position: 'relative', display: 'inline-block', width: 14, height: 14 }}>
+    <span style={{ position: 'relative', display: 'inline-block', width: 18, height: 18 }}>
       <input ref={ref} type="color" value={currentColor === 'transparent' ? '#000000' : currentColor}
         onChange={e => onPick(e.target.value)} tabIndex={-1}
         style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer', border: 'none', padding: 0 }}
       />
-      <span style={{ width: 14, height: 14, borderRadius: 3, border: `1px dashed ${theme.panelBorder}`, background: 'transparent',
+      <span style={{ width: 18, height: 18, borderRadius: 3, border: `1px dashed ${theme.panelBorder}`, background: 'transparent',
         display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.panelTextSecondary, pointerEvents: 'none' }}>
         <svg width={7} height={7} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
       </span>
@@ -100,14 +100,14 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
 
   const sep = <div style={{ width: 1, alignSelf: 'stretch', background: theme.panelBorder, flexShrink: 0 }} />;
   const lbl: React.CSSProperties = { fontSize: 8, fontWeight: 700, color: theme.panelTextSecondary, letterSpacing: 0.3, textTransform: 'uppercase', lineHeight: 1, whiteSpace: 'nowrap' };
-  const grp: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center' };
+  const grp: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'center' };
   const trackBg = theme.panelBorder;
 
   const pill = (active: boolean, onClick: () => void, child: React.ReactNode, title?: string) => (
     <button onClick={onClick} title={title} style={{
-      width: 22, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
+      width: 28, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
       border: `1px solid ${active ? theme.selectionColor : theme.panelBorder}`,
-      borderRadius: 3, background: active ? theme.panelActive : 'transparent',
+      borderRadius: 4, background: active ? theme.panelActive : 'transparent',
       cursor: 'pointer', color: theme.panelText,
     }}>{child}</button>
   );
@@ -115,7 +115,7 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
   const slider = (value: number, min: number, max: number, step: number, onChange: (v: number) => void) => (
     <input className={SLIDER_CLASS} type="range" min={min} max={max} step={step}
       value={value} onChange={e => onChange(parseFloat(e.target.value))}
-      style={{ width: 36, background: `linear-gradient(90deg, ${theme.selectionColor} ${((value - min) / (max - min)) * 100}%, ${trackBg} 0%)` }}
+      style={{ width: 48, background: `linear-gradient(90deg, ${theme.selectionColor} ${((value - min) / (max - min)) * 100}%, ${trackBg} 0%)` }}
     />
   );
 
@@ -127,7 +127,7 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
       <style>{sliderCSS}</style>
       <div style={{
         position: 'absolute', top: 8, left: '50%', transform: 'translateX(-50%)',
-        display: 'flex', gap: 6, padding: '5px 8px',
+        display: 'flex', gap: 12, padding: '10px 14px',
         background: theme.panelBackground, border: `1px solid ${theme.panelBorder}`,
         borderRadius: theme.borderRadius, boxShadow: theme.shadow, zIndex: 10,
         alignItems: 'center', fontFamily: theme.uiFontFamily,
@@ -136,17 +136,17 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
 
         {/* ── Colors (merged) ── */}
         <div style={grp}>
-          <div style={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-            <span style={{ ...lbl, width: 10, textAlign: 'right', fontSize: 7 }}>S</span>
-            <div style={{ display: 'flex', gap: 1, flexWrap: 'wrap', maxWidth: 82 }}>
+          <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+            <span style={{ ...lbl, width: 12, textAlign: 'right', fontSize: 9 }}>S</span>
+            <div style={{ display: 'flex', gap: 2, flexWrap: 'wrap', maxWidth: 105 }}>
               {STROKE_COLORS.map(c => swatch(c, first.strokeColor === c, () => onUpdate({ strokeColor: c })))}
               {customPicker(first.strokeColor, c => onUpdate({ strokeColor: c }), strokePickerRef)}
             </div>
           </div>
           {isNotLine && (
-            <div style={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-              <span style={{ ...lbl, width: 10, textAlign: 'right', fontSize: 7 }}>F</span>
-              <div style={{ display: 'flex', gap: 1, flexWrap: 'wrap', maxWidth: 82 }}>
+            <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+              <span style={{ ...lbl, width: 12, textAlign: 'right', fontSize: 9 }}>F</span>
+              <div style={{ display: 'flex', gap: 2, flexWrap: 'wrap', maxWidth: 105 }}>
                 {FILL_COLORS.map(c =>
                   swatch(c, first.backgroundColor === c, () =>
                     onUpdate({ backgroundColor: c, fillStyle: c === 'transparent' ? 'none' : (first.fillStyle === 'none' ? 'solid' : first.fillStyle) })))}
@@ -161,11 +161,11 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
         {/* ── Style: fill pattern + stroke style ── */}
         <div style={grp}>
           {isNotLine && first.backgroundColor !== 'transparent' && first.fillStyle !== 'none' && (
-            <div style={{ display: 'flex', gap: 1 }}>
+            <div style={{ display: 'flex', gap: 3 }}>
               {FILL_STYLE_OPTS.map(f => pill(first.fillStyle === f.v, () => onUpdate({ fillStyle: f.v }), f.icon, f.tip))}
             </div>
           )}
-          <div style={{ display: 'flex', gap: 1 }}>
+          <div style={{ display: 'flex', gap: 3 }}>
             {STROKE_STYLE_OPTS.map(s => pill((first.strokeStyle || 'solid') === s.v, () => onUpdate({ strokeStyle: s.v } as any), s.svg, s.v))}
           </div>
         </div>
@@ -173,7 +173,7 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
         {sep}
 
         {/* ── Sliders: width, sloppiness, opacity ── */}
-        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
           <div style={grp}>
             <span style={lbl}>{first.strokeWidth}px</span>
             {slider(first.strokeWidth, 1, 12, 1, v => onUpdate({ strokeWidth: v }))}
@@ -192,24 +192,24 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
         {isRect && <>
           {sep}
           <div style={grp}>
-            <div style={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
               <span style={lbl}>R</span>
               {!perCorner ? (
                 <>
                   {slider(br, 0, 50, 1, v => onUpdate({ borderRadius: v, borderRadii: undefined } as any))}
                   <button onClick={() => setPerCorner(true)} title="Per-corner radius" style={{
-                    width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
-                    border: `1px solid ${theme.panelBorder}`, borderRadius: 3, background: 'transparent',
+                    width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
+                    border: `1px solid ${theme.panelBorder}`, borderRadius: 4, background: 'transparent',
                     cursor: 'pointer', color: theme.panelTextSecondary,
                   }}>
-                    <svg width={10} height={10} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
+                    <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M1 5V3a2 2 0 0 1 2-2h2" /><path d="M11 1h2a2 2 0 0 1 2 2v2" />
                       <path d="M15 11v2a2 2 0 0 1-2 2h-2" /><path d="M5 15H3a2 2 0 0 1-2-2v-2" />
                     </svg>
                   </button>
                 </>
               ) : (
-                <div style={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: 2, alignItems: 'center' }}>
                   {(['TL', 'TR', 'BR', 'BL'] as const).map((corner, i) => {
                     const vals = borderRadii || [br, br, br, br];
                     return (
@@ -222,8 +222,8 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
                           onUpdate({ borderRadii: next } as any);
                         }}
                         style={{
-                          width: 24, height: 18, textAlign: 'center', fontSize: 8, fontWeight: 700,
-                          border: `1px solid ${theme.panelBorder}`, borderRadius: 3,
+                          width: 32, height: 20, textAlign: 'center', fontSize: 10, fontWeight: 700,
+                          border: `1px solid ${theme.panelBorder}`, borderRadius: 4,
                           background: 'transparent', color: theme.panelText, outline: 'none',
                           fontFamily: 'inherit', padding: 0,
                         }}
@@ -231,11 +231,11 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
                     );
                   })}
                   <button onClick={() => setPerCorner(false)} title="Uniform radius" style={{
-                    width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
-                    border: `1px solid ${theme.selectionColor}`, borderRadius: 3, background: theme.panelActive,
+                    width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
+                    border: `1px solid ${theme.selectionColor}`, borderRadius: 4, background: theme.panelActive,
                     cursor: 'pointer', color: theme.panelText,
                   }}>
-                    <svg width={10} height={10} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
+                    <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M1 5V3a2 2 0 0 1 2-2h2" /><path d="M11 1h2a2 2 0 0 1 2 2v2" />
                       <path d="M15 11v2a2 2 0 0 1-2 2h-2" /><path d="M5 15H3a2 2 0 0 1-2-2v-2" />
                     </svg>
@@ -251,7 +251,7 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
         {/* ── Shadow ── */}
         <div style={grp}>
           <span style={lbl}>Shadow</span>
-          <div style={{ display: 'flex', gap: 1 }}>
+          <div style={{ display: 'flex', gap: 3 }}>
             {[
               { label: '—', value: '', tip: 'None' },
               { label: 'S', value: '2 2 4 rgba(0,0,0,0.2)', tip: 'Small' },
@@ -260,10 +260,10 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
             ].map(s => (
               <button key={s.label} onClick={() => onUpdate({ shadow: s.value || undefined } as any)} title={s.tip}
                 style={{
-                  width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center',
                   border: `1px solid ${(first.shadow || '') === s.value ? theme.selectionColor : theme.panelBorder}`,
-                  borderRadius: 3, background: (first.shadow || '') === s.value ? theme.panelActive : 'transparent',
-                  cursor: 'pointer', color: theme.panelText, fontSize: 8, fontWeight: 700, padding: 0, fontFamily: 'inherit',
+                  borderRadius: 4, background: (first.shadow || '') === s.value ? theme.panelActive : 'transparent',
+                  cursor: 'pointer', color: theme.panelText, fontSize: 10, fontWeight: 700, padding: 0, fontFamily: 'inherit',
                 }}
               >{s.label}</button>
             ))}
@@ -275,20 +275,20 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
           {sep}
           <div style={grp}>
             <span style={lbl}>Size</span>
-            <div style={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: 2, alignItems: 'center' }}>
               {FONT_SIZES.map(s => (
                 <button key={s} onClick={() => onUpdate({ fontSize: s } as any)} style={{
-                  width: 20, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  width: 24, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center',
                   border: `1px solid ${(first as any).fontSize === s ? theme.selectionColor : theme.panelBorder}`,
-                  borderRadius: 3, background: (first as any).fontSize === s ? theme.panelActive : 'transparent',
-                  cursor: 'pointer', fontSize: 8, fontWeight: 700, color: theme.panelText, fontFamily: 'inherit', padding: 0,
+                  borderRadius: 4, background: (first as any).fontSize === s ? theme.panelActive : 'transparent',
+                  cursor: 'pointer', fontSize: 10, fontWeight: 700, color: theme.panelText, fontFamily: 'inherit', padding: 0,
                 }}>{s}</button>
               ))}
               <input type="number" min={8} max={200} value={(first as any).fontSize ?? 18}
                 onChange={e => { const v = parseInt(e.target.value); if (v >= 8 && v <= 200) onUpdate({ fontSize: v } as any); }}
                 style={{
-                  width: 28, height: 18, textAlign: 'center', fontSize: 8, fontWeight: 700,
-                  border: `1px solid ${theme.panelBorder}`, borderRadius: 3,
+                  width: 36, height: 22, textAlign: 'center', fontSize: 10, fontWeight: 700,
+                  border: `1px solid ${theme.panelBorder}`, borderRadius: 4,
                   background: 'transparent', color: theme.panelText, outline: 'none', fontFamily: 'inherit', padding: 0,
                 }}
               />
@@ -301,23 +301,23 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
           {sep}
           <div style={grp}>
             <span style={lbl}>Font</span>
-            <div style={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
               {FONT_FAMILIES.map(f => {
                 const isActive = (hasText ? (first as any).fontFamily : undefined) === f.value;
                 return (
                   <button key={f.label} onClick={() => onUpdate({ fontFamily: f.value } as any)} style={{
-                    padding: '1px 3px', fontSize: 8, fontWeight: 600,
+                    padding: '3px 6px', fontSize: 10, fontWeight: 600,
                     border: `1px solid ${isActive ? theme.selectionColor : theme.panelBorder}`,
-                    borderRadius: 3, background: isActive ? theme.panelActive : 'transparent',
+                    borderRadius: 4, background: isActive ? theme.panelActive : 'transparent',
                     cursor: 'pointer', color: theme.panelText, fontFamily: f.value,
                   }}>{f.label}</button>
                 );
               })}
               {first.roughness > 0 && (
                 <button onClick={() => onUpdate({ fontFamily: HANDWRITTEN_FONT } as any)} style={{
-                  padding: '1px 3px', fontSize: 8, fontWeight: 600,
+                  padding: '3px 6px', fontSize: 10, fontWeight: 600,
                   border: `1px solid ${(first as any).fontFamily === HANDWRITTEN_FONT ? theme.selectionColor : theme.panelBorder}`,
-                  borderRadius: 3, background: (first as any).fontFamily === HANDWRITTEN_FONT ? theme.panelActive : 'transparent',
+                  borderRadius: 4, background: (first as any).fontFamily === HANDWRITTEN_FONT ? theme.panelActive : 'transparent',
                   cursor: 'pointer', color: theme.panelText, fontFamily: HANDWRITTEN_FONT,
                 }}>Hand</button>
               )}
