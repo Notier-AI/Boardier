@@ -278,6 +278,10 @@ export class Renderer {
       { x: b.x + b.width, y: b.y },
       { x: b.x + b.width, y: b.y + b.height },
       { x: b.x, y: b.y + b.height },
+      { x: b.x + b.width / 2, y: b.y }, // Top
+      { x: b.x + b.width, y: b.y + b.height / 2 }, // Right
+      { x: b.x + b.width / 2, y: b.y + b.height }, // Bottom
+      { x: b.x, y: b.y + b.height / 2 }, // Left
     ];
 
     for (const p of positions) {
@@ -426,6 +430,10 @@ export class Renderer {
       { x: b.x + b.width, y: b.y },
       { x: b.x + b.width, y: b.y + b.height },
       { x: b.x, y: b.y + b.height },
+      { x: b.x + b.width / 2, y: b.y }, // Top
+      { x: b.x + b.width, y: b.y + b.height / 2 }, // Right
+      { x: b.x + b.width / 2, y: b.y + b.height }, // Bottom
+      { x: b.x, y: b.y + b.height / 2 }, // Left
     ];
 
     for (let i = 0; i < handles.length; i++) {

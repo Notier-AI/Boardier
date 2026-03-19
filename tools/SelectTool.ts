@@ -291,6 +291,30 @@ export class SelectTool extends BaseTool {
       ctx.scene.clearSelection();
       ctx.requestRender();
     }
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+      const ids = ctx.scene.getSelectedIds();
+      if (ids.length) {
+        ctx.history.push(ctx.scene.getElements());
+        const step = e.shiftKey ? 10 : 1;
+        let dx = 0, dy = 0;
+        if (e.key === 'ArrowUp') dy = -step;
+        if (e.key === 'ArrowDown') dy = step;
+        if (e.key === 'ArrowLeft') dx = -step;
+        if (e.key === 'ArrowRight') dx = step;
+
+        const updates = ids.map(id => {
+          const el = ctx.scene.getElementById(id);
+          if (!el) return null;
+          return { id, changes: { x: el.x + dx, y: el.y + dy } };
+        }).filter(Boolean) as { id: string; changes: Partial<BoardierElement> }[];
+        
+        ctx.scene.updateElements(updates);
+        this.updateBoundConnections(ctx);
+        ctx.commitHistory();
+        ctx.requestRender();
+        e.preventDefault();
+      }
+    }
   }
 
   getBoxSelectBounds(): Bounds | null {
@@ -407,10 +431,14 @@ export class SelectTool extends BaseTool {
       case 1: ny = ob.y + dy; nw = ob.width + dx; nh = ob.height - dy; break;
       case 2: nw = ob.width + dx; nh = ob.height + dy; break;
       case 3: nx = ob.x + dx; nw = ob.width - dx; nh = ob.height + dy; break;
+      case 4: ny = ob.y + dy; nh = ob.height - dy; break; // Top
+      case 5: nw = ob.width + dx; break; // Right
+      case 6: nh = ob.height + dy; break; // Bottom
+      case 7: nx = ob.x + dx; nw = ob.width - dx; break; // Left
     }
 
-    if (nw < 5) { nw = 5; if (this.resizeHandle === 0 || this.resizeHandle === 3) nx = ob.x + ob.width - 5; }
-    if (nh < 5) { nh = 5; if (this.resizeHandle === 0 || this.resizeHandle === 1) ny = ob.y + ob.height - 5; }
+    if (nw < 5) { nw = 5; if (this.resizeHandle === 0 || this.resizeHandle === 3 || this.resizeHandle === 7) nx = ob.x + ob.width - 5; }
+    if (nh < 5) { nh = 5; if (this.resizeHandle === 0 || this.resizeHandle === 1 || this.resizeHandle === 4) ny = ob.y + ob.height - 5; }
 
     // Snap resized bounds against reference edges
     const { guides, snapDx, snapDy } = this.computeSmartGuidesAndSnap(ctx, [{ x: nx, y: ny, width: nw, height: nh }]);
@@ -418,10 +446,11 @@ export class SelectTool extends BaseTool {
 
     // Apply snap to the moving edges only
     const h = this.resizeHandle;
-    if (h === 0 || h === 3) { nx += snapDx; nw -= snapDx; }  // left edge moves
-    else { nw += snapDx; }                                    // right edge moves
-    if (h === 0 || h === 1) { ny += snapDy; nh -= snapDy; }  // top edge moves
-    else { nh += snapDy; }                                    // bottom edge moves
+    if (h === 0 || h === 3 || h === 7) { nx += snapDx; nw -= snapDx; }  // left edge moves
+    else if (h === 1 || h === 2 || h === 5) { nw += snapDx; }           // right edge moves
+    
+    if (h === 0 || h === 1 || h === 4) { ny += snapDy; nh -= snapDy; }  // top edge moves
+    else if (h === 2 || h === 3 || h === 6) { nh += snapDy; }           // bottom edge moves
 
     if (nw < 5) nw = 5;
     if (nh < 5) nh = 5;
