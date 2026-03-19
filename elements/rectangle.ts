@@ -19,15 +19,22 @@ function render(ctx: CanvasRenderingContext2D, el: RectangleElement): void {
   // Determine effective border radius
   const radii = el.borderRadii || (el.borderRadius > 0 ? [el.borderRadius, el.borderRadius, el.borderRadius, el.borderRadius] : null);
 
-  if (el.roughness > 0 && !radii) {
+  if (el.roughness > 0) {
     // Hand-drawn style
     if (el.fillStyle !== 'none' && el.backgroundColor !== 'transparent') {
       if (el.fillStyle === 'solid') {
         ctx.fillStyle = el.backgroundColor;
-        roughFillRect(ctx, -hw, -hh, el.width, el.height, el.seed, el.roughness);
+        if (radii) {
+          ctx.beginPath();
+          ctx.roundRect(-hw, -hh, el.width, el.height, radii);
+          ctx.fill();
+        } else {
+          roughFillRect(ctx, -hw, -hh, el.width, el.height, el.seed, el.roughness);
+        }
       } else {
         ctx.beginPath();
-        ctx.rect(-hw, -hh, el.width, el.height);
+        if (radii) ctx.roundRect(-hw, -hh, el.width, el.height, radii);
+        else ctx.rect(-hw, -hh, el.width, el.height);
         drawPatternFill(ctx, el.fillStyle, el.backgroundColor, -hw, -hh, el.width, el.height, el.seed);
       }
     }
@@ -37,7 +44,38 @@ function render(ctx: CanvasRenderingContext2D, el: RectangleElement): void {
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
       applyStrokeStyle(ctx, el.strokeStyle, el.strokeWidth);
-      roughRect(ctx, -hw, -hh, el.width, el.height, el.seed, el.roughness);
+      if (radii) {
+        // Rough strokes on rounded rect: draw with jitter offset lines along rounded path
+        const r = el.roughness;
+        const seed = el.seed;
+        for (let pass = 0; pass < 2; pass++) {
+          ctx.beginPath();
+          const jx = (i: number) => (Math.sin(seed * 13.7 + i * 7.3 + pass * 31) * r * 1.2);
+          const jy = (i: number) => (Math.cos(seed * 9.1 + i * 11.1 + pass * 17) * r * 1.2);
+          // approximate rounded-rect with jittered points
+          const [tl, tr, br, bl] = radii;
+          // Top edge (after TL corner to before TR corner)
+          ctx.moveTo(-hw + tl + jx(0), -hh + jy(0));
+          ctx.lineTo(hw - tr + jx(1), -hh + jy(1));
+          // TR corner
+          ctx.arcTo(hw + jx(2), -hh + jy(2), hw + jx(3), -hh + tr + jy(3), tr);
+          // Right edge
+          ctx.lineTo(hw + jx(4), hh - br + jy(4));
+          // BR corner
+          ctx.arcTo(hw + jx(5), hh + jy(5), hw - br + jx(6), hh + jy(6), br);
+          // Bottom edge
+          ctx.lineTo(-hw + bl + jx(7), hh + jy(7));
+          // BL corner
+          ctx.arcTo(-hw + jx(8), hh + jy(8), -hw + jx(9), hh - bl + jy(9), bl);
+          // Left edge
+          ctx.lineTo(-hw + jx(10), -hh + tl + jy(10));
+          // TL corner
+          ctx.arcTo(-hw + jx(11), -hh + jy(11), -hw + tl + jx(12), -hh + jy(12), tl);
+          ctx.stroke();
+        }
+      } else {
+        roughRect(ctx, -hw, -hh, el.width, el.height, el.seed, el.roughness);
+      }
     }
   } else {
     // Clean style

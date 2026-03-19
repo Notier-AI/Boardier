@@ -35,6 +35,8 @@ export class SelectTool extends BaseTool {
   private rotateElementId: string = '';
   private rotateStartAngle: number = 0;
   private rotateOrigRotation: number = 0;
+  // Bind target hover (for line endpoint reconnection highlighting)
+  hoverBindTargetId: string | null = null;
 
   getCursor(): string {
     return 'default';
@@ -243,12 +245,26 @@ export class SelectTool extends BaseTool {
     }
   }
 
-  onPointerUp(ctx: ToolContext, _world: Vec2, _e: PointerEvent): void {
+  onPointerUp(ctx: ToolContext, world: Vec2, _e: PointerEvent): void {
     if (this.mode === 'move') {
       // Auto-include elements in frames after move
       this.autoIncludeInFrames(ctx);
       ctx.commitHistory();
-    } else if (this.mode === 'resize' || this.mode === 'rotate' || this.mode === 'lineEndpoint' || this.mode === 'lineControl') {
+    } else if (this.mode === 'lineEndpoint') {
+      // Finalize binding for the dragged endpoint
+      const el = ctx.scene.getElementById(this.lineHandleElementId);
+      if (el && (el.type === 'line' || el.type === 'arrow')) {
+        const vs = ctx.getViewState();
+        const tolerance = 20 / vs.zoom;
+        const target = this.findBindTargetForEndpoint(ctx, world, this.lineHandleElementId, tolerance);
+        const bindingKey = this.lineEndpointIndex === 0 ? 'startBindingId' : 'endBindingId';
+        ctx.scene.updateElement(this.lineHandleElementId, {
+          [bindingKey]: target ? target.id : undefined,
+        } as any);
+      }
+      this.hoverBindTargetId = null;
+      ctx.commitHistory();
+    } else if (this.mode === 'resize' || this.mode === 'rotate' || this.mode === 'lineControl') {
       ctx.commitHistory();
     }
     this.mode = 'none';
@@ -432,8 +448,27 @@ export class SelectTool extends BaseTool {
   private doLineEndpointDrag(ctx: ToolContext, world: Vec2): void {
     const el = ctx.scene.getElementById(this.lineHandleElementId);
     if (!el || (el.type !== 'line' && el.type !== 'arrow')) return;
-    const pts = [...(el as any).points] as Vec2[];
-    pts[this.lineEndpointIndex] = { x: world.x - el.x, y: world.y - el.y };
+    const lineEl = el as any;
+    const pts = [...lineEl.points] as Vec2[];
+    const vs = ctx.getViewState();
+    const tolerance = 20 / vs.zoom;
+
+    // Find bind target near the dragged endpoint
+    const target = this.findBindTargetForEndpoint(ctx, world, this.lineHandleElementId, tolerance);
+    const newHover = target ? target.id : null;
+    if (newHover !== this.hoverBindTargetId) {
+      this.hoverBindTargetId = newHover;
+    }
+
+    if (target) {
+      // Snap to the border of the target element
+      const otherIdx = this.lineEndpointIndex === 0 ? 1 : 0;
+      const otherAbs: Vec2 = { x: el.x + pts[otherIdx].x, y: el.y + pts[otherIdx].y };
+      const bp = this.closestBorderPoint(target, otherAbs);
+      pts[this.lineEndpointIndex] = { x: bp.x - el.x, y: bp.y - el.y };
+    } else {
+      pts[this.lineEndpointIndex] = { x: world.x - el.x, y: world.y - el.y };
+    }
 
     const w = Math.max(Math.abs(pts[1].x - pts[0].x), 1);
     const h = Math.max(Math.abs(pts[1].y - pts[0].y), 1);
@@ -444,6 +479,22 @@ export class SelectTool extends BaseTool {
       height: h,
     });
     ctx.requestRender();
+  }
+
+  /** Find a bindable element near a point (excludes lines/arrows/freehand/comment and the line itself). */
+  private findBindTargetForEndpoint(ctx: ToolContext, world: Vec2, excludeId: string, tolerance: number): BoardierElement | null {
+    const elements = ctx.scene.getElements();
+    for (let i = elements.length - 1; i >= 0; i--) {
+      const el = elements[i];
+      if (el.id === excludeId) continue;
+      if (el.type === 'line' || el.type === 'arrow' || el.type === 'freehand' || el.type === 'comment') continue;
+      const b = getElementBounds(el);
+      if (world.x >= b.x - tolerance && world.x <= b.x + b.width + tolerance &&
+          world.y >= b.y - tolerance && world.y <= b.y + b.height + tolerance) {
+        return el;
+      }
+    }
+    return null;
   }
 
   // ─── Line/arrow control-point (bézier bend) ───────────────────

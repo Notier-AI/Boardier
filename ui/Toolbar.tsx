@@ -78,7 +78,7 @@ function loadOrder(): BoardierToolType[] {
   return DEFAULT_TOOLS.map(t => t.type).filter(t => !overflowSet.has(t));
 }
 
-const DEFAULT_OVERFLOW: BoardierToolType[] = ['checkbox', 'radiogroup', 'table', 'embed', 'comment'];
+const DEFAULT_OVERFLOW: BoardierToolType[] = ['checkbox', 'radiogroup', 'table', 'comment'];
 
 function loadOverflow(): BoardierToolType[] {
   try {

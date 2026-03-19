@@ -573,13 +573,16 @@ export class BoardierEngine {
 
   private _doRender(): void {
     const selectTool = this.tools.get('select') as SelectTool;
-    // Collect binding highlight IDs from active line/arrow tool
+    // Collect binding highlight IDs from active line/arrow tool or select tool endpoint drag
     const bindHighlightIds: string[] = [];
     const lineTool = this.tools.get('line') as LineTool | undefined;
     const arrowTool = this.tools.get('arrow') as LineTool | undefined;
     const activeLT = this.activeToolType === 'line' ? lineTool : this.activeToolType === 'arrow' ? arrowTool : null;
     if (activeLT?.hoverBindTargetId) {
       bindHighlightIds.push(activeLT.hoverBindTargetId);
+    }
+    if (selectTool?.hoverBindTargetId) {
+      bindHighlightIds.push(selectTool.hoverBindTargetId);
     }
 
     this.renderer.render(
