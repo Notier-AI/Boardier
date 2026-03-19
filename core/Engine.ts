@@ -23,7 +23,6 @@ import { EraseTool } from '../tools/EraseTool';
 import { IconTool } from '../tools/IconTool';
 import { MarkerTool } from '../tools/MarkerTool';
 import { WidgetTool } from '../tools/WidgetTool';
-import { ConnectorTool } from '../tools/ConnectorTool';
 import { ImageTool } from '../tools/ImageTool';
 import { CommentTool } from '../tools/CommentTool';
 import { clamp } from '../utils/math';
@@ -61,6 +60,8 @@ export class BoardierEngine {
   private _onTextEdit?: (id: string) => void;
   private _onShapeLabelEdit?: (id: string) => void;
   private _onIconEdit?: (id: string) => void;
+  private _onEmbedUrl?: (id: string) => void;
+  private _onTableCellEdit?: (id: string, row: number, col: number) => void;
 
   constructor(canvas: HTMLCanvasElement, config: BoardierConfig, theme: BoardierTheme) {
     this.canvas = canvas;
@@ -85,8 +86,6 @@ export class BoardierEngine {
       ['checkbox', new WidgetTool('checkbox', 140, 28)],
       ['radiogroup', new WidgetTool('radiogroup', 140, 80)],
       ['frame', new WidgetTool('frame', 300, 200)],
-      ['connector', new ConnectorTool()],
-      ['stickynote', new WidgetTool('stickynote' as any, 160, 160)],
       ['image', new ImageTool()],
       ['embed', new WidgetTool('embed' as any, 280, 60)],
       ['table', new WidgetTool('table' as any, 300, 120)],
@@ -122,6 +121,7 @@ export class BoardierEngine {
       setToolType: (t) => this.setTool(t),
       setCursor: (c) => { this.canvas.style.cursor = c; },
       startTextEditing: (id) => { this._onTextEdit?.(id); },
+      startEmbedUrlEditing: (id) => { this._onEmbedUrl?.(id); },
       getCanvasRect: () => this.canvas.getBoundingClientRect(),
     };
   }
@@ -467,7 +467,6 @@ export class BoardierEngine {
         v: 'select', r: 'rectangle', e: 'ellipse', d: 'diamond',
         l: 'line', a: 'arrow', p: 'freehand', t: 'text',
         h: 'pan', x: 'eraser', m: 'marker', f: 'frame',
-        c: 'connector', n: 'stickynote',
       };
       if (toolMap[e.key]) { this.setTool(toolMap[e.key]); return; }
 
@@ -527,16 +526,35 @@ export class BoardierEngine {
       this.scene.updateElement(hit.id, { selectedIndex: next } as any);
       this.history.push(this.scene.getElements());
       this.render();
-    } else if (hit.type === 'stickynote') {
-      // Open text editing for sticky note
-      this.scene.setSelection([hit.id]);
-      this._onTextEdit?.(hit.id);
     } else if (hit.type === 'comment') {
       // Toggle comment resolved state
       this.history.push(this.scene.getElements());
       this.scene.updateElement(hit.id, { resolved: !(hit as any).resolved } as any);
       this.history.push(this.scene.getElements());
       this.render();
+    } else if (hit.type === 'table') {
+      // Find which cell was double-clicked
+      const table = hit as any;
+      const localX = world.x - table.x;
+      const localY = world.y - table.y;
+      let cumX = 0, col = -1;
+      for (let c = 0; c < table.cols; c++) {
+        if (localX >= cumX && localX < cumX + table.colWidths[c]) { col = c; break; }
+        cumX += table.colWidths[c];
+      }
+      let cumY = 0, row = -1;
+      for (let r = 0; r < table.rows; r++) {
+        if (localY >= cumY && localY < cumY + table.rowHeights[r]) { row = r; break; }
+        cumY += table.rowHeights[r];
+      }
+      if (row >= 0 && col >= 0) {
+        this.scene.setSelection([hit.id]);
+        this._onTableCellEdit?.(hit.id, row, col);
+      }
+    } else if (hit.type === 'embed') {
+      // Double-click embed → edit URL
+      this.scene.setSelection([hit.id]);
+      this._onEmbedUrl?.(hit.id);
     }
   }
 
@@ -555,6 +573,15 @@ export class BoardierEngine {
 
   private _doRender(): void {
     const selectTool = this.tools.get('select') as SelectTool;
+    // Collect binding highlight IDs from active line/arrow tool
+    const bindHighlightIds: string[] = [];
+    const lineTool = this.tools.get('line') as LineTool | undefined;
+    const arrowTool = this.tools.get('arrow') as LineTool | undefined;
+    const activeLT = this.activeToolType === 'line' ? lineTool : this.activeToolType === 'arrow' ? arrowTool : null;
+    if (activeLT?.hoverBindTargetId) {
+      bindHighlightIds.push(activeLT.hoverBindTargetId);
+    }
+
     this.renderer.render(
       this.scene.getElements(),
       this.viewState,
@@ -566,6 +593,7 @@ export class BoardierEngine {
         boxSelect: selectTool?.getBoxSelectBounds?.() ?? null,
         lassoPath: selectTool?.getLassoPath?.() ?? null,
         smartGuides: selectTool?.getSmartGuides?.() ?? [],
+        bindHighlightIds,
       },
     );
   }
@@ -584,6 +612,8 @@ export class BoardierEngine {
   onTextEditRequest(cb: (id: string) => void): void { this._onTextEdit = cb; }
   onShapeLabelEditRequest(cb: (id: string) => void): void { this._onShapeLabelEdit = cb; }
   onIconEditRequest(cb: (id: string) => void): void { this._onIconEdit = cb; }
+  onEmbedUrlRequest(cb: (id: string) => void): void { this._onEmbedUrl = cb; }
+  onTableCellEditRequest(cb: (id: string, row: number, col: number) => void): void { this._onTableCellEdit = cb; }
 
   dispose(): void {
     cancelAnimationFrame(this._rafId);
@@ -594,6 +624,8 @@ export class BoardierEngine {
     this._onTextEdit = undefined;
     this._onShapeLabelEdit = undefined;
     this._onIconEdit = undefined;
+    this._onEmbedUrl = undefined;
+    this._onTableCellEdit = undefined;
   }
 
   // ─── AI-Facing API ──────────────────────────────────────────────

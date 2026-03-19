@@ -12,8 +12,7 @@ import '../elements/arrow';
 import '../elements/freehand';
 import '../elements/text';
 import '../elements/icon';
-import '../elements/connector';
-import '../elements/stickynote';
+
 import '../elements/image';
 import '../elements/embed';
 import '../elements/table';

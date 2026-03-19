@@ -2,6 +2,7 @@ import type { LineElement, Vec2, Bounds } from '../core/types';
 import { registerElement } from './base';
 import { distanceToPolyline, distanceToBezier } from '../utils/math';
 import { roughPolyline, roughBezier } from '../utils/roughDraw';
+import { applyStrokeStyle } from '../utils/renderHelpers';
 
 function render(ctx: CanvasRenderingContext2D, el: LineElement): void {
   if (el.points.length < 2) return;
@@ -11,6 +12,7 @@ function render(ctx: CanvasRenderingContext2D, el: LineElement): void {
   ctx.lineWidth = el.strokeWidth;
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
+  applyStrokeStyle(ctx, el.strokeStyle, el.strokeWidth);
 
   const p0: Vec2 = { x: el.x + el.points[0].x, y: el.y + el.points[0].y };
   const p1: Vec2 = { x: el.x + el.points[1].x, y: el.y + el.points[1].y };

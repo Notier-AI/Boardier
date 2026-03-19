@@ -2,6 +2,7 @@ import type { ArrowElement, Vec2, Bounds } from '../core/types';
 import { registerElement } from './base';
 import { distanceToPolyline, distanceToBezier } from '../utils/math';
 import { roughPolyline, roughBezier, mulberry32, roughLineTo } from '../utils/roughDraw';
+import { applyStrokeStyle } from '../utils/renderHelpers';
 
 const ARROWHEAD_LEN = 14;
 const ARROWHEAD_ANGLE = Math.PI / 7;
@@ -41,6 +42,7 @@ function render(ctx: CanvasRenderingContext2D, el: ArrowElement): void {
   ctx.lineWidth = el.strokeWidth;
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
+  applyStrokeStyle(ctx, el.strokeStyle, el.strokeWidth);
 
   const p0: Vec2 = { x: el.x + el.points[0].x, y: el.y + el.points[0].y };
   const p1: Vec2 = { x: el.x + el.points[1].x, y: el.y + el.points[1].y };

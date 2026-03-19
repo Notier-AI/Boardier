@@ -1,6 +1,5 @@
 import type { EmbedElement, Vec2, Bounds } from '../core/types';
 import { registerElement } from './base';
-import { HANDWRITTEN_FONT } from '../utils/colors';
 
 function render(ctx: CanvasRenderingContext2D, el: EmbedElement): void {
   ctx.save();
@@ -9,19 +8,10 @@ function render(ctx: CanvasRenderingContext2D, el: EmbedElement): void {
   const x = el.x, y = el.y, w = el.width, h = el.height;
   const r = 6;
 
-  // Card background
-  ctx.fillStyle = el.backgroundColor;
+  // Background
+  ctx.fillStyle = el.backgroundColor !== 'transparent' ? el.backgroundColor : '#f8f9fa';
   ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.lineTo(x + w - r, y);
-  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-  ctx.lineTo(x + w, y + h - r);
-  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-  ctx.lineTo(x + r, y + h);
-  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-  ctx.lineTo(x, y + r);
-  ctx.quadraticCurveTo(x, y, x + r, y);
-  ctx.closePath();
+  ctx.roundRect(x, y, w, h, r);
   ctx.fill();
 
   // Border
@@ -29,43 +19,61 @@ function render(ctx: CanvasRenderingContext2D, el: EmbedElement): void {
   ctx.lineWidth = el.strokeWidth;
   ctx.stroke();
 
-  // Link icon (chain link)
-  const iconSize = 20;
-  const iconX = x + 12;
-  const iconY = y + h / 2;
-  ctx.strokeStyle = el.strokeColor;
-  ctx.lineWidth = 2;
-  ctx.lineCap = 'round';
+  // If no URL yet, show placeholder prompting
+  if (!el.url) {
+    ctx.fillStyle = el.strokeColor;
+    ctx.globalAlpha = el.opacity * 0.4;
+    ctx.font = 'bold 14px system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('Click to set URL', x + w / 2, y + h / 2);
+  } else {
+    // Top bar with URL
+    const barH = 28;
+    ctx.fillStyle = 'rgba(0,0,0,0.04)';
+    ctx.fillRect(x, y, w, barH);
+    ctx.strokeStyle = el.strokeColor;
+    ctx.globalAlpha = el.opacity * 0.2;
+    ctx.lineWidth = 0.5;
+    ctx.beginPath();
+    ctx.moveTo(x, y + barH);
+    ctx.lineTo(x + w, y + barH);
+    ctx.stroke();
+    ctx.globalAlpha = el.opacity;
 
-  // Simple chain link icon
-  ctx.beginPath();
-  ctx.arc(iconX, iconY - 2, 5, Math.PI * 0.8, Math.PI * 2.2);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.arc(iconX + 8, iconY + 2, 5, Math.PI * 1.8, Math.PI * 3.2);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(iconX + 3, iconY - 3);
-  ctx.lineTo(iconX + 5, iconY + 3);
-  ctx.stroke();
+    // Globe icon
+    ctx.strokeStyle = el.strokeColor;
+    ctx.globalAlpha = el.opacity * 0.5;
+    ctx.lineWidth = 1.5;
+    const gx = x + 14, gy = y + barH / 2;
+    ctx.beginPath();
+    ctx.arc(gx, gy, 6, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(gx - 6, gy);
+    ctx.lineTo(gx + 6, gy);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.ellipse(gx, gy, 3, 6, 0, 0, Math.PI * 2);
+    ctx.stroke();
 
-  // Title
-  const fontFamily = el.roughness > 0 ? HANDWRITTEN_FONT : 'system-ui, sans-serif';
-  ctx.font = `bold 13px ${fontFamily}`;
-  ctx.fillStyle = el.strokeColor;
-  ctx.textAlign = 'left';
-  ctx.textBaseline = 'middle';
-  const title = el.title || 'Embed';
-  const textX = iconX + iconSize + 8;
-  const maxTextW = w - (textX - x) - 10;
-  ctx.fillText(title, textX, y + h / 2 - 8, maxTextW);
+    // URL text
+    ctx.globalAlpha = el.opacity * 0.6;
+    ctx.font = '11px system-ui, sans-serif';
+    ctx.fillStyle = el.strokeColor;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    let urlDisplay = el.url;
+    if (urlDisplay.length > 50) urlDisplay = urlDisplay.substring(0, 50) + '…';
+    ctx.fillText(urlDisplay, x + 26, y + barH / 2, w - 36);
 
-  // URL
-  ctx.font = `11px ${fontFamily}`;
-  ctx.globalAlpha = el.opacity * 0.6;
-  let urlDisplay = el.url;
-  if (urlDisplay.length > 40) urlDisplay = urlDisplay.substring(0, 40) + '…';
-  ctx.fillText(urlDisplay, textX, y + h / 2 + 8, maxTextW);
+    // Center text saying "Web content"
+    ctx.globalAlpha = el.opacity * 0.2;
+    ctx.font = 'bold 13px system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(el.title || el.url, x + w / 2, y + barH + (h - barH) / 2, w - 20);
+  }
 
   ctx.restore();
 }

@@ -72,6 +72,7 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
     const [activeTool, setActiveTool] = useState<BoardierToolType>('select');
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [viewState, setViewState] = useState<ViewState>({ scrollX: 0, scrollY: 0, zoom: 1 });
+    const [elementVersion, setElementVersion] = useState(0);
     const [editingTextId, setEditingTextId] = useState<string | null>(null);
     const [editingLabelId, setEditingLabelId] = useState<string | null>(null);
     const [contextMenu, setContextMenu] = useState<{ position: Vec2 } | null>(null);
@@ -85,6 +86,9 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
     const [showPresentation, setShowPresentation] = useState(false);
     const [pages, setPages] = useState<{ id: string; name: string; elements: BoardierElement[] }[]>([]);
     const [activePageId, setActivePageId] = useState('');
+    const [editingEmbedId, setEditingEmbedId] = useState<string | null>(null);
+    const [editingTableCellId, setEditingTableCellId] = useState<string | null>(null);
+    const [editingTableCell, setEditingTableCell] = useState<{ row: number; col: number } | null>(null);
 
     // Track whether viewport has drifted from content
     const isViewportDrifted = React.useMemo(() => {
@@ -135,6 +139,7 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
       engine.onChange(() => {
         clearTimeout(changeTimer.id);
         changeTimer.id = setTimeout(() => { onChange?.(engine.getSceneData()); }, 120);
+        setElementVersion(v => v + 1);
       });
       engine.onSelectionChange(ids => setSelectedIds(ids));
       engine.onViewChange(vs => setViewState({ ...vs }));
@@ -146,6 +151,11 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
         setShowIconPicker(true);
       });
       engine.onPageChange((p, a) => { setPages([...p]); setActivePageId(a); });
+      engine.onEmbedUrlRequest(id => setEditingEmbedId(id));
+      engine.onTableCellEditRequest((id, row, col) => {
+        setEditingTableCellId(id);
+        setEditingTableCell({ row, col });
+      });
 
       // Initial data
       if (initialData) {
@@ -427,6 +437,54 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
         case 'delete': engine.deleteSelected(); break;
         case 'bringToFront': engine.bringToFront(); break;
         case 'sendToBack': engine.sendToBack(); break;
+        case 'addComment': {
+          // Add a comment near the selected element
+          const selected = engine.scene.getSelectedElements();
+          if (selected.length > 0) {
+            const first = selected[0];
+            const b = getElementBounds(first);
+            const { createComment } = require('../elements/base');
+            const comment = createComment({
+              x: b.x + b.width + 10, y: b.y,
+              text: '', author: '', markerColor: '#f59e0b',
+            });
+            engine.history.push(engine.scene.getElements());
+            engine.scene.addElement(comment);
+            engine.scene.setSelection([comment.id]);
+            engine.history.push(engine.scene.getElements());
+            engine.render();
+          }
+          break;
+        }
+        case 'group': {
+          const ids = engine.scene.getSelectedIds();
+          if (ids.length > 1) {
+            const groupId = Math.random().toString(36).substring(2, 10);
+            engine.history.push(engine.scene.getElements());
+            const updates = ids.map(id => ({
+              id,
+              changes: { groupIds: [...(engine.scene.getElementById(id)?.groupIds || []), groupId] } as Partial<BoardierElement>,
+            }));
+            engine.scene.updateElements(updates);
+            engine.history.push(engine.scene.getElements());
+            engine.render();
+          }
+          break;
+        }
+        case 'ungroup': {
+          const selected = engine.scene.getSelectedElements();
+          if (selected.length > 0) {
+            engine.history.push(engine.scene.getElements());
+            const updates = selected.map(el => ({
+              id: el.id,
+              changes: { groupIds: [] } as Partial<BoardierElement>,
+            }));
+            engine.scene.updateElements(updates);
+            engine.history.push(engine.scene.getElements());
+            engine.render();
+          }
+          break;
+        }
       }
       setContextMenu(null);
     }, []);
@@ -475,10 +533,13 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
     }, []);
 
     // ── Selected elements for property panel ─────────
-
-    const selectedElements = selectedIds
-      .map(id => engineRef.current?.scene.getElementById(id))
-      .filter((e): e is BoardierElement => !!e);
+    // elementVersion forces re-computation when element properties change
+    const selectedElements = React.useMemo(() =>
+      selectedIds
+        .map(id => engineRef.current?.scene.getElementById(id))
+        .filter((e): e is BoardierElement => !!e),
+      [selectedIds, elementVersion],
+    );
 
     // ── Render ───────────────────────────────────────
 
@@ -590,6 +651,77 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
           />
         )}
 
+        {/* Table Cell Editor */}
+        {editingTableCellId && editingTableCell && (() => {
+          const engine = engineRef.current;
+          const el = engine?.scene.getElementById(editingTableCellId) as any;
+          if (!el || el.type !== 'table') return null;
+          // Calculate cell position in screen coords
+          let cellX = el.x;
+          for (let c = 0; c < editingTableCell.col; c++) cellX += el.colWidths[c];
+          let cellY = el.y;
+          for (let r = 0; r < editingTableCell.row; r++) cellY += el.rowHeights[r];
+          const cellW = el.colWidths[editingTableCell.col];
+          const cellH = el.rowHeights[editingTableCell.row];
+          const screenX = cellX * viewState.zoom + viewState.scrollX;
+          const screenY = cellY * viewState.zoom + viewState.scrollY;
+          const screenW = cellW * viewState.zoom;
+          const screenH = cellH * viewState.zoom;
+          const currentText = el.cells[editingTableCell.row]?.[editingTableCell.col] || '';
+          return (
+            <input
+              key={`table-cell-${editingTableCellId}-${editingTableCell.row}-${editingTableCell.col}`}
+              autoFocus
+              defaultValue={currentText}
+              style={{
+                position: 'absolute',
+                left: screenX, top: screenY,
+                width: screenW, height: screenH,
+                padding: '2px 6px',
+                border: `2px solid ${resolvedTheme.selectionColor}`,
+                borderRadius: 0,
+                background: resolvedTheme.panelBackground,
+                color: resolvedTheme.panelText,
+                fontSize: 13 * viewState.zoom,
+                fontFamily: 'system-ui, sans-serif',
+                outline: 'none',
+                boxSizing: 'border-box',
+                zIndex: 20,
+              }}
+              onBlur={(e) => {
+                if (engine && editingTableCellId && editingTableCell) {
+                  const newCells = el.cells.map((row: string[]) => [...row]);
+                  newCells[editingTableCell.row][editingTableCell.col] = e.target.value;
+                  engine.history.push(engine.scene.getElements());
+                  engine.scene.updateElement(editingTableCellId, { cells: newCells } as any);
+                  engine.history.push(engine.scene.getElements());
+                  engine.render();
+                }
+                setEditingTableCellId(null);
+                setEditingTableCell(null);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === 'Escape') {
+                  (e.target as HTMLInputElement).blur();
+                }
+                if (e.key === 'Tab') {
+                  e.preventDefault();
+                  (e.target as HTMLInputElement).blur();
+                  // Move to next cell
+                  const nextCol = editingTableCell.col + 1;
+                  if (nextCol < el.cols) {
+                    setEditingTableCellId(editingTableCellId);
+                    setEditingTableCell({ row: editingTableCell.row, col: nextCol });
+                  } else if (editingTableCell.row + 1 < el.rows) {
+                    setEditingTableCellId(editingTableCellId);
+                    setEditingTableCell({ row: editingTableCell.row + 1, col: 0 });
+                  }
+                }
+              }}
+            />
+          );
+        })()}
+
         {/* Context Menu */}
         {contextMenu && (
           <ContextMenu
@@ -599,6 +731,8 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
             theme={resolvedTheme}
             hasSelection={selectedIds.length > 0}
             canPaste={engineRef.current?.clipboard.hasContent ?? false}
+            hasMultipleSelection={selectedIds.length > 1}
+            isGrouped={selectedElements.some(e => e.groupIds.length > 0)}
           />
         )}
 
@@ -689,6 +823,69 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
             onExit={() => setShowPresentation(false)}
           />
         )}
+
+        {/* Embed URL Dialog */}
+        {editingEmbedId && (
+          <EmbedUrlDialog
+            theme={resolvedTheme}
+            onSubmit={(url) => {
+              const engine = engineRef.current;
+              if (engine && editingEmbedId) {
+                engine.history.push(engine.scene.getElements());
+                engine.scene.updateElement(editingEmbedId, { url, title: url } as any);
+                engine.history.push(engine.scene.getElements());
+                engine.render();
+              }
+              setEditingEmbedId(null);
+            }}
+            onClose={() => {
+              // Remove embed if no URL was set
+              const engine = engineRef.current;
+              if (engine && editingEmbedId) {
+                const el = engine.scene.getElementById(editingEmbedId);
+                if (el && !(el as any).url) {
+                  engine.scene.removeElement(editingEmbedId);
+                  engine.render();
+                }
+              }
+              setEditingEmbedId(null);
+            }}
+          />
+        )}
+
+        {/* Embed iframes — render over embed elements that have URLs */}
+        {(() => {
+          const engine = engineRef.current;
+          if (!engine) return null;
+          const elements = engine.scene.getElements();
+          const embeds = elements.filter(e => e.type === 'embed' && (e as any).url);
+          if (embeds.length === 0) return null;
+          return embeds.map(el => {
+            const embed = el as any;
+            const b = getElementBounds(el);
+            const left = b.x * viewState.zoom + viewState.scrollX;
+            const top = (b.y * viewState.zoom + viewState.scrollY) + 28 * viewState.zoom;
+            const width = b.width * viewState.zoom;
+            const height = (b.height - 28) * viewState.zoom;
+            if (width < 20 || height < 20) return null;
+            return (
+              <iframe
+                key={el.id}
+                src={embed.url}
+                title={embed.title || 'Embed'}
+                sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+                style={{
+                  position: 'absolute',
+                  left, top, width, height,
+                  border: 'none',
+                  borderRadius: '0 0 6px 6px',
+                  pointerEvents: selectedIds.includes(el.id) ? 'none' : 'auto',
+                  opacity: el.opacity,
+                }}
+              />
+            );
+          });
+        })()}
       </div>
     );
   },
@@ -780,6 +977,92 @@ const MermaidDialog: React.FC<{
               background: theme.selectionColor, color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 600, fontFamily: 'inherit',
             }}
           >Convert (Ctrl+Enter)</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ──────────────── Embed URL Dialog ──────────────── */
+
+const EmbedUrlDialog: React.FC<{
+  theme: BoardierTheme;
+  onSubmit: (url: string) => void;
+  onClose: () => void;
+}> = ({ theme, onSubmit, onClose }) => {
+  const [url, setUrl] = useState('https://');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const input = inputRef.current;
+    if (input) {
+      input.focus();
+      input.setSelectionRange(input.value.length, input.value.length);
+    }
+  }, []);
+
+  const handleSubmit = () => {
+    const trimmed = url.trim();
+    if (trimmed && trimmed !== 'https://' && trimmed.startsWith('https://')) {
+      onSubmit(trimmed);
+    }
+  };
+
+  return (
+    <div
+      style={{
+        position: 'absolute', inset: 0,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: 'rgba(0,0,0,0.35)', zIndex: 50,
+      }}
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div
+        style={{
+          background: theme.panelBackground,
+          border: `1px solid ${theme.panelBorder}`,
+          borderRadius: theme.borderRadius + 4,
+          boxShadow: theme.shadow,
+          padding: 20, width: 400, maxWidth: '90%',
+          fontFamily: theme.uiFontFamily,
+        }}
+      >
+        <div style={{ fontWeight: 600, fontSize: 15, color: theme.panelText, marginBottom: 12 }}>
+          Embed Website
+        </div>
+        <div style={{ fontSize: 12, color: theme.panelTextSecondary, marginBottom: 8 }}>
+          Enter the URL of the website to embed:
+        </div>
+        <input
+          ref={inputRef}
+          type="url"
+          value={url}
+          onChange={e => setUrl(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter') handleSubmit(); if (e.key === 'Escape') onClose(); }}
+          placeholder="https://example.com"
+          style={{
+            width: '100%', padding: '8px 12px',
+            border: `1px solid ${theme.panelBorder}`, borderRadius: theme.borderRadius,
+            background: theme.canvasBackground, color: theme.panelText,
+            fontSize: 13, outline: 'none', boxSizing: 'border-box',
+            fontFamily: 'monospace',
+          }}
+        />
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 14 }}>
+          <button
+            onClick={onClose}
+            style={{
+              padding: '6px 16px', border: `1px solid ${theme.panelBorder}`, borderRadius: theme.borderRadius,
+              background: 'transparent', color: theme.panelText, cursor: 'pointer', fontSize: 13, fontFamily: 'inherit',
+            }}
+          >Cancel</button>
+          <button
+            onClick={handleSubmit}
+            style={{
+              padding: '6px 16px', border: 'none', borderRadius: theme.borderRadius,
+              background: theme.selectionColor, color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 600, fontFamily: 'inherit',
+            }}
+          >Embed</button>
         </div>
       </div>
     </div>

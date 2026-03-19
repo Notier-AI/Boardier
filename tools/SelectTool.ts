@@ -124,7 +124,16 @@ export class SelectTool extends BaseTool {
         if (scene.isSelected(hit.id)) scene.setSelection(scene.getSelectedIds().filter(id => id !== hit.id));
         else scene.addToSelection(hit.id);
       } else if (!scene.isSelected(hit.id)) {
-        scene.setSelection([hit.id]);
+        // Auto-select group members if the hit element is in a group
+        if (hit.groupIds.length > 0) {
+          const allElements = scene.getElements();
+          const groupMembers = allElements.filter(el =>
+            el.groupIds.some(gid => hit.groupIds.includes(gid))
+          );
+          scene.setSelection(groupMembers.map(el => el.id));
+        } else {
+          scene.setSelection([hit.id]);
+        }
       }
 
       // Don't allow moving locked elements
@@ -192,6 +201,10 @@ export class SelectTool extends BaseTool {
         updates.push({ id, changes: { x: orig.x + finalDx, y: orig.y + finalDy } });
       }
       ctx.scene.updateElements(updates);
+
+      // Update any lines/arrows bound to moved elements
+      this.updateBoundConnections(ctx);
+
       ctx.requestRender();
     } else if (this.mode === 'boxSelect') {
       const box = normalizeBounds(
@@ -231,7 +244,11 @@ export class SelectTool extends BaseTool {
   }
 
   onPointerUp(ctx: ToolContext, _world: Vec2, _e: PointerEvent): void {
-    if (this.mode === 'move' || this.mode === 'resize' || this.mode === 'rotate' || this.mode === 'lineEndpoint' || this.mode === 'lineControl') {
+    if (this.mode === 'move') {
+      // Auto-include elements in frames after move
+      this.autoIncludeInFrames(ctx);
+      ctx.commitHistory();
+    } else if (this.mode === 'resize' || this.mode === 'rotate' || this.mode === 'lineEndpoint' || this.mode === 'lineControl') {
       ctx.commitHistory();
     }
     this.mode = 'none';
@@ -394,6 +411,19 @@ export class SelectTool extends BaseTool {
     if (nh < 5) nh = 5;
 
     ctx.scene.updateElement(this.resizeElementId, { x: nx, y: ny, width: nw, height: nh });
+
+    // Scale table column widths and row heights proportionally
+    const el = ctx.scene.getElementById(this.resizeElementId);
+    if (el && el.type === 'table') {
+      const scaleX = nw / ob.width;
+      const scaleY = nh / ob.height;
+      const table = el as any;
+      ctx.scene.updateElement(this.resizeElementId, {
+        colWidths: table.colWidths.map((w: number) => Math.max(20, w * scaleX)),
+        rowHeights: table.rowHeights.map((h: number) => Math.max(20, h * scaleY)),
+      } as any);
+    }
+
     ctx.requestRender();
   }
 
@@ -440,5 +470,130 @@ export class SelectTool extends BaseTool {
     rotation = rotation % (Math.PI * 2);
     ctx.scene.updateElement(this.rotateElementId, { rotation });
     ctx.requestRender();
+  }
+
+  // ─── Bound connection updates ─────────────────────────────────
+
+  /** Auto-add or remove elements from frame childIds based on their position. */
+  private autoIncludeInFrames(ctx: ToolContext): void {
+    const allElements = ctx.scene.getElements();
+    const frames = allElements.filter(e => e.type === 'frame');
+    if (frames.length === 0) return;
+
+    const movedIds = new Set(ctx.scene.getSelectedIds());
+    const frameUpdates: { id: string; changes: Partial<BoardierElement> }[] = [];
+
+    for (const frame of frames) {
+      if (movedIds.has(frame.id)) continue; // Don't auto-include frames being moved
+      const fb = getElementBounds(frame);
+      const currentChildIds = new Set((frame as any).childIds || []);
+      let changed = false;
+
+      for (const el of allElements) {
+        if (el.id === frame.id || el.type === 'frame') continue;
+        const eb = getElementBounds(el);
+        const ecx = eb.x + eb.width / 2;
+        const ecy = eb.y + eb.height / 2;
+        const inside = ecx >= fb.x && ecx <= fb.x + fb.width && ecy >= fb.y && ecy <= fb.y + fb.height;
+
+        if (inside && !currentChildIds.has(el.id)) {
+          currentChildIds.add(el.id);
+          changed = true;
+        } else if (!inside && currentChildIds.has(el.id) && movedIds.has(el.id)) {
+          currentChildIds.delete(el.id);
+          changed = true;
+        }
+      }
+
+      if (changed) {
+        frameUpdates.push({ id: frame.id, changes: { childIds: Array.from(currentChildIds) } as any });
+      }
+    }
+
+    if (frameUpdates.length > 0) {
+      ctx.scene.updateElements(frameUpdates);
+    }
+  }
+
+  /**
+   * When elements are moved, update any lines/arrows that are bound
+   * to them so the endpoints follow the element borders.
+   */
+  private updateBoundConnections(ctx: ToolContext): void {
+    const movedIds = new Set(this.snapshotBeforeDrag.keys());
+    if (movedIds.size === 0) return;
+
+    const allElements = ctx.scene.getElements();
+    const lineUpdates: { id: string; changes: Partial<BoardierElement> }[] = [];
+
+    for (const el of allElements) {
+      if (el.type !== 'line' && el.type !== 'arrow') continue;
+      const lineEl = el as any;
+      const startBound = lineEl.startBindingId && movedIds.has(lineEl.startBindingId);
+      const endBound = lineEl.endBindingId && movedIds.has(lineEl.endBindingId);
+      if (!startBound && !endBound) continue;
+
+      // Skip if the line itself is being moved
+      if (movedIds.has(el.id)) continue;
+
+      const pts = [...(lineEl.points as Vec2[])];
+      let newX = el.x;
+      let newY = el.y;
+
+      if (startBound) {
+        const target = ctx.scene.getElementById(lineEl.startBindingId);
+        if (target) {
+          const endAbs = { x: el.x + pts[1].x, y: el.y + pts[1].y };
+          const bp = this.closestBorderPoint(target, endAbs);
+          newX = bp.x;
+          newY = bp.y;
+          pts[0] = { x: 0, y: 0 };
+          pts[1] = { x: endAbs.x - bp.x, y: endAbs.y - bp.y };
+        }
+      }
+
+      if (endBound) {
+        const target = ctx.scene.getElementById(lineEl.endBindingId);
+        if (target) {
+          const startAbs = { x: newX + pts[0].x, y: newY + pts[0].y };
+          const bp = this.closestBorderPoint(target, startAbs);
+          pts[1] = { x: bp.x - newX, y: bp.y - newY };
+        }
+      }
+
+      lineUpdates.push({
+        id: el.id,
+        changes: {
+          x: newX, y: newY,
+          points: pts,
+          width: Math.max(Math.abs(pts[1].x - pts[0].x), 1),
+          height: Math.max(Math.abs(pts[1].y - pts[0].y), 1),
+        },
+      });
+    }
+
+    if (lineUpdates.length > 0) {
+      ctx.scene.updateElements(lineUpdates);
+    }
+  }
+
+  /** Find closest point on an element's border. */
+  private closestBorderPoint(el: BoardierElement, from: Vec2): Vec2 {
+    const b = getElementBounds(el);
+    const cx = b.x + b.width / 2;
+    const cy = b.y + b.height / 2;
+    const dx = from.x - cx;
+    const dy = from.y - cy;
+    const hw = b.width / 2;
+    const hh = b.height / 2;
+    if (el.type === 'ellipse') {
+      const angle = Math.atan2(dy, dx);
+      return { x: cx + hw * Math.cos(angle), y: cy + hh * Math.sin(angle) };
+    }
+    if (hw === 0 && hh === 0) return { x: cx, y: cy };
+    const sx = dx !== 0 ? hw / Math.abs(dx) : Infinity;
+    const sy = dy !== 0 ? hh / Math.abs(dy) : Infinity;
+    const s = Math.min(sx, sy);
+    return { x: cx + dx * s, y: cy + dy * s };
   }
 }

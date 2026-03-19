@@ -7,7 +7,7 @@ function render(ctx: CanvasRenderingContext2D, el: CommentElement): void {
 
   const x = el.x, y = el.y;
   const pinSize = 24;
-  const color = el.markerColor || '#f59e0b';
+  const color = el.resolved ? '#22c55e' : (el.markerColor || '#f59e0b');
 
   // Pin marker (teardrop shape)
   ctx.fillStyle = color;
@@ -23,14 +23,16 @@ function render(ctx: CanvasRenderingContext2D, el: CommentElement): void {
   ctx.arc(x + pinSize / 2, y + pinSize / 2, 4, 0, Math.PI * 2);
   ctx.fill();
 
-  // Resolved cross-out
+  // Resolved checkmark
   if (el.resolved) {
-    ctx.strokeStyle = '#22c55e';
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
     ctx.beginPath();
-    ctx.moveTo(x + 4, y + pinSize / 2);
-    ctx.lineTo(x + pinSize / 2 - 2, y + pinSize - 4);
-    ctx.lineTo(x + pinSize - 2, y + 4);
+    ctx.moveTo(x + 7, y + pinSize / 2);
+    ctx.lineTo(x + pinSize / 2 - 1, y + pinSize / 2 + 5);
+    ctx.lineTo(x + pinSize - 5, y + pinSize / 2 - 4);
     ctx.stroke();
   }
 

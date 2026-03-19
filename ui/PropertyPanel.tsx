@@ -1,5 +1,5 @@
-import React, { useRef, useState } from 'react';
-import type { BoardierElement } from '../core/types';
+import React, { useRef } from 'react';
+import type { BoardierElement, FillStyle, StrokeStyle } from '../core/types';
 import type { BoardierTheme } from '../themes/types';
 import { STROKE_COLORS, FILL_COLORS, FONT_SIZES, FONT_FAMILIES, HANDWRITTEN_FONT } from '../utils/colors';
 
@@ -10,7 +10,7 @@ interface PropertyPanelProps {
   theme: BoardierTheme;
 }
 
-export const PropertyPanel: React.FC<PropertyPanelProps> = React.memo(({ elements, onUpdate, onDelete, theme }) => {
+export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate, onDelete, theme }) => {
   if (elements.length === 0) return null;
   const strokePickerRef = useRef<HTMLInputElement>(null);
   const fillPickerRef = useRef<HTMLInputElement>(null);
@@ -20,6 +20,8 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = React.memo(({ element
   const hasLabel = elements.some(e => 'label' in e);
   const hasTextOrLabel = hasText || hasLabel;
   const isNotLine = elements.every(e => e.type !== 'line' && e.type !== 'arrow' && e.type !== 'freehand');
+  const isRect = elements.some(e => e.type === 'rectangle');
+  const isEmbed = elements.some(e => e.type === 'embed');
 
   const swatch = (color: string, active: boolean, onClick: () => void) => (
     <button
@@ -113,10 +115,36 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = React.memo(({ element
           <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap', maxWidth: 108, alignItems: 'center' }}>
             {FILL_COLORS.map(c =>
               swatch(c, first.backgroundColor === c, () =>
-                onUpdate({ backgroundColor: c, fillStyle: c === 'transparent' ? 'none' : 'solid' }),
+                onUpdate({ backgroundColor: c, fillStyle: c === 'transparent' ? 'none' : (first.fillStyle === 'none' ? 'solid' : first.fillStyle) }),
               ),
             )}
-            {customColorBtn(first.backgroundColor, c => onUpdate({ backgroundColor: c, fillStyle: 'solid' }), fillPickerRef)}
+            {customColorBtn(first.backgroundColor, c => onUpdate({ backgroundColor: c, fillStyle: first.fillStyle === 'none' ? 'solid' : first.fillStyle }), fillPickerRef)}
+          </div>
+        </div>
+      )}
+
+      {/* Fill style */}
+      {isNotLine && first.backgroundColor !== 'transparent' && first.fillStyle !== 'none' && (
+        <div style={sectionStyle}>
+          <span>Fill style</span>
+          <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+            {([
+              { v: 'solid' as FillStyle, label: 'Solid' },
+              { v: 'hachure' as FillStyle, label: 'Hachure' },
+              { v: 'cross-hatch' as FillStyle, label: 'Cross' },
+              { v: 'dots' as FillStyle, label: 'Dots' },
+            ]).map(f => (
+              <button
+                key={f.v}
+                onClick={() => onUpdate({ fillStyle: f.v })}
+                style={{
+                  padding: '2px 6px', fontSize: 10, fontWeight: 600,
+                  border: `1px solid ${first.fillStyle === f.v ? theme.selectionColor : theme.panelBorder}`,
+                  borderRadius: 4, background: first.fillStyle === f.v ? theme.panelActive : 'transparent',
+                  cursor: 'pointer', color: theme.panelText, fontFamily: 'inherit',
+                }}
+              >{f.label}</button>
+            ))}
           </div>
         </div>
       )}
@@ -134,6 +162,29 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = React.memo(({ element
           style={{ width: 60, accentColor: theme.selectionColor }}
         />
         <span style={{ fontSize: 10, textAlign: 'center', color: theme.panelText }}>{first.strokeWidth}px</span>
+      </div>
+
+      {/* Stroke style */}
+      <div style={sectionStyle}>
+        <span>Stroke</span>
+        <div style={{ display: 'flex', gap: 3 }}>
+          {([
+            { v: 'solid' as StrokeStyle, svg: <svg width={22} height={8} viewBox="0 0 22 8"><line x1="1" y1="4" x2="21" y2="4" stroke="currentColor" strokeWidth="2" /></svg> },
+            { v: 'dashed' as StrokeStyle, svg: <svg width={22} height={8} viewBox="0 0 22 8"><line x1="1" y1="4" x2="21" y2="4" stroke="currentColor" strokeWidth="2" strokeDasharray="4 3" /></svg> },
+            { v: 'dotted' as StrokeStyle, svg: <svg width={22} height={8} viewBox="0 0 22 8"><line x1="1" y1="4" x2="21" y2="4" stroke="currentColor" strokeWidth="2" strokeDasharray="1.5 2.5" strokeLinecap="round" /></svg> },
+          ]).map(s => (
+            <button
+              key={s.v}
+              onClick={() => onUpdate({ strokeStyle: s.v } as any)}
+              style={{
+                width: 32, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                border: `1px solid ${(first.strokeStyle || 'solid') === s.v ? theme.selectionColor : theme.panelBorder}`,
+                borderRadius: 4, background: (first.strokeStyle || 'solid') === s.v ? theme.panelActive : 'transparent',
+                cursor: 'pointer', color: theme.panelText, padding: 0,
+              }}
+            >{s.svg}</button>
+          ))}
+        </div>
       </div>
 
       {/* Font size for text */}
@@ -241,26 +292,39 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = React.memo(({ element
         </div>
       )}
 
-      {/* Roughness */}
+      {/* Sloppiness */}
       <div style={sectionStyle}>
-        <span>Style</span>
-        <div style={{ display: 'flex', gap: 3 }}>
-          {[{ v: 0, label: 'Clean' }, { v: 1, label: 'Sketch' }].map(r => (
-            <button
-              key={r.v}
-              onClick={() => onUpdate({ roughness: r.v })}
-              style={{
-                padding: '2px 6px', fontSize: 10, fontWeight: 600,
-                border: `1px solid ${first.roughness === r.v ? theme.selectionColor : theme.panelBorder}`,
-                borderRadius: 4, background: first.roughness === r.v ? theme.panelActive : 'transparent',
-                cursor: 'pointer', color: theme.panelText, fontFamily: 'inherit',
-              }}
-            >
-              {r.label}
-            </button>
-          ))}
-        </div>
+        <span>Sloppiness</span>
+        <input
+          type="range"
+          min={0}
+          max={2}
+          step={0.1}
+          value={first.roughness}
+          onChange={e => onUpdate({ roughness: parseFloat(e.target.value) })}
+          style={{ width: 60, accentColor: theme.selectionColor }}
+        />
+        <span style={{ fontSize: 9, textAlign: 'center', color: theme.panelTextSecondary }}>
+          {first.roughness === 0 ? 'Clean' : first.roughness <= 0.8 ? 'Sketch' : 'Rough'}
+        </span>
       </div>
+
+      {/* Border radius (rectangles) */}
+      {isRect && (
+        <div style={sectionStyle}>
+          <span>Radius</span>
+          <input
+            type="range"
+            min={0}
+            max={50}
+            step={1}
+            value={(first as any).borderRadius ?? 0}
+            onChange={e => onUpdate({ borderRadius: parseInt(e.target.value) } as any)}
+            style={{ width: 60, accentColor: theme.selectionColor }}
+          />
+          <span style={{ fontSize: 10, textAlign: 'center', color: theme.panelText }}>{(first as any).borderRadius ?? 0}px</span>
+        </div>
+      )}
 
       {/* Opacity */}
       <div style={sectionStyle}>
@@ -328,20 +392,43 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = React.memo(({ element
         )}
       </button>
 
+      {/* Embed URL */}
+      {isEmbed && (
+        <div style={sectionStyle}>
+          <span>URL</span>
+          <input
+            type="text"
+            placeholder="https://..."
+            value={(first as any).url || ''}
+            onChange={e => onUpdate({ url: e.target.value } as any)}
+            style={{
+              width: 120, height: 22, fontSize: 10,
+              border: `1px solid ${theme.panelBorder}`, borderRadius: 4,
+              background: 'transparent', color: theme.panelText,
+              padding: '0 4px', outline: 'none', fontFamily: 'inherit',
+            }}
+          />
+        </div>
+      )}
+
       {/* Delete */}
       <button
         onClick={onDelete}
         title="Delete"
         style={{
-          width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center',
-          border: `1px solid ${theme.panelBorder}`, borderRadius: 4, background: 'transparent',
-          cursor: 'pointer', color: '#e03131', alignSelf: 'center', fontFamily: 'inherit',
+          display: 'flex', alignItems: 'center', gap: 4,
+          padding: '4px 10px', height: 28,
+          border: `1px solid ${theme.panelBorder}`, borderRadius: 4,
+          background: 'transparent', cursor: 'pointer',
+          color: '#e03131', alignSelf: 'center', fontFamily: 'inherit',
+          fontSize: 11, fontWeight: 600,
         }}
       >
-        <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
+        <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+        </svg>
+        Delete
       </button>
     </div>
   );
-});
-
-PropertyPanel.displayName = 'PropertyPanel';
+};

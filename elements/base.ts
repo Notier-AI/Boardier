@@ -13,8 +13,6 @@ import type {
   CheckboxElement,
   RadioGroupElement,
   FrameElement,
-  ConnectorElement,
-  StickyNoteElement,
   ImageElement,
   EmbedElement,
   TableElement,
@@ -125,14 +123,6 @@ export function createFrame(o: Partial<FrameElement> = {}): FrameElement {
   return { ...BASE_DEFAULTS, seed: newSeed(), id: generateId(), type: 'frame', x: 0, y: 0, width: 300, height: 200, label: 'Frame', childIds: [], clipX: false, clipY: false, padding: 12, frameBackground: 'transparent', backgroundColor: 'transparent', ...o };
 }
 
-export function createConnector(o: Partial<ConnectorElement> = {}): ConnectorElement {
-  return { ...BASE_DEFAULTS, seed: newSeed(), id: generateId(), type: 'connector', x: 0, y: 0, width: 0, height: 0, startId: null, endId: null, startPort: 'auto', endPort: 'auto', pathPoints: [], arrowheadEnd: true, arrowheadStart: false, lineStyle: 'straight', label: '', ...o };
-}
-
-export function createStickyNote(o: Partial<StickyNoteElement> = {}): StickyNoteElement {
-  return { ...BASE_DEFAULTS, seed: newSeed(), id: generateId(), type: 'stickynote', x: 0, y: 0, width: 160, height: 160, text: '', fontSize: 14, fontFamily: 'system-ui, sans-serif', noteColor: '#fff9c4', ...o };
-}
-
 export function createImage(o: Partial<ImageElement> = {}): ImageElement {
   return { ...BASE_DEFAULTS, seed: newSeed(), id: generateId(), type: 'image', x: 0, y: 0, width: 200, height: 200, src: '', alt: '', objectFit: 'contain', ...o };
 }
@@ -164,8 +154,6 @@ export function createElement(type: BoardierElementType, overrides: Partial<Boar
     case 'checkbox':  return createCheckbox(overrides as any);
     case 'radiogroup': return createRadioGroup(overrides as any);
     case 'frame':     return createFrame(overrides as any);
-    case 'connector': return createConnector(overrides as any);
-    case 'stickynote': return createStickyNote(overrides as any);
     case 'image':     return createImage(overrides as any);
     case 'embed':     return createEmbed(overrides as any);
     case 'table':     return createTable(overrides as any);

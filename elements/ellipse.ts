@@ -3,6 +3,7 @@ import { registerElement } from './base';
 import { rotatePoint } from '../utils/math';
 import { roughEllipse, mulberry32 } from '../utils/roughDraw';
 import { HANDWRITTEN_FONT } from '../utils/colors';
+import { applyStrokeStyle, drawPatternFill } from '../utils/renderHelpers';
 
 function render(ctx: CanvasRenderingContext2D, el: EllipseElement): void {
   ctx.save();
@@ -16,8 +17,7 @@ function render(ctx: CanvasRenderingContext2D, el: EllipseElement): void {
   const ry = el.height / 2;
 
   if (el.roughness > 0) {
-    if (el.fillStyle === 'solid' && el.backgroundColor !== 'transparent') {
-      // Fill with a slightly cleaner ellipse
+    if (el.fillStyle !== 'none' && el.backgroundColor !== 'transparent') {
       const rng = mulberry32(el.seed + 1);
       const steps = Math.max(16, Math.ceil(Math.max(rx, ry) * 0.8));
       ctx.beginPath();
@@ -28,29 +28,43 @@ function render(ctx: CanvasRenderingContext2D, el: EllipseElement): void {
         if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
       }
       ctx.closePath();
-      ctx.fillStyle = el.backgroundColor;
-      ctx.fill();
+      if (el.fillStyle === 'solid') {
+        ctx.fillStyle = el.backgroundColor;
+        ctx.fill();
+      } else {
+        drawPatternFill(ctx, el.fillStyle, el.backgroundColor, -rx, -ry, el.width, el.height, el.seed);
+      }
     }
     if (el.strokeWidth > 0) {
       ctx.strokeStyle = el.strokeColor;
       ctx.lineWidth = el.strokeWidth;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
+      applyStrokeStyle(ctx, el.strokeStyle, el.strokeWidth);
       roughEllipse(ctx, 0, 0, rx, ry, el.seed, el.roughness);
     }
   } else {
     ctx.beginPath();
     ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
-    if (el.fillStyle === 'solid' && el.backgroundColor !== 'transparent') {
-      ctx.fillStyle = el.backgroundColor;
-      ctx.fill();
+    if (el.fillStyle !== 'none' && el.backgroundColor !== 'transparent') {
+      if (el.fillStyle === 'solid') {
+        ctx.fillStyle = el.backgroundColor;
+        ctx.fill();
+      } else {
+        drawPatternFill(ctx, el.fillStyle, el.backgroundColor, -rx, -ry, el.width, el.height, el.seed);
+      }
     }
     if (el.strokeWidth > 0) {
       ctx.strokeStyle = el.strokeColor;
       ctx.lineWidth = el.strokeWidth;
+      applyStrokeStyle(ctx, el.strokeStyle, el.strokeWidth);
+      ctx.beginPath();
+      ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
       ctx.stroke();
     }
   }
+
+  ctx.setLineDash([]);
 
   // Render label text centered inside
   if (el.label) {

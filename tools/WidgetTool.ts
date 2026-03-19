@@ -72,9 +72,15 @@ export class WidgetTool extends BaseTool {
       });
     }
     ctx.commitHistory();
+    const placedId = this.activeId;
     this.drawing = false;
     this.activeId = null;
     ctx.setToolType('select');
+
+    // Trigger embed URL prompt after placement
+    if (this.elementType === 'embed' as any && placedId) {
+      ctx.startEmbedUrlEditing?.(placedId);
+    }
   }
 
   onKeyDown(ctx: ToolContext, e: KeyboardEvent): void {

@@ -3,6 +3,7 @@ import { registerElement } from './base';
 import { rotatePoint } from '../utils/math';
 import { roughDiamond, mulberry32, roughLineTo } from '../utils/roughDraw';
 import { HANDWRITTEN_FONT } from '../utils/colors';
+import { applyStrokeStyle, drawPatternFill } from '../utils/renderHelpers';
 
 function render(ctx: CanvasRenderingContext2D, el: DiamondElement): void {
   ctx.save();
@@ -16,7 +17,7 @@ function render(ctx: CanvasRenderingContext2D, el: DiamondElement): void {
   const hh = el.height / 2;
 
   if (el.roughness > 0) {
-    if (el.fillStyle === 'solid' && el.backgroundColor !== 'transparent') {
+    if (el.fillStyle !== 'none' && el.backgroundColor !== 'transparent') {
       const rng = mulberry32(el.seed + 1);
       ctx.beginPath();
       ctx.moveTo(0, -hh);
@@ -25,14 +26,19 @@ function render(ctx: CanvasRenderingContext2D, el: DiamondElement): void {
       roughLineTo(ctx, 0, hh, -hw, 0, rng, el.roughness * 0.5);
       roughLineTo(ctx, -hw, 0, 0, -hh, rng, el.roughness * 0.5);
       ctx.closePath();
-      ctx.fillStyle = el.backgroundColor;
-      ctx.fill();
+      if (el.fillStyle === 'solid') {
+        ctx.fillStyle = el.backgroundColor;
+        ctx.fill();
+      } else {
+        drawPatternFill(ctx, el.fillStyle, el.backgroundColor, -hw, -hh, el.width, el.height, el.seed);
+      }
     }
     if (el.strokeWidth > 0) {
       ctx.strokeStyle = el.strokeColor;
       ctx.lineWidth = el.strokeWidth;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
+      applyStrokeStyle(ctx, el.strokeStyle, el.strokeWidth);
       roughDiamond(ctx, 0, 0, hw, hh, el.seed, el.roughness);
     }
   } else {
@@ -42,16 +48,29 @@ function render(ctx: CanvasRenderingContext2D, el: DiamondElement): void {
     ctx.lineTo(0, hh);
     ctx.lineTo(-hw, 0);
     ctx.closePath();
-    if (el.fillStyle === 'solid' && el.backgroundColor !== 'transparent') {
-      ctx.fillStyle = el.backgroundColor;
-      ctx.fill();
+    if (el.fillStyle !== 'none' && el.backgroundColor !== 'transparent') {
+      if (el.fillStyle === 'solid') {
+        ctx.fillStyle = el.backgroundColor;
+        ctx.fill();
+      } else {
+        drawPatternFill(ctx, el.fillStyle, el.backgroundColor, -hw, -hh, el.width, el.height, el.seed);
+      }
     }
     if (el.strokeWidth > 0) {
       ctx.strokeStyle = el.strokeColor;
       ctx.lineWidth = el.strokeWidth;
+      applyStrokeStyle(ctx, el.strokeStyle, el.strokeWidth);
+      ctx.beginPath();
+      ctx.moveTo(0, -hh);
+      ctx.lineTo(hw, 0);
+      ctx.lineTo(0, hh);
+      ctx.lineTo(-hw, 0);
+      ctx.closePath();
       ctx.stroke();
     }
   }
+
+  ctx.setLineDash([]);
 
   // Render label text centered inside
   if (el.label) {

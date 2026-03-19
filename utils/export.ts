@@ -10,8 +10,7 @@ import '../elements/arrow';
 import '../elements/freehand';
 import '../elements/text';
 import '../elements/icon';
-import '../elements/connector';
-import '../elements/stickynote';
+
 import '../elements/image';
 import '../elements/embed';
 import '../elements/table';
@@ -163,26 +162,6 @@ export function exportToSVG(
             d += ` L ${fe.x + pts[i].x + offsetX} ${fe.y + pts[i].y + offsetY}`;
           }
           svgParts.push(`<path d="${d}" fill="none" stroke="${escapeXmlAttr(fe.strokeColor)}" stroke-width="${fe.strokeWidth}" stroke-linecap="round" stroke-linejoin="round" opacity="${fe.opacity}"/>`);
-        }
-        break;
-      }
-      case 'connector': {
-        const ce = el as any;
-        const pts = ce.pathPoints || [];
-        if (pts.length >= 2) {
-          let d = `M ${ce.x + pts[0].x + offsetX} ${ce.y + pts[0].y + offsetY}`;
-          for (let i = 1; i < pts.length; i++) {
-            d += ` L ${ce.x + pts[i].x + offsetX} ${ce.y + pts[i].y + offsetY}`;
-          }
-          svgParts.push(`<path d="${d}" fill="none" stroke="${escapeXmlAttr(ce.strokeColor)}" stroke-width="${ce.strokeWidth}" stroke-linecap="round" opacity="${ce.opacity}"/>`);
-        }
-        break;
-      }
-      case 'stickynote': {
-        const sn = el as any;
-        svgParts.push(`<rect x="${x}" y="${y}" width="${b.width}" height="${b.height}" rx="6" fill="${escapeXmlAttr(sn.noteColor)}" opacity="${sn.opacity}"/>`);
-        if (sn.text) {
-          svgParts.push(`<text x="${x + 10}" y="${y + 20}" fill="#333" font-size="${sn.fontSize || 14}" opacity="${sn.opacity}">${escapeXml(sn.text)}</text>`);
         }
         break;
       }

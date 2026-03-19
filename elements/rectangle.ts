@@ -3,6 +3,7 @@ import { registerElement } from './base';
 import { rotatePoint } from '../utils/math';
 import { roughRect, roughFillRect } from '../utils/roughDraw';
 import { HANDWRITTEN_FONT } from '../utils/colors';
+import { applyStrokeStyle, drawPatternFill } from '../utils/renderHelpers';
 
 function render(ctx: CanvasRenderingContext2D, el: RectangleElement): void {
   ctx.save();
@@ -15,37 +16,62 @@ function render(ctx: CanvasRenderingContext2D, el: RectangleElement): void {
   const hw = el.width / 2;
   const hh = el.height / 2;
 
-  if (el.roughness > 0 && el.borderRadius === 0) {
+  // Determine effective border radius
+  const radii = el.borderRadii || (el.borderRadius > 0 ? [el.borderRadius, el.borderRadius, el.borderRadius, el.borderRadius] : null);
+
+  if (el.roughness > 0 && !radii) {
     // Hand-drawn style
-    if (el.fillStyle === 'solid' && el.backgroundColor !== 'transparent') {
-      ctx.fillStyle = el.backgroundColor;
-      roughFillRect(ctx, -hw, -hh, el.width, el.height, el.seed, el.roughness);
+    if (el.fillStyle !== 'none' && el.backgroundColor !== 'transparent') {
+      if (el.fillStyle === 'solid') {
+        ctx.fillStyle = el.backgroundColor;
+        roughFillRect(ctx, -hw, -hh, el.width, el.height, el.seed, el.roughness);
+      } else {
+        ctx.beginPath();
+        ctx.rect(-hw, -hh, el.width, el.height);
+        drawPatternFill(ctx, el.fillStyle, el.backgroundColor, -hw, -hh, el.width, el.height, el.seed);
+      }
     }
     if (el.strokeWidth > 0) {
       ctx.strokeStyle = el.strokeColor;
       ctx.lineWidth = el.strokeWidth;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
+      applyStrokeStyle(ctx, el.strokeStyle, el.strokeWidth);
       roughRect(ctx, -hw, -hh, el.width, el.height, el.seed, el.roughness);
     }
   } else {
     // Clean style
     ctx.beginPath();
-    if (el.borderRadius > 0) {
-      ctx.roundRect(-hw, -hh, el.width, el.height, el.borderRadius);
+    if (radii) {
+      ctx.roundRect(-hw, -hh, el.width, el.height, radii);
     } else {
       ctx.rect(-hw, -hh, el.width, el.height);
     }
-    if (el.fillStyle === 'solid' && el.backgroundColor !== 'transparent') {
-      ctx.fillStyle = el.backgroundColor;
-      ctx.fill();
+    if (el.fillStyle !== 'none' && el.backgroundColor !== 'transparent') {
+      if (el.fillStyle === 'solid') {
+        ctx.fillStyle = el.backgroundColor;
+        ctx.fill();
+      } else {
+        drawPatternFill(ctx, el.fillStyle, el.backgroundColor, -hw, -hh, el.width, el.height, el.seed);
+      }
     }
     if (el.strokeWidth > 0) {
       ctx.strokeStyle = el.strokeColor;
       ctx.lineWidth = el.strokeWidth;
+      applyStrokeStyle(ctx, el.strokeStyle, el.strokeWidth);
+      // Re-draw the path for stroke (clip may have consumed it)
+      ctx.beginPath();
+      if (radii) {
+        ctx.roundRect(-hw, -hh, el.width, el.height, radii);
+      } else {
+        ctx.rect(-hw, -hh, el.width, el.height);
+      }
       ctx.stroke();
     }
   }
+
+  // Reset line dash
+  ctx.setLineDash([]);
 
   // Render label text centered inside
   if (el.label) {

@@ -17,8 +17,6 @@ import '../elements/marker';
 import '../elements/checkbox';
 import '../elements/radiogroup';
 import '../elements/frame';
-import '../elements/connector';
-import '../elements/stickynote';
 import '../elements/image';
 import '../elements/embed';
 import '../elements/table';
@@ -97,7 +95,7 @@ export class Renderer {
     viewState: ViewState,
     selectedIds: Set<string>,
     theme: BoardierTheme,
-    options?: { showGrid?: boolean; gridSize?: number; boxSelect?: Bounds | null; lassoPath?: Vec2[] | null; smartGuides?: SmartGuide[] },
+    options?: { showGrid?: boolean; gridSize?: number; boxSelect?: Bounds | null; lassoPath?: Vec2[] | null; smartGuides?: SmartGuide[]; bindHighlightIds?: string[] },
   ): void {
     const ctx = this.ctx;
     const { zoom, scrollX, scrollY } = viewState;
@@ -196,6 +194,20 @@ export class Renderer {
 
     if (options?.smartGuides && options.smartGuides.length > 0) {
       this.drawSmartGuides(ctx, options.smartGuides, theme);
+    }
+
+    // Draw blue highlight on elements targeted for line/arrow binding
+    if (options?.bindHighlightIds && options.bindHighlightIds.length > 0) {
+      const highlightSet = new Set(options.bindHighlightIds);
+      for (const el of elements) {
+        if (highlightSet.has(el.id)) {
+          const b = getElementBounds(el);
+          ctx.strokeStyle = '#2563eb';
+          ctx.lineWidth = 2.5 / zoom;
+          ctx.setLineDash([]);
+          ctx.strokeRect(b.x, b.y, b.width, b.height);
+        }
+      }
     }
 
     ctx.restore();

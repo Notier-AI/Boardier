@@ -21,6 +21,7 @@ export interface ToolContext {
   setToolType(type: BoardierToolType): void;
   setCursor(cursor: string): void;
   startTextEditing(elementId: string): void;
+  startEmbedUrlEditing?(elementId: string): void;
   getCanvasRect(): DOMRect;
 }
 

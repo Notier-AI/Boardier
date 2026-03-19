@@ -29,14 +29,14 @@ export type BoardierElementType =
   | 'checkbox'
   | 'radiogroup'
   | 'frame'
-  | 'connector'
-  | 'stickynote'
   | 'image'
   | 'embed'
   | 'table'
   | 'comment';
 
-export type FillStyle = 'none' | 'solid';
+export type FillStyle = 'none' | 'solid' | 'hachure' | 'cross-hatch' | 'dots';
+
+export type StrokeStyle = 'solid' | 'dashed' | 'dotted';
 
 /** Fields shared by every element on the canvas. */
 export interface BoardierElementBase {
@@ -56,6 +56,8 @@ export interface BoardierElementBase {
   seed: number;              // stable random seed for hand-drawn consistency
   locked: boolean;
   groupIds: string[];
+  /** Stroke dash style */
+  strokeStyle?: StrokeStyle;
   /** Optional shadow: CSS-style "offsetX offsetY blur color" */
   shadow?: string;
 }
@@ -63,6 +65,8 @@ export interface BoardierElementBase {
 export interface RectangleElement extends BoardierElementBase {
   type: 'rectangle';
   borderRadius: number;
+  /** Per-corner radii: [topLeft, topRight, bottomRight, bottomLeft]. If set, overrides borderRadius. */
+  borderRadii?: [number, number, number, number];
   label: string;
 }
 
@@ -86,6 +90,10 @@ export interface LineElement extends BoardierElementBase {
   type: 'line';
   points: Vec2[];
   controlPoint: Vec2 | null;
+  /** ID of element bound to start point */
+  startBindingId?: string | null;
+  /** ID of element bound to end point */
+  endBindingId?: string | null;
 }
 
 export interface ArrowElement extends BoardierElementBase {
@@ -94,6 +102,10 @@ export interface ArrowElement extends BoardierElementBase {
   controlPoint: Vec2 | null;
   arrowheadStart: boolean;
   arrowheadEnd: boolean;
+  /** ID of element bound to start point */
+  startBindingId?: string | null;
+  /** ID of element bound to end point */
+  endBindingId?: string | null;
 }
 
 export interface FreehandElement extends BoardierElementBase {
@@ -171,39 +183,6 @@ export interface FrameElement extends BoardierElementBase {
   frameBackground: string;
 }
 
-/** Smart connector that links two elements with auto-routing. */
-export interface ConnectorElement extends BoardierElementBase {
-  type: 'connector';
-  /** Source element ID */
-  startId: string;
-  /** Target element ID */
-  endId: string;
-  /** Anchor port on source: 'top' | 'right' | 'bottom' | 'left' | 'auto' */
-  startPort: 'top' | 'right' | 'bottom' | 'left' | 'auto';
-  /** Anchor port on target */
-  endPort: 'top' | 'right' | 'bottom' | 'left' | 'auto';
-  /** Computed path points (world coords, relative to x,y) */
-  pathPoints: Vec2[];
-  /** Arrowhead at end */
-  arrowheadEnd: boolean;
-  /** Arrowhead at start */
-  arrowheadStart: boolean;
-  /** Line style: straight, elbow, or curved */
-  lineStyle: 'straight' | 'elbow' | 'curved';
-  /** Label on the connector */
-  label: string;
-}
-
-/** Sticky note element — colored square with editable text. */
-export interface StickyNoteElement extends BoardierElementBase {
-  type: 'stickynote';
-  text: string;
-  fontSize: number;
-  fontFamily: string;
-  /** Note color presets */
-  noteColor: string;
-}
-
 /** Image element rendered on the canvas. */
 export interface ImageElement extends BoardierElementBase {
   type: 'image';
@@ -272,8 +251,6 @@ export type BoardierElement =
   | CheckboxElement
   | RadioGroupElement
   | FrameElement
-  | ConnectorElement
-  | StickyNoteElement
   | ImageElement
   | EmbedElement
   | TableElement
@@ -295,8 +272,6 @@ export type BoardierToolType =
   | 'checkbox'
   | 'radiogroup'
   | 'frame'
-  | 'connector'
-  | 'stickynote'
   | 'image'
   | 'embed'
   | 'table'
