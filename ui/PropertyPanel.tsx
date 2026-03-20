@@ -41,12 +41,26 @@ const iconFillDots = (
     <circle cx="10" cy="10" r="1" stroke="none" />
   </svg>
 );
+const iconFillZigzag = (
+  <svg width={12} height={12} viewBox="0 0 14 14" stroke="currentColor" strokeWidth="1.4" fill="none">
+    <rect x="1" y="1" width="12" height="12" rx="2" />
+    <polyline points="2,5 5,8 8,5 11,8" /><polyline points="2,9 5,12 8,9 11,12" />
+  </svg>
+);
+const iconFillZigzagLine = (
+  <svg width={12} height={12} viewBox="0 0 14 14" stroke="currentColor" strokeWidth="1.2" fill="none">
+    <rect x="1" y="1" width="12" height="12" rx="2" />
+    <polyline points="2,3 4,5 6,3 8,5 10,3 12,5" /><polyline points="2,7 4,9 6,7 8,9 10,7 12,9" /><polyline points="3,11 5,13 7,11 9,13" />
+  </svg>
+);
 
 const FILL_STYLE_OPTS: { v: FillStyle; icon: React.ReactNode; tip: string }[] = [
   { v: 'solid', icon: iconFillSolid, tip: 'Solid' },
   { v: 'hachure', icon: iconFillHachure, tip: 'Hachure' },
   { v: 'cross-hatch', icon: iconFillCross, tip: 'Cross-hatch' },
   { v: 'dots', icon: iconFillDots, tip: 'Dots' },
+  { v: 'zigzag', icon: iconFillZigzag, tip: 'Zigzag' },
+  { v: 'zigzag-line', icon: iconFillZigzagLine, tip: 'Zigzag-line' },
 ];
 
 const STROKE_STYLE_OPTS: { v: StrokeStyle; svg: React.ReactNode }[] = [

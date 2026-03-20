@@ -1,9 +1,10 @@
 import Link from "next/link";
 import Image from "next/image";
-import { PenTool, Share2, Sparkles, Github, ArrowRight, MousePointerClick, Book } from "lucide-react";
+import { PenTool, Sparkles, Github, ArrowRight, MousePointerClick, Book } from "lucide-react";
 import HeroSelectAnimation from "./components/HeroSelectAnimation";
 import ScrollReveal from "./components/ScrollReveal";
 import StaggerChildren from "./components/StaggerChildren";
+import { RoughnessDemo, FreehandDemo, ColorDemo, FillStyleDemo, AIGenerateDemo, StrokeWidthDemo } from "./components/FeatureDemos";
 
 export default function Home() {
   return (
@@ -73,32 +74,22 @@ export default function Home() {
           </div>
         </ScrollReveal>
 
-        {/* Feature Grid */}
+        {/* Interactive Feature Demos */}
         <div id="features" className="w-full mt-12">
+          <ScrollReveal delay={100} direction="none">
+            <div className="text-center mb-10">
+              <h2 className="text-4xl font-bold font-caveat mb-2">Play With It</h2>
+              <p className="text-root-fg/60 text-lg">These are real. Go ahead, interact.</p>
+            </div>
+          </ScrollReveal>
+
           <StaggerChildren className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full" stagger={150}>
-            <div className="sketch-card p-6 flex flex-col items-center text-center group hover-lift cursor-default">
-              <div className="w-16 h-16 sketch-border bg-brand-red/20 text-brand-red flex items-center justify-center mb-4 group-hover:bg-brand-red group-hover:text-white transition-all duration-300 group-hover:rotate-[-6deg] group-hover:scale-110">
-                <Share2 size={32} />
-              </div>
-              <h3 className="text-2xl font-bold mb-2">100% Free</h3>
-              <p className="text-lg text-root-fg/80">No premium tiers, no licenses. Built by the community, for the community.</p>
-            </div>
-            
-            <div className="sketch-card p-6 flex flex-col items-center text-center group hover-lift cursor-default">
-              <div className="w-16 h-16 sketch-border bg-brand-blue/20 text-brand-blue flex items-center justify-center mb-4 group-hover:bg-brand-blue group-hover:text-white transition-all duration-300 group-hover:rotate-[6deg] group-hover:scale-110">
-                <PenTool size={32} />
-              </div>
-              <h3 className="text-2xl font-bold mb-2">Open Source</h3>
-              <p className="text-lg text-root-fg/80">Everything is open. Fork it, mod it, integrate it anywhere you need.</p>
-            </div>
-            
-            <div className="sketch-card p-6 flex flex-col items-center text-center group hover-lift cursor-default">
-              <div className="w-16 h-16 sketch-border bg-brand-yellow/20 text-brand-orange flex items-center justify-center mb-4 group-hover:bg-brand-yellow group-hover:text-root-fg transition-all duration-300 group-hover:rotate-[-4deg] group-hover:scale-110">
-                <Sparkles size={32} />
-              </div>
-              <h3 className="text-2xl font-bold mb-2">AI First</h3>
-              <p className="text-lg text-root-fg/80">Native bindings and structures designed for LLM generation and interpretation.</p>
-            </div>
+            <RoughnessDemo />
+            <FreehandDemo />
+            <ColorDemo />
+            <FillStyleDemo />
+            <AIGenerateDemo />
+            <StrokeWidthDemo />
           </StaggerChildren>
         </div>
 

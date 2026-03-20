@@ -91,6 +91,39 @@ export function drawPatternFill(
         ctx.fill();
       }
     }
+  } else if (fillStyle === 'zigzag') {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    ctx.globalAlpha *= 0.6;
+    const gap = 10;
+    const amp = 4;
+    for (let row = 0; row < h; row += gap) {
+      ctx.beginPath();
+      ctx.moveTo(x, y + row);
+      for (let dx = 0; dx < w; dx += amp * 2) {
+        ctx.lineTo(x + dx + amp, y + row + amp);
+        ctx.lineTo(x + dx + amp * 2, y + row);
+      }
+      ctx.stroke();
+    }
+  } else if (fillStyle === 'zigzag-line') {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1;
+    ctx.globalAlpha *= 0.55;
+    const gap = 8;
+    const amp = 3;
+    // Diagonal zigzag lines
+    for (let i = -h; i < w + h; i += gap) {
+      ctx.beginPath();
+      const steps = Math.ceil(h / (amp * 2));
+      for (let s = 0; s <= steps; s++) {
+        const py = y + s * amp * 2;
+        const px = x + i - (py - y) + (s % 2 === 0 ? 0 : amp);
+        if (s === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+    }
   }
 
   ctx.restore();

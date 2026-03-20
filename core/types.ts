@@ -57,9 +57,9 @@ export type BoardierElementType =
 
 /**
  * @boardier-type FillStyle
- * @boardier-description Available fill patterns for shape elements. `hachure` and `cross-hatch` use the rough.js hand-drawn rendering engine.
+ * @boardier-description Available fill patterns for shape elements. `hachure`, `cross-hatch`, `zigzag`, and `zigzag-line` use the rough.js hand-drawn rendering engine.
  */
-export type FillStyle = 'none' | 'solid' | 'hachure' | 'cross-hatch' | 'dots';
+export type FillStyle = 'none' | 'solid' | 'hachure' | 'cross-hatch' | 'dots' | 'zigzag' | 'zigzag-line';
 
 export type StrokeStyle = 'solid' | 'dashed' | 'dotted';
 
