@@ -1,3 +1,9 @@
+/**
+ * @boardier-module ui/PageNavigator
+ * @boardier-category UI
+ * @boardier-description Multi-page navigation panel. Lists all pages/slides, allows adding, deleting, renaming, and switching between pages.
+ * @boardier-since 0.1.0
+ */
 import React, { useState } from 'react';
 import type { BoardierTheme } from '../themes/types';
 import type { BoardierPage } from '../core/types';

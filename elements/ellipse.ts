@@ -1,3 +1,9 @@
+/**
+ * @boardier-module elements/ellipse
+ * @boardier-category Elements
+ * @boardier-description Renderer, hit-tester, and bounds-getter for the ellipse element. Uses roughEllipse for hand-drawn rendering, supports labels, fill patterns, and point-in-ellipse hit-testing.
+ * @boardier-since 0.1.0
+ */
 import type { EllipseElement, Vec2, Bounds } from '../core/types';
 import { registerElement } from './base';
 import { rotatePoint } from '../utils/math';

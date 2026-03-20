@@ -1,3 +1,9 @@
+/**
+ * @boardier-module ui/PresentationMode
+ * @boardier-category UI
+ * @boardier-description Fullscreen presentation mode that displays pages/frames as slides. Supports keyboard navigation, auto-fit zoom, and ESC to exit.
+ * @boardier-since 0.1.0
+ */
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import type { BoardierElement, ViewState } from '../core/types';
 import type { BoardierTheme } from '../themes/types';

@@ -1,3 +1,9 @@
+/**
+ * @boardier-module tools/EraseTool
+ * @boardier-category Tools
+ * @boardier-description Eraser tool that removes elements on pointer contact. Hit-tests under the cursor and removes matching elements in real-time as the pointer moves.
+ * @boardier-since 0.1.0
+ */
 import type { Vec2 } from '../core/types';
 import { BaseTool, type ToolContext } from './BaseTool';
 

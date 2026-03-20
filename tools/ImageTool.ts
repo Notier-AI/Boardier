@@ -1,3 +1,9 @@
+/**
+ * @boardier-module tools/ImageTool
+ * @boardier-category Tools
+ * @boardier-description Tool for inserting images. Opens a file picker on click and creates an ImageElement from the selected file.
+ * @boardier-since 0.1.0
+ */
 import type { Vec2 } from '../core/types';
 import { BaseTool, type ToolContext } from './BaseTool';
 import { createImage } from '../elements/base';

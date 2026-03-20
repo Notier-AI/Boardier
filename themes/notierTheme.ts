@@ -1,3 +1,10 @@
+/**
+ * @boardier-module themes/notierTheme
+ * @boardier-category Themes
+ * @boardier-description Factory function that creates a Notier-branded theme. Accepts optional overrides for accent and background colors.
+ * @boardier-since 0.1.0
+ * @boardier-usage `const theme = createNotierTheme({ accent: '#6366f1' });`
+ */
 import type { BoardierTheme } from './types';
 
 /**

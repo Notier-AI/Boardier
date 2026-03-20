@@ -1,3 +1,9 @@
+/**
+ * @boardier-module tools/ShapeTool
+ * @boardier-category Tools
+ * @boardier-description Generic tool for creating rectangle, ellipse, and diamond shapes. Click-and-drag creates the shape; hold Shift for square/circle constraint.
+ * @boardier-since 0.1.0
+ */
 import type { Vec2, BoardierElementType } from '../core/types';
 import { BaseTool, type ToolContext } from './BaseTool';
 import { createElement } from '../elements/base';

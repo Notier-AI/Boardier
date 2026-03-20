@@ -1,3 +1,9 @@
+/**
+ * @boardier-module elements/table
+ * @boardier-category Elements
+ * @boardier-description Renderer, hit-tester, and bounds-getter for grid/table elements. Renders rows, columns, cell text, optional headers, and proportional column/row sizing.
+ * @boardier-since 0.1.0
+ */
 import type { TableElement, Vec2, Bounds } from '../core/types';
 import { registerElement } from './base';
 import { HANDWRITTEN_FONT } from '../utils/colors';

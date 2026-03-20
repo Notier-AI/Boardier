@@ -1,3 +1,10 @@
+/**
+ * @boardier-module core/Engine
+ * @boardier-category Core
+ * @boardier-description The central orchestrator of the Boardier whiteboard. `BoardierEngine` owns the scene graph, undo/redo history, renderer, clipboard, and the active tool. It exposes a public API for tool switching, element manipulation, multi-page support, viewport control, theming, and an AI-facing interface for LLM integration.
+ * @boardier-since 0.1.0
+ * @boardier-see Scene, Renderer, History, Clipboard, BaseTool
+ */
 import type {
   BoardierElement,
   BoardierToolType,
@@ -31,6 +38,12 @@ import { setIconImageLoadCallback } from '../elements/icon';
 import { generateId } from '../utils/id';
 import type { BoardierPage } from './types';
 
+/**
+ * @boardier-class BoardierEngine
+ * @boardier-description The main engine class. Instantiate with a `<canvas>` element, a config, and a theme. All user interaction flows through `handlePointer*` / `handleWheel` / `handleKey*` methods which delegate to the active tool. The engine batches re-renders via `requestAnimationFrame`.
+ * @boardier-usage `const engine = new BoardierEngine(canvasEl, { showGrid: true }, defaultTheme);`
+ * @boardier-ai The engine exposes `searchElements()`, `getSceneSummary()`, `getSceneStats()`, `moveElement()`, `resizeElement()`, `setElementColor()`, `deleteAll()`, `panTo()`, `selectElements()`, and `getCanvas()` specifically for LLM agents to read and manipulate the whiteboard programmatically.
+ */
 export class BoardierEngine {
   readonly scene = new Scene();
   readonly history = new History();

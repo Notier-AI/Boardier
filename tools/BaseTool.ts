@@ -1,3 +1,10 @@
+/**
+ * @boardier-module tools/BaseTool
+ * @boardier-category Tools
+ * @boardier-description Abstract base class and `ToolContext` interface for all Boardier tools. Every tool receives a `ToolContext` with access to the scene, history, renderer, clipboard, theme, viewport, and utility callbacks. Extend `BaseTool` to create custom tool behaviours.
+ * @boardier-since 0.1.0
+ * @boardier-see core/Engine for tool registration
+ */
 import type { BoardierToolType, BoardierConfig, Vec2 } from '../core/types';
 import type { Scene } from '../core/Scene';
 import type { History } from '../core/History';

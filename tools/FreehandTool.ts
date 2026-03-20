@@ -1,3 +1,9 @@
+/**
+ * @boardier-module tools/FreehandTool
+ * @boardier-category Tools
+ * @boardier-description Freehand drawing tool. Records pointer positions on move and creates a FreehandElement on release. Supports pressure-sensitive input from styluses.
+ * @boardier-since 0.1.0
+ */
 import type { Vec2 } from '../core/types';
 import { BaseTool, type ToolContext } from './BaseTool';
 import { createFreehand } from '../elements/base';

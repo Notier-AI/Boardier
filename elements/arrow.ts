@@ -1,3 +1,9 @@
+/**
+ * @boardier-module elements/arrow
+ * @boardier-category Elements
+ * @boardier-description Renderer, hit-tester, and bounds-getter for arrows. Extends line rendering with configurable arrowheads at start and/or end. Supports bézier curves and element binding.
+ * @boardier-since 0.1.0
+ */
 import type { ArrowElement, Vec2, Bounds } from '../core/types';
 import { registerElement } from './base';
 import { distanceToPolyline, distanceToBezier } from '../utils/math';

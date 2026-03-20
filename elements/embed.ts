@@ -1,3 +1,9 @@
+/**
+ * @boardier-module elements/embed
+ * @boardier-category Elements
+ * @boardier-description Renderer, hit-tester, and bounds-getter for embedded web content placeholders. Displays a URL title card on the canvas (actual iframe rendering happens in the UI layer).
+ * @boardier-since 0.1.0
+ */
 import type { EmbedElement, Vec2, Bounds } from '../core/types';
 import { registerElement } from './base';
 

@@ -1,9 +1,19 @@
+/**
+ * @boardier-module core/Scene
+ * @boardier-category Core
+ * @boardier-description In-memory scene graph that holds all elements and the current selection. Provides CRUD operations, hit-testing, z-ordering, and serialisation. Emits change and selection events consumed by the engine and UI.
+ * @boardier-since 0.1.0
+ */
 import type { BoardierElement, Vec2, Bounds, ViewState, BoardierSceneData } from './types';
 import { hitTestElement, getElementBounds } from '../elements/base';
 import { boundsIntersect, boundsContainsPoint } from '../utils/math';
 
 type Listener<T extends (...args: any[]) => void> = T;
 
+/**
+ * @boardier-class Scene
+ * @boardier-description Manages the flat element array and selection set. Provides `hitTest()` and `getElementsInBounds()` for spatial queries, and `toJSON()` / `fromJSON()` for persistence.
+ */
 export class Scene {
   private elements: BoardierElement[] = [];
   private selectedIds: Set<string> = new Set();

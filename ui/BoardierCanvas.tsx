@@ -1,3 +1,12 @@
+/**
+ * @boardier-module ui/BoardierCanvas
+ * @boardier-category UI
+ * @boardier-description The top-level React component for embedding the Boardier whiteboard. Wraps the BoardierEngine with a canvas element and provides a complete UI including toolbar, property panel, zoom controls, export dialog, text editor overlays, context menu, minimap, page navigator, and presentation mode. All UI panels are draggable via the DraggablePanel system.
+ * @boardier-since 0.1.0
+ * @boardier-usage `<BoardierCanvas config={{ showGrid: true }} theme={defaultTheme} onChange={handleChange} />`
+ * @boardier-props BoardierCanvasProps
+ * @boardier-ref BoardierCanvasRef (via React.forwardRef) — exposes getEngine(), getSceneData(), loadScene(), exportToPNG(), exportToSVG(), exportToJSON()
+ */
 import React, {
   useRef,
   useEffect,

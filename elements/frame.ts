@@ -1,3 +1,9 @@
+/**
+ * @boardier-module elements/frame
+ * @boardier-category Elements
+ * @boardier-description Renderer, hit-tester, and bounds-getter for frame containers. Frames group child elements with optional clipping, padding, and a labelled header.
+ * @boardier-since 0.1.0
+ */
 import type { FrameElement, Vec2, Bounds } from '../core/types';
 import { registerElement } from './base';
 import { rotatePoint } from '../utils/math';

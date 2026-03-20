@@ -1,3 +1,9 @@
+/**
+ * @boardier-module ui/Minimap
+ * @boardier-category UI
+ * @boardier-description A small overview map of the entire scene shown in a corner. Renders a scaled-down view of all elements and a viewport indicator. Click-to-navigate and drag-to-pan are supported.
+ * @boardier-since 0.1.0
+ */
 import React, { useRef, useEffect, useCallback } from 'react';
 import type { BoardierElement, ViewState } from '../core/types';
 import type { BoardierTheme } from '../themes/types';

@@ -1,3 +1,9 @@
+/**
+ * @boardier-module tools/WidgetTool
+ * @boardier-category Tools
+ * @boardier-description Generic tool for placing widget elements (checkbox, radiogroup, frame, embed, table). Accepts a widget type and default dimensions; creates the corresponding element on click.
+ * @boardier-since 0.1.0
+ */
 import type { Vec2, BoardierElementType } from '../core/types';
 import { BaseTool, type ToolContext } from './BaseTool';
 import { createElement } from '../elements/base';

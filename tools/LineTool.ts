@@ -1,3 +1,9 @@
+/**
+ * @boardier-module tools/LineTool
+ * @boardier-category Tools
+ * @boardier-description Tool for creating lines and arrows. Supports straight segments, bézier curves (via alt-drag control point), element binding (snapping to target shapes), and multi-point polylines.
+ * @boardier-since 0.1.0
+ */
 import type { Vec2, BoardierElement } from '../core/types';
 import { BaseTool, type ToolContext } from './BaseTool';
 import { createLine, createArrow, getElementBounds } from '../elements/base';

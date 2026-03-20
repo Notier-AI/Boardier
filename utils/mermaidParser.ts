@@ -1,4 +1,12 @@
 /**
+ * @boardier-module utils/mermaidParser
+ * @boardier-category Utilities
+ * @boardier-description Converts Mermaid diagram syntax into Boardier elements. parseMermaid() parses text into a graph structure; mermaidToBoardier() converts that into positioned BoardierElement arrays.
+ * @boardier-since 0.1.0
+ * @boardier-usage `const elements = mermaidToBoardier('graph TD; A-->B; B-->C');`
+ * @boardier-ai This module is particularly useful for LLM agents that generate diagrams from natural language.
+ */
+/**
  * Mermaid Flowchart → Boardier Elements converter.
  * Parses Mermaid flowchart/graph syntax and produces Boardier elements.
  *

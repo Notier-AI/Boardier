@@ -1,3 +1,9 @@
+/**
+ * @boardier-module ui/PropertyPanel
+ * @boardier-category UI
+ * @boardier-description Side panel that displays and edits properties of selected elements: stroke color, fill color/style, stroke width/style, opacity, roughness, font, text alignment, border radius, and element-specific fields.
+ * @boardier-since 0.1.0
+ */
 import React, { useRef, useState } from 'react';
 import type { BoardierElement, FillStyle, StrokeStyle } from '../core/types';
 import type { BoardierTheme } from '../themes/types';

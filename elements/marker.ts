@@ -1,3 +1,9 @@
+/**
+ * @boardier-module elements/marker
+ * @boardier-category Elements
+ * @boardier-description Renderer, hit-tester, and bounds-getter for the highlighter-marker element. Draws wide, translucent strokes ideal for annotations and emphasis.
+ * @boardier-since 0.1.0
+ */
 import type { MarkerElement, Vec2, Bounds } from '../core/types';
 import { registerElement } from './base';
 

@@ -1,3 +1,9 @@
+/**
+ * @boardier-module elements/freehand
+ * @boardier-category Elements
+ * @boardier-description Renderer, hit-tester, and bounds-getter for freehand drawing. Records an array of points (and optional per-point pressure values for stylus support). Rendered as a smooth polyline.
+ * @boardier-since 0.1.0
+ */
 import type { FreehandElement, Vec2, Bounds } from '../core/types';
 import { registerElement } from './base';
 import { distanceToPolyline } from '../utils/math';

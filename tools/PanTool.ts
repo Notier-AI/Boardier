@@ -1,3 +1,9 @@
+/**
+ * @boardier-module tools/PanTool
+ * @boardier-category Tools
+ * @boardier-description Hand/pan tool for scrolling the canvas viewport. Also used as a space-bar override in the engine.
+ * @boardier-since 0.1.0
+ */
 import type { Vec2 } from '../core/types';
 import { BaseTool, type ToolContext } from './BaseTool';
 

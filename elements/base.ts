@@ -1,3 +1,10 @@
+/**
+ * @boardier-module elements/base
+ * @boardier-category Elements
+ * @boardier-description Element registry and factory system. Each element type module (rectangle.ts, ellipse.ts, etc.) calls `registerElement()` to provide a renderer, hit-tester, and bounds getter. The factory functions (`createRectangle`, `createEllipse`, …) produce elements with sensible defaults. Use `createElement(type)` as a generic dispatcher.
+ * @boardier-since 0.1.0
+ * @boardier-see core/types for the element type definitions
+ */
 import type {
   BoardierElement,
   BoardierElementType,
@@ -33,6 +40,14 @@ const renderers: Record<string, ElementRenderer> = {};
 const hitTesters: Record<string, ElementHitTester> = {};
 const boundsGetters: Record<string, ElementBoundsGetter> = {};
 
+/**
+ * @boardier-function registerElement
+ * @boardier-description Register a renderer, hit-tester, and bounds-getter for a specific element type. Called once per element module at import time.
+ * @boardier-param type The `BoardierElementType` string identifier.
+ * @boardier-param renderer Draws the element onto a `CanvasRenderingContext2D`.
+ * @boardier-param hitTester Returns true if a world-space point is within `tolerance` of the element.
+ * @boardier-param boundsGetter Returns the axis-aligned bounding box of the element.
+ */
 export function registerElement(
   type: string,
   renderer: ElementRenderer,

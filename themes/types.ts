@@ -1,3 +1,10 @@
+/**
+ * @boardier-module themes/types
+ * @boardier-category Themes
+ * @boardier-description The complete BoardierTheme interface. Every visual aspect of the engine — canvas background, grid, selection, panels, tooltips, fonts, and element defaults — is configurable through a single theme object.
+ * @boardier-since 0.1.0
+ * @boardier-usage `const myTheme: BoardierTheme = { ...defaultTheme, canvasBackground: '#1e1e1e' };`
+ */
 /** Complete visual theme for the Boardier engine. */
 export interface BoardierTheme {
   // Canvas

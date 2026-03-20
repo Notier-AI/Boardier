@@ -1,3 +1,9 @@
+/**
+ * @boardier-module elements/rectangle
+ * @boardier-category Elements
+ * @boardier-description Renderer, hit-tester, and bounds-getter for the rectangle element. Supports border-radius (uniform or per-corner), labels, fill styles (solid/hachure/cross-hatch/dots), stroke styles, shadow, and roughness-based hand-drawn rendering via `roughRect`.
+ * @boardier-since 0.1.0
+ */
 import type { RectangleElement, Vec2, Bounds } from '../core/types';
 import { registerElement } from './base';
 import { rotatePoint } from '../utils/math';

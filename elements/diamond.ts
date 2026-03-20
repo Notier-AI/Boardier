@@ -1,3 +1,9 @@
+/**
+ * @boardier-module elements/diamond
+ * @boardier-category Elements
+ * @boardier-description Renderer, hit-tester, and bounds-getter for the diamond (rhombus) element. Uses roughDiamond for hand-drawn rendering and point-in-polygon for hit-testing.
+ * @boardier-since 0.1.0
+ */
 import type { DiamondElement, Vec2, Bounds } from '../core/types';
 import { registerElement } from './base';
 import { rotatePoint } from '../utils/math';

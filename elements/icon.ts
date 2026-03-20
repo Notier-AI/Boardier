@@ -1,3 +1,9 @@
+/**
+ * @boardier-module elements/icon
+ * @boardier-category Elements
+ * @boardier-description Renderer, hit-tester, and bounds-getter for icon elements. Icons are referenced by iconName and iconSet identifiers, with pre-rendered SVG markup cached as Image objects for canvas painting.
+ * @boardier-since 0.1.0
+ */
 import type { IconElement, Vec2, Bounds } from '../core/types';
 import { registerElement } from './base';
 import { rotatePoint } from '../utils/math';

@@ -1,3 +1,9 @@
+/**
+ * @boardier-module elements/comment
+ * @boardier-category Elements
+ * @boardier-description Renderer, hit-tester, and bounds-getter for comment/annotation pins. Displays author, timestamp, text, and resolved status with a colored marker.
+ * @boardier-since 0.1.0
+ */
 import type { CommentElement, Vec2, Bounds } from '../core/types';
 import { registerElement } from './base';
 

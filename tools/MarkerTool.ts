@@ -1,3 +1,9 @@
+/**
+ * @boardier-module tools/MarkerTool
+ * @boardier-category Tools
+ * @boardier-description Highlighter / marker tool that creates wide, translucent strokes. Records pointer positions during drag and creates a MarkerElement on release.
+ * @boardier-since 0.1.0
+ */
 import type { Vec2 } from '../core/types';
 import { BaseTool, type ToolContext } from './BaseTool';
 import { createMarker } from '../elements/base';

@@ -1,3 +1,10 @@
+/**
+ * @boardier-module utils/export
+ * @boardier-category Utilities
+ * @boardier-description Export functions for converting scene elements to PNG (as Blob), JSON (as string), and SVG (as string). PNG export renders to an offscreen canvas at configurable scale and padding. SVG export generates self-contained markup.
+ * @boardier-since 0.1.0
+ * @boardier-usage `const blob = await exportToPNG(elements, '#fff', 40, 2);`
+ */
 import type { BoardierElement, ViewState } from '../core/types';
 import { getElementBounds, renderElement } from '../elements/base';
 

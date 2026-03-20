@@ -1,3 +1,9 @@
+/**
+ * @boardier-module ui/TextEditor
+ * @boardier-category UI
+ * @boardier-description Floating textarea overlay for editing text elements in-place. Auto-resizes to fit content and supports multi-line editing.
+ * @boardier-since 0.1.0
+ */
 import React, { useRef, useEffect, useCallback } from 'react';
 import type { TextElement, ViewState } from '../core/types';
 import type { BoardierTheme } from '../themes/types';

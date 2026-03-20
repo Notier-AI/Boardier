@@ -1,3 +1,9 @@
+/**
+ * @boardier-module ui/ShapeLabelEditor
+ * @boardier-category UI
+ * @boardier-description Inline text editor overlay positioned on top of shape elements (rectangles, ellipses, diamonds) for editing their labels.
+ * @boardier-since 0.1.0
+ */
 import React, { useRef, useEffect, useCallback } from 'react';
 import type { BoardierElement, ViewState } from '../core/types';
 import type { BoardierTheme } from '../themes/types';

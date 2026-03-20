@@ -1,3 +1,9 @@
+/**
+ * @boardier-module elements/text
+ * @boardier-category Elements
+ * @boardier-description Renderer, hit-tester, bounds-getter, and measureText() utility for multi-line text elements. Supports font family/size selection, text alignment, line-height, and optional inline icon placeholders.
+ * @boardier-since 0.1.0
+ */
 import type { TextElement, Vec2, Bounds } from '../core/types';
 import { registerElement } from './base';
 import { rotatePoint } from '../utils/math';

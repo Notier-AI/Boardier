@@ -1,12 +1,29 @@
+/**
+ * @boardier-module core/types
+ * @boardier-category Core
+ * @boardier-description All type definitions for the Boardier whiteboard engine. This module contains zero runtime code — it is purely TypeScript type declarations used across every other module. Import only what you need for tree-shaking.
+ * @boardier-since 0.1.0
+ */
+
 // ─── Boardier Core Types ─────────────────────────────────────────────
 // All type definitions for the Boardier whiteboard engine.
 // No runtime dependencies — pure type declarations.
 
+/**
+ * @boardier-type Vec2
+ * @boardier-description 2D vector / point used for positions, offsets, and control points throughout the engine.
+ * @boardier-usage `const pos: Vec2 = { x: 100, y: 200 };`
+ */
 export interface Vec2 {
   x: number;
   y: number;
 }
 
+/**
+ * @boardier-type Bounds
+ * @boardier-description Axis-aligned bounding box used for hit-testing, viewport culling, and layout calculations.
+ * @boardier-usage `const b: Bounds = { x: 0, y: 0, width: 100, height: 50 };`
+ */
 export interface Bounds {
   x: number;
   y: number;
@@ -16,6 +33,10 @@ export interface Bounds {
 
 // ─── Element Types ───────────────────────────────────────────────────
 
+/**
+ * @boardier-type BoardierElementType
+ * @boardier-description Union of all element type string identifiers. Used as the discriminant in the `BoardierElement` union and as keys in the element registry.
+ */
 export type BoardierElementType =
   | 'rectangle'
   | 'ellipse'
@@ -34,11 +55,19 @@ export type BoardierElementType =
   | 'table'
   | 'comment';
 
+/**
+ * @boardier-type FillStyle
+ * @boardier-description Available fill patterns for shape elements. `hachure` and `cross-hatch` use the rough.js hand-drawn rendering engine.
+ */
 export type FillStyle = 'none' | 'solid' | 'hachure' | 'cross-hatch' | 'dots';
 
 export type StrokeStyle = 'solid' | 'dashed' | 'dotted';
 
-/** Fields shared by every element on the canvas. */
+/**
+ * @boardier-type BoardierElementBase
+ * @boardier-description Fields shared by every element on the canvas. All concrete element interfaces extend this base. When creating elements, prefer using the factory functions in `elements/base.ts` which supply sensible defaults.
+ * @boardier-see createElement
+ */
 export interface BoardierElementBase {
   id: string;
   type: BoardierElementType;
@@ -237,7 +266,11 @@ export interface CommentElement extends BoardierElementBase {
   markerColor: string;
 }
 
-/** Discriminated union of all element shapes. */
+/**
+ * @boardier-type BoardierElement
+ * @boardier-description Discriminated union of all element shapes. Narrow by checking `element.type` to access shape-specific fields. This is the primary type passed around the engine.
+ * @boardier-usage `if (el.type === 'rectangle') { console.log(el.borderRadius); }`
+ */
 export type BoardierElement =
   | RectangleElement
   | EllipseElement
@@ -281,6 +314,11 @@ export type BoardierToolType =
 
 // ─── View State ──────────────────────────────────────────────────────
 
+/**
+ * @boardier-type ViewState
+ * @boardier-description Camera state for the canvas viewport. `scrollX`/`scrollY` are in world-space pixels; `zoom` is a multiplier (1 = 100%).
+ * @boardier-usage `engine.setViewState({ scrollX: 0, scrollY: 0, zoom: 1.5 });`
+ */
 export interface ViewState {
   scrollX: number;
   scrollY: number;
@@ -296,6 +334,11 @@ export interface BoardierPage {
   elements: BoardierElement[];
 }
 
+/**
+ * @boardier-type BoardierSceneData
+ * @boardier-description Serialisation format for persisting an entire whiteboard scene. Can be stored in a database, exported as JSON, or loaded back in.
+ * @boardier-usage `const json = engine.getSceneData(); localStorage.setItem('scene', JSON.stringify(json));`
+ */
 export interface BoardierSceneData {
   engine: 'boardier';
   elements: BoardierElement[];  // default page elements (backwards compat)
@@ -308,6 +351,11 @@ export interface BoardierSceneData {
 
 // ─── Config ──────────────────────────────────────────────────────────
 
+/**
+ * @boardier-type BoardierConfig
+ * @boardier-description Configuration object passed to `BoardierCanvas` or `BoardierEngine`. All fields are optional — defaults are applied internally.
+ * @boardier-usage `<BoardierCanvas config={{ readOnly: true, showGrid: false }} />`
+ */
 export interface BoardierConfig {
   readOnly?: boolean;
   showGrid?: boolean;
@@ -335,6 +383,11 @@ export type BoardierPanelId = 'toolbar' | 'zoom' | 'export' | 'backToContent';
 
 // ─── AI Config (Phase 3 — placeholder) ───────────────────────────────
 
+/**
+ * @boardier-type BoardierAIConfig
+ * @boardier-description Configuration for AI-assisted features (Phase 3). Boardier never ships API keys — the developer provides their own.
+ * @boardier-usage `const aiConfig: BoardierAIConfig = { apiKey: process.env.OPENAI_KEY!, model: 'gpt-4' };`
+ */
 export interface BoardierAIConfig {
   /** The developer provides their own key; Boardier never ships one. */
   apiKey: string;

@@ -1,3 +1,9 @@
+/**
+ * @boardier-module elements/checkbox
+ * @boardier-category Elements
+ * @boardier-description Renderer, hit-tester, and bounds-getter for interactive checkbox elements. Renders a hand-drawn checkbox with check-mark, label text, and configurable check color/size.
+ * @boardier-since 0.1.0
+ */
 import type { CheckboxElement, Vec2, Bounds } from '../core/types';
 import { registerElement } from './base';
 import { rotatePoint } from '../utils/math';

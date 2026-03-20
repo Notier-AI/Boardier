@@ -1,3 +1,9 @@
+/**
+ * @boardier-module tools/CommentTool
+ * @boardier-category Tools
+ * @boardier-description Click-to-place tool for adding comment/annotation pins. Creates a CommentElement at the click position with default author and timestamp.
+ * @boardier-since 0.1.0
+ */
 import type { Vec2 } from '../core/types';
 import { BaseTool, type ToolContext } from './BaseTool';
 import { createComment } from '../elements/base';

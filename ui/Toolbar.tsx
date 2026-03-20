@@ -1,3 +1,9 @@
+/**
+ * @boardier-module ui/Toolbar
+ * @boardier-category UI
+ * @boardier-description Main tool-selection toolbar. Renders tool buttons for all element types plus select, pan, and eraser. Supports keyboard shortcuts and active-tool highlighting.
+ * @boardier-since 0.1.0
+ */
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import type { BoardierToolType } from '../core/types';
 import type { BoardierTheme } from '../themes/types';

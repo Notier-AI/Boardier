@@ -1,8 +1,20 @@
+/**
+ * @boardier-module core/History
+ * @boardier-category Core
+ * @boardier-description Simple undo/redo stack using full-scene snapshots. Snapshots are deep-cloned via `structuredClone`, so mutations to the live scene don't affect history entries.
+ * @boardier-since 0.1.0
+ */
 import type { BoardierElement } from './types';
 
 /**
  * Simple undo/redo stack using full-scene snapshots.
  * Snapshots are deep-cloned, so mutations to the live scene don't affect history.
+ */
+/**
+ * @boardier-class History
+ * @boardier-description Maintains a capped stack of `BoardierElement[]` snapshots. Call `push()` after an operation, then `undo()` / `redo()` to navigate.
+ * @boardier-usage `history.push(scene.getElements()); // after drag-end`
+ * @boardier-param maxSize Maximum number of snapshots to retain (default: 100).
  */
 export class History {
   private stack: BoardierElement[][] = [];

@@ -1,3 +1,9 @@
+/**
+ * @boardier-module elements/image
+ * @boardier-category Elements
+ * @boardier-description Renderer, hit-tester, and bounds-getter for image elements. Supports data URLs and external URLs with object-fit modes (contain/cover/fill).
+ * @boardier-since 0.1.0
+ */
 import type { ImageElement, Vec2, Bounds } from '../core/types';
 import { registerElement } from './base';
 

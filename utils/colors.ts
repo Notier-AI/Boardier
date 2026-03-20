@@ -1,3 +1,9 @@
+/**
+ * @boardier-module utils/colors
+ * @boardier-category Utilities
+ * @boardier-description Colour palettes, stroke widths, font sizes, and font families used as defaults throughout the UI and element creation. All are exported as `readonly` arrays.
+ * @boardier-since 0.1.0
+ */
 /** Stroke / border color palette. */
 export const STROKE_COLORS = [
   '#1e1e1e',

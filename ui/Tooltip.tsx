@@ -1,3 +1,9 @@
+/**
+ * @boardier-module ui/Tooltip
+ * @boardier-category UI
+ * @boardier-description Themed tooltip component that appears on hover. Positions itself above/below the trigger element and respects theme colors.
+ * @boardier-since 0.1.0
+ */
 import React, { useState, useRef, useCallback } from 'react';
 import type { BoardierTheme } from '../themes/types';
 

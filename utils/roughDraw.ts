@@ -1,4 +1,10 @@
 /**
+ * @boardier-module utils/roughDraw
+ * @boardier-category Utilities
+ * @boardier-description Hand-drawn rendering primitives powered by a seeded PRNG. Provides roughRect, roughEllipse, roughDiamond, roughPolyline, roughBezier, and roughFillRect for a sketchy aesthetic. Roughness 0 = clean, 2 = very rough.
+ * @boardier-since 0.1.0
+ */
+/**
  * Lightweight hand-drawn rendering helpers.
  * Uses a seeded PRNG so jitter is stable across renders for the same element.
  * No external dependencies.

@@ -1,3 +1,9 @@
+/**
+ * @boardier-module ui/ContextMenu
+ * @boardier-category UI
+ * @boardier-description Right-click context menu for the canvas. Shows element operations (copy, paste, delete, duplicate, z-order, select all) positioned at the cursor.
+ * @boardier-since 0.1.0
+ */
 import React from 'react';
 import type { BoardierTheme } from '../themes/types';
 import type { Vec2 } from '../core/types';

@@ -1,3 +1,10 @@
+/**
+ * @boardier-module core/Renderer
+ * @boardier-category Core
+ * @boardier-description Canvas 2D renderer responsible for drawing all elements, the grid, selection overlays, smart guides, and lasso outlines. Performs viewport culling, coordinate transforms (screen ↔ world), and theme-aware color adaptation for dark backgrounds.
+ * @boardier-since 0.1.0
+ * @boardier-see BoardierEngine, Scene
+ */
 import type { BoardierElement, Vec2, ViewState, Bounds } from './types';
 import type { BoardierTheme } from '../themes/types';
 import type { SmartGuide } from '../tools/SelectTool';

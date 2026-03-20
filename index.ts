@@ -1,3 +1,11 @@
+/**
+ * @boardier-module index
+ * @boardier-category Public API
+ * @boardier-description Main entry point for the Boardier library. Re-exports all public components, types, themes, element factories, engine, utilities, and rendering helpers. Import from this module for the cleanest consumer experience.
+ * @boardier-since 0.1.0
+ * @boardier-usage `import { BoardierCanvas, defaultTheme, createElement } from 'boardier';`
+ */
+
 // Boardier — A themeable, extensible whiteboard engine
 // Public API
 

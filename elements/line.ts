@@ -1,3 +1,9 @@
+/**
+ * @boardier-module elements/line
+ * @boardier-category Elements
+ * @boardier-description Renderer, hit-tester, and bounds-getter for straight/bézier lines. Supports an optional controlPoint for quadratic curves and element-binding at start/end points.
+ * @boardier-since 0.1.0
+ */
 import type { LineElement, Vec2, Bounds } from '../core/types';
 import { registerElement } from './base';
 import { distanceToPolyline, distanceToBezier } from '../utils/math';

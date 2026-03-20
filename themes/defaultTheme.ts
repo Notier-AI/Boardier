@@ -1,3 +1,10 @@
+/**
+ * @boardier-module themes/defaultTheme
+ * @boardier-category Themes
+ * @boardier-description Ships two built-in themes: `defaultTheme` (light) and `defaultDarkTheme`. Both are complete BoardierTheme objects that can be used directly or spread into custom themes.
+ * @boardier-since 0.1.0
+ * @boardier-usage `<BoardierCanvas theme={defaultTheme} />` or `<BoardierCanvas theme={defaultDarkTheme} />`
+ */
 import type { BoardierTheme } from './types';
 
 /** Clean, modern default theme (light). */

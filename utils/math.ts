@@ -1,3 +1,9 @@
+/**
+ * @boardier-module utils/math
+ * @boardier-category Utilities
+ * @boardier-description Pure math helpers used throughout the engine: distance, midpoint, rotation, bounds testing, segment/polyline/bézier distance, path simplification, and polygon point-in-polygon testing. All functions are stateless and tree-shakeable.
+ * @boardier-since 0.1.0
+ */
 import type { Vec2, Bounds } from '../core/types';
 
 export function distance(a: Vec2, b: Vec2): number {

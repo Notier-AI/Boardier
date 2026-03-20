@@ -1,3 +1,9 @@
+/**
+ * @boardier-module ui/IconPicker
+ * @boardier-category UI
+ * @boardier-description Searchable icon picker dialog that renders icons from react-icons sets (Feather, Material Design, Font Awesome, etc.). Supports lazy loading, search filtering, and set tabs.
+ * @boardier-since 0.1.0
+ */
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import type { BoardierTheme } from '../themes/types';

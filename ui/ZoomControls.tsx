@@ -1,3 +1,9 @@
+/**
+ * @boardier-module ui/ZoomControls
+ * @boardier-category UI
+ * @boardier-description Zoom-in, zoom-out, and fit-to-content buttons displayed in a compact panel. Shows the current zoom percentage.
+ * @boardier-since 0.1.0
+ */
 import React from 'react';
 import type { BoardierTheme } from '../themes/types';
 

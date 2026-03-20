@@ -1,3 +1,9 @@
+/**
+ * @boardier-module ui/ExportDialog
+ * @boardier-category UI
+ * @boardier-description Modal dialog for exporting the scene to PNG, SVG, or JSON. Provides format selection, scale/padding controls, and a download button.
+ * @boardier-since 0.1.0
+ */
 import React, { useState } from 'react';
 import type { BoardierTheme } from '../themes/types';
 import type { BoardierElement, ViewState } from '../core/types';

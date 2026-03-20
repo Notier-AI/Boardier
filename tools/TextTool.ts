@@ -1,3 +1,9 @@
+/**
+ * @boardier-module tools/TextTool
+ * @boardier-category Tools
+ * @boardier-description Click-to-place text tool. Creates a TextElement at the click position and immediately requests the text editor overlay.
+ * @boardier-since 0.1.0
+ */
 import type { Vec2 } from '../core/types';
 import { BaseTool, type ToolContext } from './BaseTool';
 import { createText } from '../elements/base';

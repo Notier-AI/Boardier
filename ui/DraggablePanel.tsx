@@ -1,3 +1,9 @@
+/**
+ * @boardier-module ui/DraggablePanel
+ * @boardier-category UI
+ * @boardier-description A generic draggable container used to wrap toolbar, zoom controls, and export panels. Supports position persistence, no-drop zones, and optional lock mode via BoardierLayoutConfig.
+ * @boardier-since 0.1.0
+ */
 import React, { useRef, useState, useCallback, useEffect } from 'react';
 import type { BoardierTheme } from '../themes/types';
 import type { BoardierPanelId, BoardierLayoutConfig } from '../core/types';

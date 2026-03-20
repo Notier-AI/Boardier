@@ -1,3 +1,9 @@
+/**
+ * @boardier-module tools/SelectTool
+ * @boardier-category Tools
+ * @boardier-description The default selection tool. Handles click-to-select, box selection, lasso selection, drag-to-move, resize handles, smart alignment guides, and keyboard shortcuts (delete, copy, paste, undo/redo, select-all). This is the most complex tool in Boardier.
+ * @boardier-since 0.1.0
+ */
 import type { Vec2, Bounds, BoardierElement } from '../core/types';
 import { BaseTool, type ToolContext } from './BaseTool';
 import { getElementBounds } from '../elements/base';

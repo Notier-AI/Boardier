@@ -1,3 +1,9 @@
+/**
+ * @boardier-module elements/radiogroup
+ * @boardier-category Elements
+ * @boardier-description Renderer, hit-tester, and bounds-getter for interactive radio-button groups. Supports vertical/horizontal layouts with configurable option labels and selection index.
+ * @boardier-since 0.1.0
+ */
 import type { RadioGroupElement, Vec2, Bounds } from '../core/types';
 import { registerElement } from './base';
 import { rotatePoint } from '../utils/math';
