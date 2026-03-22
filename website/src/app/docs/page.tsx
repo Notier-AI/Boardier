@@ -185,6 +185,9 @@ export default function DocsPage() {
           </div>
         </div>
         <div className="flex items-center gap-3">
+          <Link href="/changelog" className="sketch-button px-2.5 py-1 text-xs hover:bg-brand-green hover:text-white">
+            Changelog
+          </Link>
           <a href="https://notier.ai" target="_blank" className="flex items-center gap-1.5 hover:text-brand-blue text-xs">
             <Image src="/notiericon.png" alt="Notier.ai" width={14} height={14} className="rounded-[2px]" />
             <span className="font-semibold">Notier.ai</span>

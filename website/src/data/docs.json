@@ -1,5 +1,107 @@
 [
   {
+    "module": "ai/htmlConverter",
+    "category": "AI",
+    "description": "Converts HTML to Boardier elements using the browser's layout engine. The AI generates semantic HTML with inline styles; we render it offscreen, measure positions via getBoundingClientRect(), and convert each visible element into BoardierElements at the computed coordinates.",
+    "since": "0.2.0",
+    "usage": "",
+    "see": "",
+    "ai": "",
+    "props": "",
+    "ref": "",
+    "params": [],
+    "types": [],
+    "classes": [],
+    "functions": [],
+    "filePath": "ai/htmlConverter.ts",
+    "lineCount": 343
+  },
+  {
+    "module": "ai/index",
+    "category": "AI",
+    "description": "Barrel export for all Boardier AI modules.",
+    "since": "0.2.0",
+    "usage": "",
+    "see": "",
+    "ai": "",
+    "props": "",
+    "ref": "",
+    "params": [],
+    "types": [],
+    "classes": [],
+    "functions": [],
+    "filePath": "ai/index.ts",
+    "lineCount": 53
+  },
+  {
+    "module": "ai/layout",
+    "category": "AI",
+    "description": "Layout algorithms for automatic element arrangement. Provides grid, tree, flow (dagre-like), radial, and force-directed layouts. All functions are pure — they take elements and return positioned elements without mutating the originals.",
+    "since": "0.2.0",
+    "usage": "",
+    "see": "",
+    "ai": "",
+    "props": "",
+    "ref": "",
+    "params": [],
+    "types": [],
+    "classes": [],
+    "functions": [],
+    "filePath": "ai/layout.ts",
+    "lineCount": 625
+  },
+  {
+    "module": "ai/orchestrator",
+    "category": "AI",
+    "description": "Provider-agnostic AI orchestrator for the Boardier whiteboard engine. Accepts a pluggable AI provider function so the host app can use any LLM backend (OpenAI, Gemini, Anthropic, local models, etc.). Routes requests between local handlers (mermaid, simple commands) and the remote AI provider (complex generation).",
+    "since": "0.2.0",
+    "usage": "",
+    "see": "",
+    "ai": "",
+    "props": "",
+    "ref": "",
+    "params": [],
+    "types": [],
+    "classes": [],
+    "functions": [],
+    "filePath": "ai/orchestrator.ts",
+    "lineCount": 542
+  },
+  {
+    "module": "ai/schema",
+    "category": "AI",
+    "description": "Element schema definitions for LLM-based diagram generation. Provides structured JSON schemas that describe all BoardierElement types, their properties and valid ranges. LLM providers use these schemas to produce valid element arrays when generating diagrams from natural language.",
+    "since": "0.2.0",
+    "usage": "",
+    "see": "",
+    "ai": "",
+    "props": "",
+    "ref": "",
+    "params": [],
+    "types": [],
+    "classes": [],
+    "functions": [],
+    "filePath": "ai/schema.ts",
+    "lineCount": 233
+  },
+  {
+    "module": "ai/styles",
+    "category": "AI",
+    "description": "Style presets and style transfer utilities for Boardier elements. Provides named preset themes (e.g. \"professional\", \"playful\", \"blueprint\") that can be applied to all elements on the canvas in a single call. Also provides style transfer — copy the visual style of one element to selected elements.",
+    "since": "0.2.0",
+    "usage": "",
+    "see": "",
+    "ai": "",
+    "props": "",
+    "ref": "",
+    "params": [],
+    "types": [],
+    "classes": [],
+    "functions": [],
+    "filePath": "ai/styles.ts",
+    "lineCount": 252
+  },
+  {
     "module": "scripts/parseDocsFromSource",
     "category": "Build",
     "description": "Parses all @boardier- JSDoc annotations from the boardier source tree and outputs a structured JSON file consumed by the /docs page at build time.",
@@ -38,7 +140,7 @@
     ],
     "functions": [],
     "filePath": "core/Clipboard.ts",
-    "lineCount": 34
+    "lineCount": 35
   },
   {
     "module": "core/Engine",
@@ -62,7 +164,7 @@
     ],
     "functions": [],
     "filePath": "core/Engine.ts",
-    "lineCount": 757
+    "lineCount": 1033
   },
   {
     "module": "core/History",
@@ -103,7 +205,7 @@
     "classes": [],
     "functions": [],
     "filePath": "core/Renderer.ts",
-    "lineCount": 455
+    "lineCount": 465
   },
   {
     "module": "core/Scene",
@@ -158,7 +260,7 @@
       },
       {
         "name": "FillStyle",
-        "description": "Available fill patterns for shape elements. `hachure` and `cross-hatch` use the rough.js hand-drawn rendering engine.",
+        "description": "Available fill patterns for shape elements. `hachure`, `cross-hatch`, `zigzag`, and `zigzag-line` use the rough.js hand-drawn rendering engine.",
         "usage": ""
       },
       {
@@ -524,12 +626,12 @@
     "classes": [],
     "functions": [],
     "filePath": "index.ts",
-    "lineCount": 99
+    "lineCount": 133
   },
   {
     "module": "themes/defaultTheme",
     "category": "Themes",
-    "description": "Ships two built-in themes: `defaultTheme` (light) and `defaultDarkTheme`. Both are complete BoardierTheme objects that can be used directly or spread into custom themes.",
+    "description": "Ships two built-in themes: `defaultTheme` (light) and `defaultDarkTheme`. Both are complete BoardierTheme objects that can be used directly or spread into custom themes. Also exports `roughUIStyle` and `cleanUIStyle` presets.",
     "since": "0.1.0",
     "usage": "`<BoardierCanvas theme={defaultTheme} />` or `<BoardierCanvas theme={defaultDarkTheme} />`",
     "see": "",
@@ -541,7 +643,7 @@
     "classes": [],
     "functions": [],
     "filePath": "themes/defaultTheme.ts",
-    "lineCount": 89
+    "lineCount": 163
   },
   {
     "module": "themes/notierTheme",
@@ -558,12 +660,12 @@
     "classes": [],
     "functions": [],
     "filePath": "themes/notierTheme.ts",
-    "lineCount": 117
+    "lineCount": 124
   },
   {
     "module": "themes/types",
     "category": "Themes",
-    "description": "The complete BoardierTheme interface. Every visual aspect of the engine — canvas background, grid, selection, panels, tooltips, fonts, and element defaults — is configurable through a single theme object.",
+    "description": "The complete BoardierTheme interface. Every visual aspect of the engine — canvas background, grid, selection, panels, tooltips, fonts, and element defaults — is configurable through a single theme object. The `uiStyle` section provides full CSS-level control over UI component shapes.",
     "since": "0.1.0",
     "usage": "`const myTheme: BoardierTheme = { ...defaultTheme, canvasBackground: '#1e1e1e' };`",
     "see": "",
@@ -571,11 +673,17 @@
     "props": "",
     "ref": "",
     "params": [],
-    "types": [],
+    "types": [
+      {
+        "name": "BoardierUIStyle",
+        "description": "CSS-level control over the look and shape of every UI component. Developers can make the UI look sketchy/organic, perfectly clean, or anything in between. All `borderRadius` values accept any valid CSS border-radius string.",
+        "usage": ""
+      }
+    ],
     "classes": [],
     "functions": [],
     "filePath": "themes/types.ts",
-    "lineCount": 56
+    "lineCount": 134
   },
   {
     "module": "tools/BaseTool",
@@ -643,7 +751,7 @@
     "classes": [],
     "functions": [],
     "filePath": "tools/FreehandTool.ts",
-    "lineCount": 104
+    "lineCount": 105
   },
   {
     "module": "tools/IconTool",
@@ -694,7 +802,7 @@
     "classes": [],
     "functions": [],
     "filePath": "tools/LineTool.ts",
-    "lineCount": 223
+    "lineCount": 231
   },
   {
     "module": "tools/MarkerTool",
@@ -745,7 +853,7 @@
     "classes": [],
     "functions": [],
     "filePath": "tools/SelectTool.ts",
-    "lineCount": 686
+    "lineCount": 706
   },
   {
     "module": "tools/ShapeTool",
@@ -813,7 +921,7 @@
     "classes": [],
     "functions": [],
     "filePath": "ui/BoardierCanvas.tsx",
-    "lineCount": 1082
+    "lineCount": 1095
   },
   {
     "module": "ui/ContextMenu",
@@ -830,7 +938,7 @@
     "classes": [],
     "functions": [],
     "filePath": "ui/ContextMenu.tsx",
-    "lineCount": 120
+    "lineCount": 145
   },
   {
     "module": "ui/DraggablePanel",
@@ -864,7 +972,7 @@
     "classes": [],
     "functions": [],
     "filePath": "ui/ExportDialog.tsx",
-    "lineCount": 152
+    "lineCount": 153
   },
   {
     "module": "ui/IconPicker",
@@ -898,7 +1006,7 @@
     "classes": [],
     "functions": [],
     "filePath": "ui/Minimap.tsx",
-    "lineCount": 159
+    "lineCount": 160
   },
   {
     "module": "ui/PageNavigator",
@@ -915,7 +1023,7 @@
     "classes": [],
     "functions": [],
     "filePath": "ui/PageNavigator.tsx",
-    "lineCount": 131
+    "lineCount": 132
   },
   {
     "module": "ui/PresentationMode",
@@ -932,7 +1040,7 @@
     "classes": [],
     "functions": [],
     "filePath": "ui/PresentationMode.tsx",
-    "lineCount": 178
+    "lineCount": 179
   },
   {
     "module": "ui/PropertyPanel",
@@ -949,7 +1057,7 @@
     "classes": [],
     "functions": [],
     "filePath": "ui/PropertyPanel.tsx",
-    "lineCount": 400
+    "lineCount": 511
   },
   {
     "module": "ui/ShapeLabelEditor",
@@ -966,7 +1074,7 @@
     "classes": [],
     "functions": [],
     "filePath": "ui/ShapeLabelEditor.tsx",
-    "lineCount": 75
+    "lineCount": 76
   },
   {
     "module": "ui/TextEditor",
@@ -983,7 +1091,7 @@
     "classes": [],
     "functions": [],
     "filePath": "ui/TextEditor.tsx",
-    "lineCount": 118
+    "lineCount": 119
   },
   {
     "module": "ui/Toolbar",
@@ -1000,7 +1108,7 @@
     "classes": [],
     "functions": [],
     "filePath": "ui/Toolbar.tsx",
-    "lineCount": 415
+    "lineCount": 416
   },
   {
     "module": "ui/Tooltip",
@@ -1017,7 +1125,7 @@
     "classes": [],
     "functions": [],
     "filePath": "ui/Tooltip.tsx",
-    "lineCount": 98
+    "lineCount": 99
   },
   {
     "module": "ui/ZoomControls",
@@ -1034,7 +1142,7 @@
     "classes": [],
     "functions": [],
     "filePath": "ui/ZoomControls.tsx",
-    "lineCount": 73
+    "lineCount": 74
   },
   {
     "module": "utils/colors",
@@ -1136,7 +1244,7 @@
     "classes": [],
     "functions": [],
     "filePath": "utils/renderHelpers.ts",
-    "lineCount": 98
+    "lineCount": 131
   },
   {
     "module": "utils/roughDraw",

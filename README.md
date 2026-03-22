@@ -44,6 +44,9 @@ function App() {
 
 ## API Overview
 
+> [!NOTE]
+> The following overview may not always be up to date. To see the full docs, please visit [Boardier Docs](https://boardier.dev/docs).
+
 ### `<BoardierCanvas />`
 
 The main React component. Props:

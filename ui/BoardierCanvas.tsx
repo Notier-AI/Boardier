@@ -43,12 +43,15 @@ import { createIcon } from '../elements/base';
 import { getElementBounds } from '../elements/base';
 import { mermaidToBoardier } from '../utils/mermaidParser';
 import { measureText } from '../elements/text';
+import { describeElements } from '../ai/htmlConverter';
 
 /* ──────────────── public types ──────────────── */
 
 export interface BoardierCanvasProps {
   initialData?: BoardierSceneData | null;
   onChange?: (data: BoardierSceneData) => void;
+  /** Called when the user right-clicks selected elements and chooses "Send to AI". Receives a text description of the selected elements. */
+  onSendToAI?: (description: string) => void;
   theme?: BoardierTheme;
   darkMode?: boolean;
   readOnly?: boolean;
@@ -72,7 +75,7 @@ export interface BoardierCanvasRef {
 /* ──────────────── component ──────────────── */
 
 export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>(
-  ({ initialData, onChange, theme: themeProp, darkMode = false, readOnly = false, config = {}, style, className }, ref) => {
+  ({ initialData, onChange, onSendToAI, theme: themeProp, darkMode = false, readOnly = false, config = {}, style, className }, ref) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const engineRef = useRef<BoardierEngine | null>(null);
@@ -503,9 +506,16 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
         case 'distributeH': engine.distributeSelected('horizontal'); break;
         case 'distributeV': engine.distributeSelected('vertical'); break;
         case 'autoArrange': engine.autoArrange('grid'); break;
+        case 'sendToAI': {
+          const selected = engine.scene.getSelectedElements();
+          if (selected.length > 0 && onSendToAI) {
+            onSendToAI(describeElements(selected));
+          }
+          break;
+        }
       }
       setContextMenu(null);
-    }, []);
+    }, [onSendToAI]);
 
     // ── Mermaid converter ────────────────────────────
 

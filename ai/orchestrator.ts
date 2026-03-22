@@ -20,7 +20,10 @@ import {
   resolveColor,
   resolveFillColor,
   AI_COLOR_MAP,
+  isComplexLayoutRequest,
+  HTML_GENERATION_PROMPT,
 } from './schema';
+import { htmlToBoardier } from './htmlConverter';
 
 // ─── Types ────────────────────────────────────────────────────────
 
@@ -57,6 +60,8 @@ export interface BoardierAIProviderOptions {
   maxTokens?: number;
   /** JSON schema for structured output (for providers that support it). */
   responseSchema?: Record<string, unknown>;
+  /** 'json' (default) or 'html' — tells the provider/edge function which generation mode to use. */
+  mode?: 'json' | 'html';
 }
 
 /** Configuration for the Boardier AI orchestrator. */
@@ -331,6 +336,50 @@ export async function processAIRequest(
     return handleFlowchartFallback(engine, prompt);
   }
 
+  // Detect whether this is a complex visual layout request (HTML mode)
+  const useHtmlMode = isComplexLayoutRequest(prompt);
+
+  if (useHtmlMode) {
+    // ── HTML generation mode ──
+    // For complex layouts (landing pages, dashboards, wireframes etc.)
+    // we ask the AI to generate HTML, then convert it to Boardier elements.
+    const htmlSystemPrompt = (config.systemPromptPrefix ? config.systemPromptPrefix + '\n\n' : '') + HTML_GENERATION_PROMPT;
+    try {
+      const result = await config.provider(htmlSystemPrompt, prompt, {
+        temperature: 0.4,
+        maxTokens: 8192,
+        mode: 'html',
+      });
+
+      // The provider should return { html: "..." } for HTML mode
+      if (result.error) return result;
+
+      const html = (result as any).html;
+      if (html && typeof html === 'string') {
+        const elements = htmlToBoardier(html);
+        if (elements.length > 0) {
+          engine.addElements(elements);
+          setTimeout(() => engine.zoomToFit(), 100);
+          return { command: 'add_elements', elements };
+        }
+        return { error: 'HTML conversion produced no elements' };
+      }
+
+      // Fallback: if provider returned elements instead of HTML (non-HTML-aware provider)
+      if (result.elements && result.elements.length > 0) {
+        const created = materializeElements(result.elements);
+        engine.addElements(created);
+        setTimeout(() => engine.zoomToFit(), 100);
+        return { command: 'add_elements', elements: created };
+      }
+
+      return { error: 'AI returned no usable content' };
+    } catch (err) {
+      return { error: err instanceof Error ? err.message : 'HTML generation error' };
+    }
+  }
+
+  // ── JSON element generation mode ──
   const systemPrompt = buildSystemPrompt(engine, prompt, config);
   try {
     const result = await config.provider(systemPrompt, prompt, {

@@ -25,7 +25,16 @@ export {
   detectDiagramType,
   resolveColor,
   resolveFillColor,
+  isComplexLayoutRequest,
+  HTML_GENERATION_PROMPT,
+  HTML_MODIFY_PROMPT,
 } from './schema';
+
+// HTML converter
+export {
+  htmlToBoardier,
+  describeElements,
+} from './htmlConverter';
 
 // Layout algorithms
 export {

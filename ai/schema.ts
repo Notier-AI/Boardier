@@ -138,3 +138,95 @@ export function detectDiagramType(prompt: string): string | null {
   }
   return null;
 }
+
+/**
+ * Detect whether a prompt requests a complex visual layout (landing page, dashboard, etc.)
+ * that should use HTML generation mode instead of raw element JSON.
+ */
+export function isComplexLayoutRequest(prompt: string): boolean {
+  const lower = prompt.toLowerCase();
+  return /\b(landing\s*page|website|webpage|web\s*page|dashboard|app\s*design|ui\s*design|layout|homepage|hero\s*section|signup\s*page|login\s*page|profile\s*page|pricing\s*page|blog\s*page|portfolio|mobile\s*app|screen\s*design|wireframe|mockup|prototype|sidebar|navbar|footer|header|card\s*layout|form\s*design|settings\s*page|checkout|e.?commerce|saas|admin\s*panel|cms|social\s*media|email\s*template|newsletter|presentation|slide|poster|banner|infographic|resume|business\s*card)\b/.test(lower);
+}
+
+/** System prompt for HTML-based generation. The AI produces HTML that gets converted to Boardier elements. */
+export const HTML_GENERATION_PROMPT = `
+You generate whiteboard wireframes as HTML with inline styles.
+
+CRITICAL RULES:
+1. Return ONLY a single HTML snippet (the content, no <html>/<head>/<body> wrappers).
+2. Use a root container div with explicit width (usually 1200px for desktop, 375px for mobile).
+3. Use ONLY inline styles (style="..."). NO <style> blocks, NO CSS classes.
+4. Use semantic HTML: <nav>, <header>, <section>, <footer>, <aside>, <main>, <article>.
+5. For images, use <div> placeholders with a gray background and centered text like [Hero Image].
+6. Use flexbox for layouts: display:flex, flex-direction, gap, align-items, justify-content.
+7. Keep it visual and wireframe-like — use clear backgrounds, borders, and spacing.
+8. Use realistic placeholder text (not lorem ipsum — use real-sounding headlines and copy).
+9. For icons, use emoji or text symbols (★, →, ✓, ✕, ☰, 🔍, 👤, etc.).
+10. Make every element have explicit dimensions or flex properties — nothing should be 0-height.
+
+COLOR PALETTE:
+- Primaries: #1971c2, #2f9e44, #e03131, #f08c00, #6741d9
+- Neutrals: #1e1e1e, #495057, #868e96, #adb5bd, #dee2e6, #f1f3f5, #f8f9fa, #ffffff
+- Fills: #e7f5ff, #ebfbee, #fff5f5, #fff9db, #f3f0ff
+
+WIREFRAME COMPONENTS to use:
+- Navigation: <nav> with logo text + links + CTA button
+- Hero: Large <section> with headline, subtext, CTA button, optional image placeholder
+- Features: Grid of cards using flex with gap
+- Cards: <div> with border, padding, icon/image, title, description
+- Footer: <footer> with columns of links
+- Sidebar: <aside> with vertical nav items
+- Forms: <div> containers with labeled inputs (just use <div> styled as input fields)
+- Stats: Numbers with labels in a row
+- Testimonials: Quoted text with avatar placeholder and name
+- Pricing: Cards with tier name, price, feature list, CTA
+
+BUTTON STYLING:
+- Primary: style="padding:12px 24px;background:#1971c2;color:white;border-radius:8px;font-weight:600;font-size:16px;border:none;cursor:pointer"
+- Secondary: style="padding:12px 24px;background:transparent;color:#1971c2;border:2px solid #1971c2;border-radius:8px;font-weight:600;font-size:16px"
+- CTA: style="padding:14px 32px;background:#2f9e44;color:white;border-radius:8px;font-weight:700;font-size:18px;border:none"
+
+INPUT FIELD STYLING:
+- style="padding:10px 14px;border:1px solid #dee2e6;border-radius:6px;background:#f8f9fa;width:100%;font-size:14px;color:#495057"
+
+EXAMPLE — Landing Page:
+<div style="width:1200px;font-family:system-ui,sans-serif">
+  <nav style="display:flex;align-items:center;padding:16px 40px;border-bottom:1px solid #dee2e6">
+    <div style="font-size:22px;font-weight:800;color:#1971c2">BrandName</div>
+    <div style="display:flex;gap:28px;margin-left:auto;align-items:center">
+      <span style="color:#495057;font-size:15px">Features</span>
+      <span style="color:#495057;font-size:15px">Pricing</span>
+      <span style="color:#495057;font-size:15px">About</span>
+      <div style="padding:10px 22px;background:#1971c2;color:white;border-radius:8px;font-weight:600;font-size:14px">Get Started</div>
+    </div>
+  </nav>
+  <section style="display:flex;align-items:center;padding:80px 40px;gap:60px">
+    <div style="flex:1">
+      <h1 style="font-size:48px;font-weight:800;color:#1e1e1e;line-height:1.1;margin-bottom:20px">Build better products faster</h1>
+      <p style="font-size:18px;color:#868e96;line-height:1.6;margin-bottom:32px">The all-in-one platform that helps teams design, prototype, and ship beautiful software.</p>
+      <div style="display:flex;gap:16px">
+        <div style="padding:14px 32px;background:#1971c2;color:white;border-radius:8px;font-weight:700;font-size:16px">Start Free Trial</div>
+        <div style="padding:14px 32px;background:transparent;color:#1971c2;border:2px solid #1971c2;border-radius:8px;font-weight:600;font-size:16px">Watch Demo →</div>
+      </div>
+    </div>
+    <div style="width:500px;height:340px;background:#f1f3f5;border-radius:16px;display:flex;align-items:center;justify-content:center;color:#868e96;font-size:16px">[Product Screenshot]</div>
+  </section>
+</div>
+
+RESPONSE:
+Return the HTML directly. No markdown fences, no explanation, just the HTML string.
+`;
+
+/** Prompt extension for modifying existing elements described by the user or context. */
+export const HTML_MODIFY_PROMPT = `
+The user wants to modify part of their existing whiteboard.
+
+CONTEXT about their current canvas:
+{SCENE_CONTEXT}
+
+SELECTED ELEMENTS:
+{SELECTED_DESCRIPTION}
+
+Generate the complete updated HTML for the modified section. Apply the user's requested changes while preserving the overall structure and intent.
+Return only the HTML.
+`;

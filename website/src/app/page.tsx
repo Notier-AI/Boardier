@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { PenTool, Sparkles, Github, ArrowRight, MousePointerClick, Book } from "lucide-react";
+import { PenTool, Sparkles, Github, ArrowRight, MousePointerClick, Book, GitBranch } from "lucide-react";
 import HeroSelectAnimation from "./components/HeroSelectAnimation";
 import ScrollReveal from "./components/ScrollReveal";
 import StaggerChildren from "./components/StaggerChildren";
@@ -36,6 +36,10 @@ export default function Home() {
           <Link href="/docs" className="sketch-button px-3 py-1.5 flex items-center gap-2 hover:bg-brand-blue hover:text-white group">
             <Book size={18} />
             <span className="hidden sm:inline group-hover:text-white">Docs</span>
+          </Link>
+          <Link href="/changelog" className="sketch-button px-3 py-1.5 flex items-center gap-2 hover:bg-brand-green hover:text-white group">
+            <GitBranch size={18} />
+            <span className="hidden sm:inline group-hover:text-white">Changelog</span>
           </Link>
           <a href="https://github.com" className="sketch-button px-3 py-1.5 flex items-center gap-2 hover:bg-brand-red hover:text-white group">
             <Github size={18} />
@@ -160,7 +164,7 @@ export default function Home() {
           <div className="flex gap-4">
             <Link href="/demo" className="sketch-underline hover:text-brand-blue">Demo</Link>
             <Link href="/docs" className="sketch-underline hover:text-brand-red">Documentation</Link>
-            <a href="#" className="sketch-underline hover:text-brand-green">Source Code</a>
+            <Link href="/changelog" className="sketch-underline hover:text-brand-green">Changelog</Link>
           </div>
         </div>
         <div className="pt-6 pb-2 border-t-2 border-root-fg/20 border-dashed w-full max-w-md flex items-center justify-center">

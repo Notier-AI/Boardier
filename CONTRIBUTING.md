@@ -33,6 +33,24 @@ npx tsx scripts/parseDocsFromSource.ts
 
 This updates `website/src/data/docs.json`, which powers the `/docs` page.
 
+### Regenerating Changelog
+
+After adding modules with new `@boardier-since` versions:
+
+```bash
+npx tsx scripts/generateChangelog.ts
+```
+
+This updates `website/src/data/changelog.json`, which powers the `/changelog` page.
+
+**Adding a new release:**
+
+1. Tag all new/changed modules with `@boardier-since X.Y.Z` in their JSDoc header
+2. Add an entry to the `VERSION_META` map in `scripts/generateChangelog.ts` with the version, date, and a one-line summary
+3. Run `npx tsx scripts/parseDocsFromSource.ts` (docs first — changelog reads `docs.json`)
+4. Run `npx tsx scripts/generateChangelog.ts`
+5. Verify with `npm run build` in `website/`
+
 ## Code Structure
 
 | Directory | Purpose |
@@ -43,7 +61,7 @@ This updates `website/src/data/docs.json`, which powers the `/docs` page.
 | `themes/` | Theme types and presets |
 | `ui/` | React components (canvas wrapper, toolbar, panels, overlays) |
 | `utils/` | Pure utilities (math, colors, export, rough drawing, mermaid) |
-| `scripts/` | Build-time scripts (docs parser) |
+| `scripts/` | Build-time scripts (docs parser, changelog generator) |
 | `website/` | Next.js marketing site, demo, and docs |
 
 ## Coding Guidelines
@@ -78,13 +96,15 @@ Every module should have a `@boardier-module` JSDoc block at the top:
 ```ts
 /**
  * @boardier-module category/moduleName
- * @boardier-category Core | Elements | Tools | Themes | UI | Utilities
+ * @boardier-category Core | Elements | Tools | Themes | UI | Utilities | AI
  * @boardier-description What this module does.
  * @boardier-since 0.1.0
  * @boardier-usage `example code here`
  * @boardier-see OtherModule
  */
 ```
+
+> **Important:** The `@boardier-since` tag drives the `/changelog` page. When adding a new module or adding significant new exports to an existing module as part of a release, set `@boardier-since` to the target version (e.g. `0.3.0`). This is how we track what shipped in each release without maintaining a manual changelog.
 
 For individual exports, use:
 

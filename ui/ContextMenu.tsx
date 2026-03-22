@@ -1,10 +1,10 @@
 /**
  * @boardier-module ui/ContextMenu
  * @boardier-category UI
- * @boardier-description Right-click context menu for the canvas. Shows element operations (copy, paste, delete, duplicate, z-order, select all) positioned at the cursor.
+ * @boardier-description Right-click context menu for the canvas. Shows element operations (copy, paste, delete, duplicate, z-order, arrange submenu, send to AI, select all) positioned at the cursor.
  * @boardier-since 0.1.0
  */
-import React from 'react';
+import React, { useState } from 'react';
 import type { BoardierTheme } from '../themes/types';
 import type { Vec2 } from '../core/types';
 
@@ -41,6 +41,7 @@ const Icons: Record<string, React.ReactNode> = {
   distributeH: <svg width={ICON_SIZE} height={ICON_SIZE} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="2" x2="3" y2="22"/><line x1="21" y1="2" x2="21" y2="22"/><rect x="8" y="6" width="8" height="12" rx="1"/></svg>,
   distributeV: <svg width={ICON_SIZE} height={ICON_SIZE} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="2" y1="3" x2="22" y2="3"/><line x1="2" y1="21" x2="22" y2="21"/><rect x="6" y="8" width="12" height="8" rx="1"/></svg>,
   autoArrange: <svg width={ICON_SIZE} height={ICON_SIZE} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>,
+  sendToAI: <svg width={ICON_SIZE} height={ICON_SIZE} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .962 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.582a.5.5 0 0 1 0 .962L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.962 0z"/></svg>,
 };
 
 interface MenuItem {
@@ -51,7 +52,22 @@ interface MenuItem {
   icon?: React.ReactNode;
   needsMultiple?: boolean;
   needsTriple?: boolean;
+  children?: MenuItem[];
 }
+
+const ARRANGE_ITEMS: MenuItem[] = [
+  { action: 'alignLeft', label: 'Align left', shortcut: '', needsSelection: true, icon: Icons.alignLeft, needsMultiple: true },
+  { action: 'alignCenterH', label: 'Align center', shortcut: '', needsSelection: true, icon: Icons.alignCenterH, needsMultiple: true },
+  { action: 'alignRight', label: 'Align right', shortcut: '', needsSelection: true, icon: Icons.alignRight, needsMultiple: true },
+  { action: 'alignTop', label: 'Align top', shortcut: '', needsSelection: true, icon: Icons.alignTop, needsMultiple: true },
+  { action: 'alignCenterV', label: 'Align middle', shortcut: '', needsSelection: true, icon: Icons.alignCenterV, needsMultiple: true },
+  { action: 'alignBottom', label: 'Align bottom', shortcut: '', needsSelection: true, icon: Icons.alignBottom, needsMultiple: true },
+  { action: 'separator-ar1', label: '', shortcut: '', needsSelection: false },
+  { action: 'distributeH', label: 'Distribute horizontal', shortcut: '', needsSelection: true, icon: Icons.distributeH, needsTriple: true },
+  { action: 'distributeV', label: 'Distribute vertical', shortcut: '', needsSelection: true, icon: Icons.distributeV, needsTriple: true },
+  { action: 'separator-ar2', label: '', shortcut: '', needsSelection: false },
+  { action: 'autoArrange', label: 'Auto-arrange', shortcut: '', needsSelection: false, icon: Icons.autoArrange },
+];
 
 const ITEMS: MenuItem[] = [
   { action: 'copy', label: 'Copy', shortcut: 'Ctrl+C', needsSelection: true, icon: Icons.copy },
@@ -61,16 +77,10 @@ const ITEMS: MenuItem[] = [
   { action: 'bringToFront', label: 'Bring to front', shortcut: ']', needsSelection: true, icon: Icons.bringToFront },
   { action: 'sendToBack', label: 'Send to back', shortcut: '[', needsSelection: true, icon: Icons.sendToBack },
   { action: 'separator2', label: '', shortcut: '', needsSelection: false },
-  { action: 'alignLeft', label: 'Align left', shortcut: '', needsSelection: true, icon: Icons.alignLeft, needsMultiple: true },
-  { action: 'alignCenterH', label: 'Align center', shortcut: '', needsSelection: true, icon: Icons.alignCenterH, needsMultiple: true },
-  { action: 'alignRight', label: 'Align right', shortcut: '', needsSelection: true, icon: Icons.alignRight, needsMultiple: true },
-  { action: 'alignTop', label: 'Align top', shortcut: '', needsSelection: true, icon: Icons.alignTop, needsMultiple: true },
-  { action: 'alignCenterV', label: 'Align middle', shortcut: '', needsSelection: true, icon: Icons.alignCenterV, needsMultiple: true },
-  { action: 'alignBottom', label: 'Align bottom', shortcut: '', needsSelection: true, icon: Icons.alignBottom, needsMultiple: true },
-  { action: 'distributeH', label: 'Distribute horizontal', shortcut: '', needsSelection: true, icon: Icons.distributeH, needsTriple: true },
-  { action: 'distributeV', label: 'Distribute vertical', shortcut: '', needsSelection: true, icon: Icons.distributeV, needsTriple: true },
-  { action: 'autoArrange', label: 'Auto-arrange', shortcut: '', needsSelection: false, icon: Icons.autoArrange },
+  { action: 'arrange', label: 'Arrange', shortcut: '', needsSelection: false, icon: Icons.autoArrange, children: ARRANGE_ITEMS },
   { action: 'separator2b', label: '', shortcut: '', needsSelection: false },
+  { action: 'sendToAI', label: 'Send to AI', shortcut: '', needsSelection: true, icon: Icons.sendToAI },
+  { action: 'separator2c', label: '', shortcut: '', needsSelection: false },
   { action: 'addComment', label: 'Add comment', shortcut: '', needsSelection: true, icon: Icons.comment },
   { action: 'group', label: 'Group', shortcut: 'Ctrl+G', needsSelection: true, icon: Icons.group },
   { action: 'ungroup', label: 'Ungroup', shortcut: 'Ctrl+Shift+G', needsSelection: true, icon: Icons.ungroup },
@@ -79,6 +89,73 @@ const ITEMS: MenuItem[] = [
 ];
 
 export const ContextMenu: React.FC<ContextMenuProps> = ({ position, onAction, onClose, theme, hasSelection, canPaste, hasMultipleSelection, isGrouped, selectionCount = 0 }) => {
+  const [openSubmenu, setOpenSubmenu] = useState<string | null>(null);
+
+  const renderItem = (item: MenuItem, parentAction?: string) => {
+    if (item.action.startsWith('separator')) {
+      return <div key={(parentAction || '') + item.action} style={{ height: 1, background: theme.panelBorder, margin: '4px 0' }} />;
+    }
+    if (item.action === 'group' && !hasMultipleSelection) return null;
+    if (item.action === 'ungroup' && !isGrouped) return null;
+    if (item.needsMultiple && selectionCount < 2) return null;
+    if (item.needsTriple && selectionCount < 3) return null;
+
+    const disabled = (item.needsSelection && !hasSelection) || (item.action === 'paste' && !canPaste);
+    const hasChildren = item.children && item.children.length > 0;
+    const submenuOpen = openSubmenu === item.action;
+
+    return (
+      <div key={item.action} style={{ position: 'relative' }}
+        onMouseEnter={() => { if (hasChildren && !disabled) setOpenSubmenu(item.action); }}
+        onMouseLeave={() => { if (hasChildren) setOpenSubmenu(null); }}>
+        <button
+          onClick={() => { if (!disabled && !hasChildren) onAction(item.action); }}
+          disabled={disabled}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            width: '100%',
+            padding: '6px 12px',
+            border: 'none',
+            background: submenuOpen ? theme.panelHover : 'transparent',
+            cursor: disabled ? 'default' : 'pointer',
+            fontSize: 12,
+            fontWeight: 500,
+            color: disabled ? theme.panelTextSecondary : (item.action === 'delete' ? '#e03131' : theme.panelText),
+            opacity: disabled ? 0.5 : 1,
+            fontFamily: 'inherit',
+            textAlign: 'left',
+          }}
+          onMouseEnter={e => { if (!disabled) (e.currentTarget as HTMLElement).style.background = theme.panelHover; }}
+          onMouseLeave={e => { if (!submenuOpen) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+        >
+          {item.icon && <span style={{ display: 'flex', flexShrink: 0, opacity: 0.7 }}>{item.icon}</span>}
+          <span style={{ flex: 1 }}>{item.label}</span>
+          {hasChildren && <span style={{ fontSize: 10, color: theme.panelTextSecondary, marginLeft: 8 }}>▶</span>}
+          {!hasChildren && item.shortcut && <span style={{ fontSize: 10, color: theme.panelTextSecondary, marginLeft: 12 }}>{item.shortcut}</span>}
+        </button>
+        {hasChildren && submenuOpen && (
+          <div style={{
+            position: 'absolute',
+            left: '100%',
+            top: -4,
+            minWidth: 200,
+            padding: '4px 0',
+            background: theme.panelBackground,
+            border: `${theme.uiStyle.panelBorderWidth}px ${theme.uiStyle.panelBorderStyle} ${theme.panelBorder}`,
+            borderRadius: theme.uiStyle.menuBorderRadius,
+            boxShadow: theme.uiStyle.panelShadow,
+            zIndex: 52,
+            fontFamily: theme.uiFontFamily,
+          }}>
+            {item.children!.map(child => renderItem(child, item.action))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <>
       <div style={{ position: 'fixed', inset: 0, zIndex: 50 }} onClick={onClose} onContextMenu={e => { e.preventDefault(); onClose(); }} />
@@ -97,47 +174,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({ position, onAction, on
           fontFamily: theme.uiFontFamily,
         }}
       >
-        {ITEMS.map(item => {
-          if (item.action.startsWith('separator')) {
-            return <div key={item.action} style={{ height: 1, background: theme.panelBorder, margin: '4px 0' }} />;
-          }
-          // Hide group if only one selected, hide ungroup if not grouped
-          if (item.action === 'group' && !hasMultipleSelection) return null;
-          if (item.action === 'ungroup' && !isGrouped) return null;
-          if (item.needsMultiple && (selectionCount < 2)) return null;
-          if (item.needsTriple && (selectionCount < 3)) return null;
-
-          const disabled = (item.needsSelection && !hasSelection) || (item.action === 'paste' && !canPaste);
-          return (
-            <button
-              key={item.action}
-              onClick={() => { if (!disabled) onAction(item.action); }}
-              disabled={disabled}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                width: '100%',
-                padding: '6px 12px',
-                border: 'none',
-                background: 'transparent',
-                cursor: disabled ? 'default' : 'pointer',
-                fontSize: 12,
-                fontWeight: 500,
-                color: disabled ? theme.panelTextSecondary : (item.action === 'delete' ? '#e03131' : theme.panelText),
-                opacity: disabled ? 0.5 : 1,
-                fontFamily: 'inherit',
-                textAlign: 'left',
-              }}
-              onMouseEnter={e => { if (!disabled) (e.currentTarget as HTMLElement).style.background = theme.panelHover; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
-            >
-              {item.icon && <span style={{ display: 'flex', flexShrink: 0, opacity: 0.7 }}>{item.icon}</span>}
-              <span style={{ flex: 1 }}>{item.label}</span>
-              {item.shortcut && <span style={{ fontSize: 10, color: theme.panelTextSecondary, marginLeft: 12 }}>{item.shortcut}</span>}
-            </button>
-          );
-        })}
+        {ITEMS.map(item => renderItem(item))}
       </div>
     </>
   );
