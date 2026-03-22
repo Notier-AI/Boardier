@@ -96,3 +96,37 @@ export { roughRect, roughEllipse, roughDiamond, roughPolyline, roughLineTo, roug
 
 // Mermaid conversion
 export { mermaidToBoardier, parseMermaid } from './utils/mermaidParser';
+
+// AI module
+export {
+  processAIRequest,
+  materializeElements,
+  parseLLMResponse,
+  type BoardierAIResult,
+  type BoardierAIProvider,
+  type BoardierAIProviderOptions,
+  type BoardierAIOrchestratorConfig,
+  ELEMENT_SCHEMA_PROMPT,
+  DIAGRAM_HINTS,
+  AI_COLOR_MAP,
+  AI_FILL_MAP,
+  detectDiagramType,
+  resolveColor,
+  resolveFillColor,
+  layoutGrid,
+  layoutTree,
+  layoutFlow,
+  layoutRadial,
+  layoutForce,
+  type LayoutOptions,
+  type ForceLayoutOptions,
+  STYLE_PRESETS,
+  getPreset,
+  listPresets,
+  applyPreset,
+  detectStylePreset,
+  extractStyle,
+  applyStyle,
+  type StylePreset,
+  type ElementStyle,
+} from './ai';

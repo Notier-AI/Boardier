@@ -29,6 +29,8 @@ export class SelectTool extends BaseTool {
   private resizeOrigBounds: Bounds | null = null;
   private resizeElementId: string = '';
   private snapshotBeforeDrag: Map<string, { x: number; y: number; width: number; height: number }> = new Map();
+  /** Snapshots of bound lines at drag-start — used to avoid cumulative drift */
+  private boundLineSnapshots: Map<string, { x: number; y: number; pts: Vec2[] }> = new Map();
   private boxSelectBounds: Bounds | null = null;
   // Lasso selection path
   private lassoPath: Vec2[] = [];
@@ -153,8 +155,25 @@ export class SelectTool extends BaseTool {
       this.mode = 'move';
       this.dragStart = world;
       this.snapshotBeforeDrag.clear();
+      this.boundLineSnapshots.clear();
       for (const el of scene.getSelectedElements()) {
         this.snapshotBeforeDrag.set(el.id, { x: el.x, y: el.y, width: el.width, height: el.height });
+      }
+      // Snapshot all lines/arrows bound to the selected elements so we can
+      // compute their positions from the original each frame (no drift).
+      const movedIds = new Set(this.snapshotBeforeDrag.keys());
+      for (const el of scene.getElements()) {
+        if (el.type !== 'line' && el.type !== 'arrow') continue;
+        if (movedIds.has(el.id)) continue;
+        const lineEl = el as any;
+        if ((lineEl.startBindingId && movedIds.has(lineEl.startBindingId)) ||
+            (lineEl.endBindingId && movedIds.has(lineEl.endBindingId))) {
+          this.boundLineSnapshots.set(el.id, {
+            x: el.x,
+            y: el.y,
+            pts: (lineEl.points as Vec2[]).map((p: Vec2) => ({ ...p })),
+          });
+        }
       }
       ctx.history.push(scene.getElements());
     } else {
@@ -261,7 +280,7 @@ export class SelectTool extends BaseTool {
       const el = ctx.scene.getElementById(this.lineHandleElementId);
       if (el && (el.type === 'line' || el.type === 'arrow')) {
         const vs = ctx.getViewState();
-        const tolerance = 20 / vs.zoom;
+        const tolerance = 50 / vs.zoom;
         const target = this.findBindTargetForEndpoint(ctx, world, this.lineHandleElementId, tolerance);
         const bindingKey = this.lineEndpointIndex === 0 ? 'startBindingId' : 'endBindingId';
         ctx.scene.updateElement(this.lineHandleElementId, {
@@ -486,24 +505,17 @@ export class SelectTool extends BaseTool {
     const lineEl = el as any;
     const pts = [...lineEl.points] as Vec2[];
     const vs = ctx.getViewState();
-    const tolerance = 20 / vs.zoom;
+    const tolerance = 50 / vs.zoom;
 
-    // Find bind target near the dragged endpoint
+    // Find bind target near the dragged endpoint (for hover glow only)
     const target = this.findBindTargetForEndpoint(ctx, world, this.lineHandleElementId, tolerance);
     const newHover = target ? target.id : null;
     if (newHover !== this.hoverBindTargetId) {
       this.hoverBindTargetId = newHover;
     }
 
-    if (target) {
-      // Snap to the border of the target element
-      const otherIdx = this.lineEndpointIndex === 0 ? 1 : 0;
-      const otherAbs: Vec2 = { x: el.x + pts[otherIdx].x, y: el.y + pts[otherIdx].y };
-      const bp = this.closestBorderPoint(target, otherAbs);
-      pts[this.lineEndpointIndex] = { x: bp.x - el.x, y: bp.y - el.y };
-    } else {
-      pts[this.lineEndpointIndex] = { x: world.x - el.x, y: world.y - el.y };
-    }
+    // Always follow cursor — no border snap during drag
+    pts[this.lineEndpointIndex] = { x: world.x - el.x, y: world.y - el.y };
 
     const w = Math.max(Math.abs(pts[1].x - pts[0].x), 1);
     const h = Math.max(Math.abs(pts[1].y - pts[0].y), 1);
@@ -516,20 +528,27 @@ export class SelectTool extends BaseTool {
     ctx.requestRender();
   }
 
-  /** Find a bindable element near a point (excludes lines/arrows/freehand/comment and the line itself). */
+  /** Find a bindable element near a point using true border-distance (excludes lines/arrows/freehand/comment and the line itself). */
   private findBindTargetForEndpoint(ctx: ToolContext, world: Vec2, excludeId: string, tolerance: number): BoardierElement | null {
     const elements = ctx.scene.getElements();
+    let best: BoardierElement | null = null;
+    let bestDist = tolerance;
     for (let i = elements.length - 1; i >= 0; i--) {
       const el = elements[i];
       if (el.id === excludeId) continue;
       if (el.type === 'line' || el.type === 'arrow' || el.type === 'freehand' || el.type === 'comment') continue;
       const b = getElementBounds(el);
-      if (world.x >= b.x - tolerance && world.x <= b.x + b.width + tolerance &&
-          world.y >= b.y - tolerance && world.y <= b.y + b.height + tolerance) {
-        return el;
+      // Distance to border: inside = distance to nearest edge, outside = euclidean to nearest border point
+      const inside = world.x > b.x && world.x < b.x + b.width && world.y > b.y && world.y < b.y + b.height;
+      const dist = inside
+        ? Math.min(world.x - b.x, b.x + b.width - world.x, world.y - b.y, b.y + b.height - world.y)
+        : Math.sqrt((Math.max(b.x, Math.min(b.x + b.width, world.x)) - world.x) ** 2 + (Math.max(b.y, Math.min(b.y + b.height, world.y)) - world.y) ** 2);
+      if (dist <= bestDist) {
+        bestDist = dist;
+        best = el;
       }
     }
-    return null;
+    return best;
   }
 
   // ─── Line/arrow control-point (bézier bend) ───────────────────
@@ -603,52 +622,53 @@ export class SelectTool extends BaseTool {
 
   /**
    * When elements are moved, update any lines/arrows that are bound
-   * to them so the endpoints follow the element borders.
+   * to them so the endpoints follow the element by the same delta —
+   * no border-snap, the line keeps its relative position.
+   * Uses original snapshots to avoid cumulative drift.
    */
   private updateBoundConnections(ctx: ToolContext): void {
-    const movedIds = new Set(this.snapshotBeforeDrag.keys());
-    if (movedIds.size === 0) return;
+    if (this.boundLineSnapshots.size === 0) return;
 
-    const allElements = ctx.scene.getElements();
+    // Compute deltas from the ORIGINAL snapshot positions of moved elements
+    const deltas = new Map<string, { dx: number; dy: number }>();
+    for (const [id, snap] of this.snapshotBeforeDrag.entries()) {
+      const cur = ctx.scene.getElementById(id);
+      if (!cur) continue;
+      deltas.set(id, { dx: cur.x - snap.x, dy: cur.y - snap.y });
+    }
+
     const lineUpdates: { id: string; changes: Partial<BoardierElement> }[] = [];
 
-    for (const el of allElements) {
-      if (el.type !== 'line' && el.type !== 'arrow') continue;
+    for (const [lineId, origLine] of this.boundLineSnapshots) {
+      const el = ctx.scene.getElementById(lineId);
+      if (!el) continue;
       const lineEl = el as any;
-      const startBound = lineEl.startBindingId && movedIds.has(lineEl.startBindingId);
-      const endBound = lineEl.endBindingId && movedIds.has(lineEl.endBindingId);
+      const startBound = lineEl.startBindingId && deltas.has(lineEl.startBindingId);
+      const endBound = lineEl.endBindingId && deltas.has(lineEl.endBindingId);
       if (!startBound && !endBound) continue;
 
-      // Skip if the line itself is being moved
-      if (movedIds.has(el.id)) continue;
-
-      const pts = [...(lineEl.points as Vec2[])];
-      let newX = el.x;
-      let newY = el.y;
+      // Start from the ORIGINAL line snapshot each frame
+      let newX = origLine.x;
+      let newY = origLine.y;
+      const pts: Vec2[] = origLine.pts.map(p => ({ ...p }));
 
       if (startBound) {
-        const target = ctx.scene.getElementById(lineEl.startBindingId);
-        if (target) {
-          const endAbs = { x: el.x + pts[1].x, y: el.y + pts[1].y };
-          const bp = this.closestBorderPoint(target, endAbs);
-          newX = bp.x;
-          newY = bp.y;
-          pts[0] = { x: 0, y: 0 };
-          pts[1] = { x: endAbs.x - bp.x, y: endAbs.y - bp.y };
-        }
+        const d = deltas.get(lineEl.startBindingId)!;
+        // Shift the line origin (start point) by the target's delta
+        newX += d.dx;
+        newY += d.dy;
+        // Keep end point absolute by compensating
+        pts[1] = { x: pts[1].x - d.dx, y: pts[1].y - d.dy };
       }
 
       if (endBound) {
-        const target = ctx.scene.getElementById(lineEl.endBindingId);
-        if (target) {
-          const startAbs = { x: newX + pts[0].x, y: newY + pts[0].y };
-          const bp = this.closestBorderPoint(target, startAbs);
-          pts[1] = { x: bp.x - newX, y: bp.y - newY };
-        }
+        const d = deltas.get(lineEl.endBindingId)!;
+        // Shift end point by target's delta
+        pts[1] = { x: pts[1].x + d.dx, y: pts[1].y + d.dy };
       }
 
       lineUpdates.push({
-        id: el.id,
+        id: lineId,
         changes: {
           x: newX, y: newY,
           points: pts,

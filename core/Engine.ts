@@ -33,9 +33,11 @@ import { WidgetTool } from '../tools/WidgetTool';
 import { ImageTool } from '../tools/ImageTool';
 import { CommentTool } from '../tools/CommentTool';
 import { clamp } from '../utils/math';
-import { getElementBounds } from '../elements/base';
+import { getElementBounds, createElement } from '../elements/base';
 import { setIconImageLoadCallback } from '../elements/icon';
 import { generateId } from '../utils/id';
+import { layoutGrid, layoutTree, layoutRadial, layoutForce, type LayoutOptions, type ForceLayoutOptions } from '../ai/layout';
+import { applyPreset, applyStyle, extractStyle, type ElementStyle } from '../ai/styles';
 import type { BoardierPage } from './types';
 
 /**
@@ -682,10 +684,118 @@ export class BoardierEngine {
     const byType: Record<string, number> = {};
     for (const el of elements) byType[el.type] = (byType[el.type] || 0) + 1;
     const typeSummary = Object.entries(byType).map(([t, n]) => `${n} ${t}${n > 1 ? 's' : ''}`).join(', ');
-    const texts = elements.filter(e => e.type === 'text').map(e => `"${(e as any).text}"`).join(', ');
+
+    // Labels & text
+    const labeled = elements.filter(e => (e as any).label || (e as any).text);
+    const labelSummary = labeled.slice(0, 15).map(e => {
+      const label = (e as any).label || (e as any).text || '';
+      return `${e.type}:"${label.substring(0, 40)}"`;
+    });
+
+    // Connection graph
+    const arrows = elements.filter(e => e.type === 'arrow') as any[];
+    const connections = arrows
+      .filter(a => a.startBindingId && a.endBindingId)
+      .slice(0, 20)
+      .map(a => {
+        const from = elements.find(e => e.id === a.startBindingId);
+        const to = elements.find(e => e.id === a.endBindingId);
+        const fromName = (from as any)?.label || (from as any)?.text || from?.type || '?';
+        const toName = (to as any)?.label || (to as any)?.text || to?.type || '?';
+        return `${fromName} → ${toName}`;
+      });
+
+    // Frames
+    const frames = elements.filter(e => e.type === 'frame') as any[];
+    const frameSummary = frames.slice(0, 5).map(f => {
+      const childCount = f.childIds?.length || 0;
+      return `Frame "${f.label || 'untitled'}" (${childCount} children)`;
+    });
+
     let summary = `Canvas has ${elements.length} elements: ${typeSummary}.`;
-    if (texts) summary += ` Text elements: ${texts}.`;
+    if (labelSummary.length > 0) summary += `\nLabeled: ${labelSummary.join(', ')}.`;
+    if (connections.length > 0) summary += `\nConnections: ${connections.join('; ')}.`;
+    if (frameSummary.length > 0) summary += `\nFrames: ${frameSummary.join('; ')}.`;
     return summary;
+  }
+
+  /**
+   * Get a detailed description of the scene for AI consumption.
+   * @param detail 'brief' returns summary + stats. 'full' adds spatial relationships and element details.
+   */
+  getSceneDescription(detail: 'brief' | 'full' = 'brief'): string {
+    const summary = this.getSceneSummary();
+    const stats = this.getSceneStats();
+
+    if (detail === 'brief') {
+      let desc = summary;
+      if (stats.bounds) {
+        desc += `\nBounds: (${Math.round(stats.bounds.x)}, ${Math.round(stats.bounds.y)}) ${Math.round(stats.bounds.width)}×${Math.round(stats.bounds.height)}.`;
+      }
+      return desc;
+    }
+
+    // Full detail: include element list with positions, sizes, colors
+    const elements = this.scene.getElements();
+    let desc = summary + '\n';
+    if (stats.bounds) {
+      desc += `Canvas bounds: (${Math.round(stats.bounds.x)}, ${Math.round(stats.bounds.y)}) ${Math.round(stats.bounds.width)}×${Math.round(stats.bounds.height)}\n`;
+    }
+
+    // Spatial regions
+    if (elements.length > 0 && stats.bounds) {
+      const midX = stats.bounds.x + stats.bounds.width / 2;
+      const midY = stats.bounds.y + stats.bounds.height / 2;
+      const regions: Record<string, string[]> = { 'top-left': [], 'top-right': [], 'bottom-left': [], 'bottom-right': [] };
+      for (const el of elements) {
+        if (el.type === 'arrow' || el.type === 'line') continue;
+        const cx = el.x + el.width / 2;
+        const cy = el.y + el.height / 2;
+        const quad = `${cy < midY ? 'top' : 'bottom'}-${cx < midX ? 'left' : 'right'}`;
+        const name = (el as any).label || (el as any).text || el.type;
+        regions[quad].push(name);
+      }
+      const nonEmptyRegions = Object.entries(regions).filter(([, v]) => v.length > 0);
+      if (nonEmptyRegions.length > 1) {
+        desc += '\nSpatial layout:\n';
+        for (const [quad, items] of nonEmptyRegions) {
+          desc += `  ${quad}: ${items.slice(0, 5).join(', ')}${items.length > 5 ? ` (+${items.length - 5} more)` : ''}\n`;
+        }
+      }
+    }
+
+    // Element details (first 50)
+    desc += `\nElement details (${Math.min(elements.length, 50)} of ${elements.length}):\n`;
+    for (const el of elements.slice(0, 50)) {
+      const label = (el as any).label || (el as any).text || '';
+      const pos = `(${Math.round(el.x)},${Math.round(el.y)})`;
+      const size = `${Math.round(el.width)}×${Math.round(el.height)}`;
+      const colors = `stroke:${el.strokeColor} fill:${el.backgroundColor}`;
+      desc += `  [${el.id}] ${el.type} ${pos} ${size} ${label ? `"${label}" ` : ''}${colors}\n`;
+    }
+
+    // Groups
+    const groups = new Map<string, string[]>();
+    for (const el of elements) {
+      for (const gid of el.groupIds) {
+        if (!groups.has(gid)) groups.set(gid, []);
+        groups.get(gid)!.push((el as any).label || (el as any).text || el.type);
+      }
+    }
+    if (groups.size > 0) {
+      desc += `\nGroups (${groups.size}):\n`;
+      for (const [gid, members] of groups) {
+        desc += `  Group ${gid}: ${members.join(', ')}\n`;
+      }
+    }
+
+    // Selection
+    const selectedIds = this.scene.getSelectedIds();
+    if (selectedIds.length > 0) {
+      desc += `\nSelected: ${selectedIds.length} element(s) [${selectedIds.slice(0, 10).join(', ')}]\n`;
+    }
+
+    return desc;
   }
 
   /** Get scene statistics. */
@@ -753,4 +863,170 @@ export class BoardierEngine {
 
   /** Get the canvas element for direct access. */
   getCanvas(): HTMLCanvasElement { return this.canvas; }
+
+  // ─── Align & Distribute ───────────────────────────────────────
+
+  /** Align selected elements. Axis: 'left'|'centerH'|'right'|'top'|'centerV'|'bottom'. */
+  alignSelected(axis: 'left' | 'centerH' | 'right' | 'top' | 'centerV' | 'bottom'): void {
+    const ids = this.scene.getSelectedIds();
+    if (ids.length < 2) return;
+    const elements = ids.map(id => this.scene.getElements().find(e => e.id === id)).filter(Boolean) as BoardierElement[];
+    const bounds = elements.map(getElementBounds);
+    this.history.push(this.scene.getElements());
+
+    switch (axis) {
+      case 'left': {
+        const target = Math.min(...bounds.map(b => b.x));
+        for (let i = 0; i < elements.length; i++) this.scene.updateElement(elements[i].id, { x: target });
+        break;
+      }
+      case 'centerH': {
+        const allMinX = Math.min(...bounds.map(b => b.x));
+        const allMaxX = Math.max(...bounds.map(b => b.x + b.width));
+        const center = (allMinX + allMaxX) / 2;
+        for (let i = 0; i < elements.length; i++) this.scene.updateElement(elements[i].id, { x: center - bounds[i].width / 2 });
+        break;
+      }
+      case 'right': {
+        const target = Math.max(...bounds.map(b => b.x + b.width));
+        for (let i = 0; i < elements.length; i++) this.scene.updateElement(elements[i].id, { x: target - bounds[i].width });
+        break;
+      }
+      case 'top': {
+        const target = Math.min(...bounds.map(b => b.y));
+        for (let i = 0; i < elements.length; i++) this.scene.updateElement(elements[i].id, { y: target });
+        break;
+      }
+      case 'centerV': {
+        const allMinY = Math.min(...bounds.map(b => b.y));
+        const allMaxY = Math.max(...bounds.map(b => b.y + b.height));
+        const center = (allMinY + allMaxY) / 2;
+        for (let i = 0; i < elements.length; i++) this.scene.updateElement(elements[i].id, { y: center - bounds[i].height / 2 });
+        break;
+      }
+      case 'bottom': {
+        const target = Math.max(...bounds.map(b => b.y + b.height));
+        for (let i = 0; i < elements.length; i++) this.scene.updateElement(elements[i].id, { y: target - bounds[i].height });
+        break;
+      }
+    }
+    this.history.push(this.scene.getElements());
+    this.render();
+  }
+
+  /** Distribute selected elements evenly. Direction: 'horizontal' | 'vertical'. */
+  distributeSelected(direction: 'horizontal' | 'vertical'): void {
+    const ids = this.scene.getSelectedIds();
+    if (ids.length < 3) return;
+    const elements = ids.map(id => this.scene.getElements().find(e => e.id === id)).filter(Boolean) as BoardierElement[];
+    const bounds = elements.map(getElementBounds);
+    this.history.push(this.scene.getElements());
+
+    if (direction === 'horizontal') {
+      const sorted = elements.map((el, i) => ({ el, b: bounds[i] })).sort((a, b) => a.b.x - b.b.x);
+      const minX = sorted[0].b.x;
+      const maxX = sorted[sorted.length - 1].b.x + sorted[sorted.length - 1].b.width;
+      const totalWidth = sorted.reduce((s, { b }) => s + b.width, 0);
+      const gap = (maxX - minX - totalWidth) / (sorted.length - 1);
+      let x = minX;
+      for (const { el, b } of sorted) {
+        this.scene.updateElement(el.id, { x });
+        x += b.width + gap;
+      }
+    } else {
+      const sorted = elements.map((el, i) => ({ el, b: bounds[i] })).sort((a, b) => a.b.y - b.b.y);
+      const minY = sorted[0].b.y;
+      const maxY = sorted[sorted.length - 1].b.y + sorted[sorted.length - 1].b.height;
+      const totalHeight = sorted.reduce((s, { b }) => s + b.height, 0);
+      const gap = (maxY - minY - totalHeight) / (sorted.length - 1);
+      let y = minY;
+      for (const { el, b } of sorted) {
+        this.scene.updateElement(el.id, { y });
+        y += b.height + gap;
+      }
+    }
+    this.history.push(this.scene.getElements());
+    this.render();
+  }
+
+  // ─── Auto-Arrange ─────────────────────────────────────────────
+
+  /** Auto-arrange all (or selected) elements using the given algorithm. */
+  autoArrange(
+    algorithm: 'grid' | 'tree' | 'radial' | 'force' = 'grid',
+    options?: LayoutOptions | ForceLayoutOptions
+  ): void {
+    const selectedIds = this.scene.getSelectedIds();
+    const useSelected = selectedIds.length > 1;
+    const all = this.scene.getElements();
+    const targets = useSelected ? all.filter(e => selectedIds.includes(e.id)) : all;
+
+    if (targets.length < 2) return;
+
+    // Compute center of current positions for origin
+    const allBounds = targets.map(getElementBounds);
+    const cx = allBounds.reduce((s, b) => s + b.x + b.width / 2, 0) / allBounds.length;
+    const cy = allBounds.reduce((s, b) => s + b.y + b.height / 2, 0) / allBounds.length;
+    const opts = { origin: { x: cx, y: cy }, ...options };
+
+    let result;
+    switch (algorithm) {
+      case 'grid': result = layoutGrid(targets, opts); break;
+      case 'tree': result = layoutTree(targets, opts); break;
+      case 'radial': result = layoutRadial(targets, opts); break;
+      case 'force': result = layoutForce(targets, opts as ForceLayoutOptions); break;
+    }
+
+    this.history.push(all);
+    for (const el of result.elements) {
+      this.scene.updateElement(el.id, { x: el.x, y: el.y });
+      // Also update arrow points if changed
+      if ((el.type === 'arrow' || el.type === 'line') && (el as any).points) {
+        this.scene.updateElement(el.id, { points: (el as any).points } as any);
+      }
+    }
+    this.history.push(this.scene.getElements());
+    this.render();
+    setTimeout(() => this.zoomToFit(), 100);
+  }
+
+  // ─── Style Presets & Transfer ─────────────────────────────────
+
+  /** Apply a named style preset to all or selected elements. */
+  applyStylePreset(presetName: string, selectedOnly = false): boolean {
+    const targets = selectedOnly
+      ? this.scene.getSelectedElements()
+      : this.scene.getElements();
+    if (targets.length === 0) return false;
+
+    const styled = applyPreset(targets, presetName);
+    if (!styled) return false;
+
+    this.history.push(this.scene.getElements());
+    for (const el of styled) {
+      this.scene.updateElement(el.id, el);
+    }
+    this.history.push(this.scene.getElements());
+    this.render();
+    return true;
+  }
+
+  /** Copy style from source element to target elements (or selected). */
+  transferStyle(sourceId: string, targetIds?: string[]): void {
+    const source = this.scene.getElementById(sourceId);
+    if (!source) return;
+    const style = extractStyle(source);
+    const targets = targetIds
+      ? targetIds.map(id => this.scene.getElementById(id)).filter(Boolean) as BoardierElement[]
+      : this.scene.getSelectedElements().filter(e => e.id !== sourceId);
+    if (targets.length === 0) return;
+
+    const styled = applyStyle(targets, style);
+    this.history.push(this.scene.getElements());
+    for (const el of styled) {
+      this.scene.updateElement(el.id, el);
+    }
+    this.history.push(this.scene.getElements());
+    this.render();
+  }
 }

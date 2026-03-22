@@ -494,6 +494,15 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
           }
           break;
         }
+        case 'alignLeft': engine.alignSelected('left'); break;
+        case 'alignCenterH': engine.alignSelected('centerH'); break;
+        case 'alignRight': engine.alignSelected('right'); break;
+        case 'alignTop': engine.alignSelected('top'); break;
+        case 'alignCenterV': engine.alignSelected('centerV'); break;
+        case 'alignBottom': engine.alignSelected('bottom'); break;
+        case 'distributeH': engine.distributeSelected('horizontal'); break;
+        case 'distributeV': engine.distributeSelected('vertical'); break;
+        case 'autoArrange': engine.autoArrange('grid'); break;
       }
       setContextMenu(null);
     }, []);
@@ -589,6 +598,9 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
             elements={selectedElements}
             onUpdate={handlePropertyUpdate}
             onDelete={handleDelete}
+            onCopy={() => handleContextAction('copy')}
+            onDuplicate={() => handleContextAction('duplicate')}
+            onClose={() => engineRef.current?.scene.setSelection([])}
             theme={resolvedTheme}
           />
         )}
@@ -742,6 +754,7 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
             canPaste={engineRef.current?.clipboard.hasContent ?? false}
             hasMultipleSelection={selectedIds.length > 1}
             isGrouped={selectedElements.some(e => e.groupIds.length > 0)}
+            selectionCount={selectedIds.length}
           />
         )}
 

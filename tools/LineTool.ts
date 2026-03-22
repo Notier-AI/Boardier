@@ -13,7 +13,28 @@ import { createLine, createArrow, getElementBounds } from '../elements/base';
  * Auto-connects to element borders with a blue highlight when hovering near them.
  */
 
-/** Find the closest point on an element's border to a given point. */
+/** World-space pixel radius within which a bind target is detected / shown. */
+const BIND_TOLERANCE = 50;
+
+/**
+ * Distance from a world point to the nearest edge of a bounding box.
+ * Returns 0 when on the border, negative when inside, positive when outside.
+ * We use the minimum distance to any edge (inside) or the euclidean distance
+ * to the nearest corner/edge projection (outside).
+ */
+function distanceToBorder(b: { x: number; y: number; width: number; height: number }, p: Vec2): number {
+  const inside = p.x > b.x && p.x < b.x + b.width && p.y > b.y && p.y < b.y + b.height;
+  if (inside) {
+    // Distance to nearest inner edge
+    return Math.min(p.x - b.x, b.x + b.width - p.x, p.y - b.y, b.y + b.height - p.y);
+  }
+  // Distance from point to nearest point on the border rectangle
+  const cx = Math.max(b.x, Math.min(b.x + b.width, p.x));
+  const cy = Math.max(b.y, Math.min(b.y + b.height, p.y));
+  return Math.sqrt((cx - p.x) ** 2 + (cy - p.y) ** 2);
+}
+
+/** Find the closest point on an element's border to a given world point (used only by SelectTool update-bindings). */
 function closestBorderPoint(el: BoardierElement, point: Vec2): Vec2 {
   const b = getElementBounds(el);
   const cx = b.x + b.width / 2;
@@ -36,21 +57,28 @@ function closestBorderPoint(el: BoardierElement, point: Vec2): Vec2 {
   return { x: cx + dx * s, y: cy + dy * s };
 }
 
-/** Find the element under or near a point for binding (excludes the line being drawn and other lines). */
+/**
+ * Find the best element to bind to near a world point.
+ * Uses true border-distance so that only elements whose border is within
+ * tolerance are considered — drawing INSIDE a large shape won't accidentally
+ * bind unless the cursor is near its edge.
+ */
 function findBindTarget(ctx: ToolContext, world: Vec2, excludeId: string | null, tolerance: number): BoardierElement | null {
   const elements = ctx.scene.getElements();
+  let best: BoardierElement | null = null;
+  let bestDist = tolerance;
   for (let i = elements.length - 1; i >= 0; i--) {
     const el = elements[i];
     if (el.id === excludeId) continue;
     if (el.type === 'line' || el.type === 'arrow' || el.type === 'freehand' || el.type === 'comment') continue;
     const b = getElementBounds(el);
-    // Check if point is within or near the element bounds
-    if (world.x >= b.x - tolerance && world.x <= b.x + b.width + tolerance &&
-        world.y >= b.y - tolerance && world.y <= b.y + b.height + tolerance) {
-      return el;
+    const dist = distanceToBorder(b, world);
+    if (dist <= bestDist) {
+      bestDist = dist;
+      best = el;
     }
   }
-  return null;
+  return best;
 }
 
 export class LineTool extends BaseTool {
@@ -72,33 +100,28 @@ export class LineTool extends BaseTool {
   getCursor(): string { return 'crosshair'; }
 
   onPointerDown(ctx: ToolContext, world: Vec2, _e: PointerEvent): void {
-    const tolerance = 15 / (ctx.getViewState().zoom || 1);
+    const tolerance = BIND_TOLERANCE / (ctx.getViewState().zoom || 1);
 
-    // Check if starting on an element → auto-bind start
+    // Check if starting on / near an element → record start binding
     const startTarget = findBindTarget(ctx, world, null, tolerance);
     this.startBindingId = startTarget?.id ?? null;
 
-    // If bound, snap the start to the element border
-    let startPoint = world;
-    if (startTarget) {
-      startPoint = closestBorderPoint(startTarget, world);
-    }
-
-    this.originPos = startPoint;
+    // Always start from cursor position — no forced border snap
+    this.originPos = world;
     this.drawing = true;
     this.hoverBindTargetId = null;
 
     const defaults = ctx.theme.elementDefaults;
     const el = this.isArrow
       ? createArrow({
-          x: startPoint.x, y: startPoint.y, width: 0, height: 0,
+          x: world.x, y: world.y, width: 0, height: 0,
           points: [{ x: 0, y: 0 }, { x: 0, y: 0 }],
           controlPoint: null,
           strokeColor: defaults.strokeColor, strokeWidth: defaults.strokeWidth,
           startBindingId: this.startBindingId,
         })
       : createLine({
-          x: startPoint.x, y: startPoint.y, width: 0, height: 0,
+          x: world.x, y: world.y, width: 0, height: 0,
           points: [{ x: 0, y: 0 }, { x: 0, y: 0 }],
           controlPoint: null,
           strokeColor: defaults.strokeColor, strokeWidth: defaults.strokeWidth,
@@ -113,7 +136,7 @@ export class LineTool extends BaseTool {
   }
 
   onPointerMove(ctx: ToolContext, world: Vec2, _e: PointerEvent): void {
-    const tolerance = 15 / (ctx.getViewState().zoom || 1);
+    const tolerance = BIND_TOLERANCE / (ctx.getViewState().zoom || 1);
 
     if (!this.drawing || !this.activeId) {
       // Preview hover target for highlight
@@ -126,20 +149,15 @@ export class LineTool extends BaseTool {
       return;
     }
 
-    // While drawing, check for end target
+    // While drawing, check for end target (for hover glow only)
     const endTarget = findBindTarget(ctx, world, this.activeId, tolerance);
     const newHover = endTarget?.id ?? null;
     if (newHover !== this.hoverBindTargetId) {
       this.hoverBindTargetId = newHover;
     }
 
-    // Snap end point to target border if hovering
-    let endPoint = world;
-    if (endTarget) {
-      endPoint = closestBorderPoint(endTarget, world);
-    }
-
-    const rel: Vec2 = { x: endPoint.x - this.originPos.x, y: endPoint.y - this.originPos.y };
+    // Line follows cursor exactly — no border snap during draw
+    const rel: Vec2 = { x: world.x - this.originPos.x, y: world.y - this.originPos.y };
     const w = Math.max(Math.abs(rel.x), 1);
     const h = Math.max(Math.abs(rel.y), 1);
     ctx.scene.updateElement(this.activeId, {
@@ -160,7 +178,7 @@ export class LineTool extends BaseTool {
       return;
     }
 
-    const tolerance = 15 / (ctx.getViewState().zoom || 1);
+    const tolerance = BIND_TOLERANCE / (ctx.getViewState().zoom || 1);
     const endTarget = findBindTarget(ctx, world, this.activeId, tolerance);
     const endBindingId = endTarget?.id ?? null;
 
@@ -171,19 +189,9 @@ export class LineTool extends BaseTool {
     if (Math.abs(dx) < 3 && Math.abs(dy) < 3) {
       ctx.scene.removeElement(this.activeId);
     } else {
-      // Snap final end point
-      if (endTarget) {
-        const endPoint = closestBorderPoint(endTarget, world);
-        const rel: Vec2 = { x: endPoint.x - this.originPos.x, y: endPoint.y - this.originPos.y };
-        ctx.scene.updateElement(this.activeId, {
-          points: [{ x: 0, y: 0 }, rel],
-          width: Math.max(Math.abs(rel.x), 1),
-          height: Math.max(Math.abs(rel.y), 1),
-          endBindingId,
-        });
-      } else {
-        ctx.scene.updateElement(this.activeId, { endBindingId: null });
-      }
+      // Endpoint is already at cursor position (set by onPointerMove).
+      // Just record whether or not it connects to an element.
+      ctx.scene.updateElement(this.activeId, { endBindingId });
       ctx.commitHistory();
     }
 

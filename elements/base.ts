@@ -80,7 +80,7 @@ const BASE_DEFAULTS = {
   fillStyle: 'none' as const,
   strokeWidth: 2,
   opacity: 1,
-  roughness: 1.5,
+  roughness: 1.0,
   seed: Math.floor(Math.random() * 2_000_000_000),
   locked: false,
   groupIds: [] as string[],

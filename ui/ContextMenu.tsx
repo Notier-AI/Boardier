@@ -17,6 +17,7 @@ interface ContextMenuProps {
   canPaste: boolean;
   hasMultipleSelection?: boolean;
   isGrouped?: boolean;
+  selectionCount?: number;
 }
 
 const ICON_SIZE = 14;
@@ -31,6 +32,15 @@ const Icons: Record<string, React.ReactNode> = {
   group: <svg width={ICON_SIZE} height={ICON_SIZE} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="1" width="22" height="22" rx="2" strokeDasharray="4 2"/><rect x="5" y="5" width="6" height="6" rx="1"/><rect x="13" y="13" width="6" height="6" rx="1"/></svg>,
   ungroup: <svg width={ICON_SIZE} height={ICON_SIZE} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><path d="M14 7h3m0 0V4m0 3l-3-3" /><path d="M10 17H7m0 0v3m0-3l3 3" /></svg>,
   delete: <svg width={ICON_SIZE} height={ICON_SIZE} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>,
+  alignLeft: <svg width={ICON_SIZE} height={ICON_SIZE} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="2" x2="3" y2="22"/><rect x="7" y="4" width="14" height="6" rx="1"/><rect x="7" y="14" width="8" height="6" rx="1"/></svg>,
+  alignCenterH: <svg width={ICON_SIZE} height={ICON_SIZE} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="2" x2="12" y2="22"/><rect x="5" y="4" width="14" height="6" rx="1"/><rect x="7" y="14" width="10" height="6" rx="1"/></svg>,
+  alignRight: <svg width={ICON_SIZE} height={ICON_SIZE} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="21" y1="2" x2="21" y2="22"/><rect x="3" y="4" width="14" height="6" rx="1"/><rect x="9" y="14" width="8" height="6" rx="1"/></svg>,
+  alignTop: <svg width={ICON_SIZE} height={ICON_SIZE} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="2" y1="3" x2="22" y2="3"/><rect x="4" y="7" width="6" height="14" rx="1"/><rect x="14" y="7" width="6" height="8" rx="1"/></svg>,
+  alignCenterV: <svg width={ICON_SIZE} height={ICON_SIZE} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="2" y1="12" x2="22" y2="12"/><rect x="4" y="5" width="6" height="14" rx="1"/><rect x="14" y="7" width="6" height="10" rx="1"/></svg>,
+  alignBottom: <svg width={ICON_SIZE} height={ICON_SIZE} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="2" y1="21" x2="22" y2="21"/><rect x="4" y="3" width="6" height="14" rx="1"/><rect x="14" y="9" width="6" height="8" rx="1"/></svg>,
+  distributeH: <svg width={ICON_SIZE} height={ICON_SIZE} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="2" x2="3" y2="22"/><line x1="21" y1="2" x2="21" y2="22"/><rect x="8" y="6" width="8" height="12" rx="1"/></svg>,
+  distributeV: <svg width={ICON_SIZE} height={ICON_SIZE} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="2" y1="3" x2="22" y2="3"/><line x1="2" y1="21" x2="22" y2="21"/><rect x="6" y="8" width="12" height="8" rx="1"/></svg>,
+  autoArrange: <svg width={ICON_SIZE} height={ICON_SIZE} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>,
 };
 
 interface MenuItem {
@@ -39,6 +49,8 @@ interface MenuItem {
   shortcut: string;
   needsSelection: boolean;
   icon?: React.ReactNode;
+  needsMultiple?: boolean;
+  needsTriple?: boolean;
 }
 
 const ITEMS: MenuItem[] = [
@@ -49,6 +61,16 @@ const ITEMS: MenuItem[] = [
   { action: 'bringToFront', label: 'Bring to front', shortcut: ']', needsSelection: true, icon: Icons.bringToFront },
   { action: 'sendToBack', label: 'Send to back', shortcut: '[', needsSelection: true, icon: Icons.sendToBack },
   { action: 'separator2', label: '', shortcut: '', needsSelection: false },
+  { action: 'alignLeft', label: 'Align left', shortcut: '', needsSelection: true, icon: Icons.alignLeft, needsMultiple: true },
+  { action: 'alignCenterH', label: 'Align center', shortcut: '', needsSelection: true, icon: Icons.alignCenterH, needsMultiple: true },
+  { action: 'alignRight', label: 'Align right', shortcut: '', needsSelection: true, icon: Icons.alignRight, needsMultiple: true },
+  { action: 'alignTop', label: 'Align top', shortcut: '', needsSelection: true, icon: Icons.alignTop, needsMultiple: true },
+  { action: 'alignCenterV', label: 'Align middle', shortcut: '', needsSelection: true, icon: Icons.alignCenterV, needsMultiple: true },
+  { action: 'alignBottom', label: 'Align bottom', shortcut: '', needsSelection: true, icon: Icons.alignBottom, needsMultiple: true },
+  { action: 'distributeH', label: 'Distribute horizontal', shortcut: '', needsSelection: true, icon: Icons.distributeH, needsTriple: true },
+  { action: 'distributeV', label: 'Distribute vertical', shortcut: '', needsSelection: true, icon: Icons.distributeV, needsTriple: true },
+  { action: 'autoArrange', label: 'Auto-arrange', shortcut: '', needsSelection: false, icon: Icons.autoArrange },
+  { action: 'separator2b', label: '', shortcut: '', needsSelection: false },
   { action: 'addComment', label: 'Add comment', shortcut: '', needsSelection: true, icon: Icons.comment },
   { action: 'group', label: 'Group', shortcut: 'Ctrl+G', needsSelection: true, icon: Icons.group },
   { action: 'ungroup', label: 'Ungroup', shortcut: 'Ctrl+Shift+G', needsSelection: true, icon: Icons.ungroup },
@@ -56,7 +78,7 @@ const ITEMS: MenuItem[] = [
   { action: 'delete', label: 'Delete', shortcut: 'Del', needsSelection: true, icon: Icons.delete },
 ];
 
-export const ContextMenu: React.FC<ContextMenuProps> = ({ position, onAction, onClose, theme, hasSelection, canPaste, hasMultipleSelection, isGrouped }) => {
+export const ContextMenu: React.FC<ContextMenuProps> = ({ position, onAction, onClose, theme, hasSelection, canPaste, hasMultipleSelection, isGrouped, selectionCount = 0 }) => {
   return (
     <>
       <div style={{ position: 'fixed', inset: 0, zIndex: 50 }} onClick={onClose} onContextMenu={e => { e.preventDefault(); onClose(); }} />
@@ -82,6 +104,8 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({ position, onAction, on
           // Hide group if only one selected, hide ungroup if not grouped
           if (item.action === 'group' && !hasMultipleSelection) return null;
           if (item.action === 'ungroup' && !isGrouped) return null;
+          if (item.needsMultiple && (selectionCount < 2)) return null;
+          if (item.needsTriple && (selectionCount < 3)) return null;
 
           const disabled = (item.needsSelection && !hasSelection) || (item.action === 'paste' && !canPaste);
           return (

@@ -112,7 +112,7 @@ export const defaultTheme: BoardierTheme = {
     backgroundColor: 'transparent',
     fillStyle: 'none',
     strokeWidth: 2,
-    roughness: 1.5,
+    roughness: 1.0,
     fontSize: 18,
     fontFamily: 'system-ui, -apple-system, sans-serif',
   },

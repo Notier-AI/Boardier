@@ -203,17 +203,27 @@ export class Renderer {
       this.drawSmartGuides(ctx, options.smartGuides, theme);
     }
 
-    // Draw blue highlight on elements targeted for line/arrow binding
+    // Soft glow on elements targeted for line/arrow binding
     if (options?.bindHighlightIds && options.bindHighlightIds.length > 0) {
       const highlightSet = new Set(options.bindHighlightIds);
       for (const el of elements) {
-        if (highlightSet.has(el.id)) {
-          const b = getElementBounds(el);
-          ctx.strokeStyle = '#2563eb';
-          ctx.lineWidth = 2.5 / zoom;
-          ctx.setLineDash([]);
-          ctx.strokeRect(b.x, b.y, b.width, b.height);
-        }
+        if (!highlightSet.has(el.id)) continue;
+        const b = getElementBounds(el);
+        ctx.save();
+        ctx.setLineDash([]);
+        const pad = 5 / zoom;
+        // Three passes: outer glow → mid → crisp inner ring
+        ctx.lineWidth = 10 / zoom;
+        ctx.strokeStyle = theme.selectionColor;
+        ctx.globalAlpha = 0.08;
+        ctx.strokeRect(b.x - pad, b.y - pad, b.width + pad * 2, b.height + pad * 2);
+        ctx.lineWidth = 5 / zoom;
+        ctx.globalAlpha = 0.18;
+        ctx.strokeRect(b.x - pad * 0.4, b.y - pad * 0.4, b.width + pad * 0.8, b.height + pad * 0.8);
+        ctx.lineWidth = 2 / zoom;
+        ctx.globalAlpha = 0.65;
+        ctx.strokeRect(b.x - 1 / zoom, b.y - 1 / zoom, b.width + 2 / zoom, b.height + 2 / zoom);
+        ctx.restore();
       }
     }
 
