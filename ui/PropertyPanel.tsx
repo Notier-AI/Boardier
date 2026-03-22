@@ -13,6 +13,9 @@ interface PropertyPanelProps {
   elements: BoardierElement[];
   onUpdate: (updates: Partial<BoardierElement>) => void;
   onDelete: () => void;
+  onCopy?: () => void;
+  onDuplicate?: () => void;
+  onClose?: () => void;
   theme: BoardierTheme;
 }
 
@@ -84,7 +87,7 @@ const getSliderCSS = (ui: BoardierUIStyle) => `
 .${NUM_INPUT_CLASS}:focus{border-color:var(--bdier-accent) !important}
 `;
 
-export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate, onDelete, theme }) => {
+export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate, onDelete, onCopy, onDuplicate, onClose, theme }) => {
   if (elements.length === 0) return null;
   const strokePickerRef = useRef<HTMLInputElement>(null);
   const fillPickerRef = useRef<HTMLInputElement>(null);
@@ -431,7 +434,33 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
         </>)}
 
         {/* ── Actions ── */}
-        <div style={{ display: 'flex', gap: 4, padding: '2px 6px', justifyContent: 'flex-start' }}>
+        <div style={{ display: 'flex', gap: 4, padding: '2px 6px', justifyContent: 'flex-start', flexWrap: 'wrap' }}>
+          {onCopy && (
+            <button onClick={onCopy} title="Copy"
+              style={{
+                width: 32, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                border: `${ui.buttonBorderWidth}px solid transparent`, borderRadius: ui.buttonBorderRadius, background: 'transparent',
+                cursor: 'pointer', color: theme.panelText, padding: 0, transition: 'all 0.1s',
+              }}
+            >
+              <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+              </svg>
+            </button>
+          )}
+          {onDuplicate && (
+            <button onClick={onDuplicate} title="Duplicate"
+              style={{
+                width: 32, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                border: `${ui.buttonBorderWidth}px solid transparent`, borderRadius: ui.buttonBorderRadius, background: 'transparent',
+                cursor: 'pointer', color: theme.panelText, padding: 0, transition: 'all 0.1s',
+              }}
+            >
+              <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="8" y="8" width="14" height="14" rx="2" /><path d="M4 16V4a2 2 0 0 1 2-2h12" />
+              </svg>
+            </button>
+          )}
           <button onClick={() => onUpdate({ locked: !first.locked })} title={first.locked ? 'Unlock' : 'Lock'}
             style={{
               width: 32, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -461,6 +490,19 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
               <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
             </svg>
           </button>
+          {onClose && (
+            <button onClick={onClose} title="Close panel"
+              style={{
+                width: 32, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                border: `${ui.buttonBorderWidth}px solid transparent`, borderRadius: ui.buttonBorderRadius, background: 'transparent',
+                cursor: 'pointer', color: theme.panelTextSecondary, padding: 0, transition: 'all 0.1s',
+              }}
+            >
+              <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
+          )}
         </div>
       </div>
     </>
