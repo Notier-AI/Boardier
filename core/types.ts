@@ -3,6 +3,7 @@
  * @boardier-category Core
  * @boardier-description All type definitions for the Boardier whiteboard engine. This module contains zero runtime code — it is purely TypeScript type declarations used across every other module. Import only what you need for tree-shaking.
  * @boardier-since 0.1.0
+ * @boardier-changed 0.2.0 Added zigzag and zigzag-line to the FillStyle union type
  */
 
 // ─── Boardier Core Types ─────────────────────────────────────────────

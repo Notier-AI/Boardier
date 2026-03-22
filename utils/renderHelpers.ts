@@ -1,8 +1,9 @@
 /**
  * @boardier-module utils/renderHelpers
  * @boardier-category Utilities
- * @boardier-description Shared Canvas 2D rendering helpers: applyStrokeStyle() for dash patterns and drawPatternFill() for hachure/cross-hatch/dot fill patterns used by shape renderers.
+ * @boardier-description Shared Canvas 2D rendering helpers: applyStrokeStyle() for dash patterns and drawPatternFill() for hachure/cross-hatch/dot/zigzag fill patterns used by shape renderers.
  * @boardier-since 0.1.0
+ * @boardier-changed 0.2.0 Added zigzag and zigzag-line fill pattern rendering
  */
 import type { FillStyle, StrokeStyle } from '../core/types';
 

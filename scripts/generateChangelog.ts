@@ -1,9 +1,9 @@
 /**
  * @boardier-module scripts/generateChangelog
  * @boardier-category Build
- * @boardier-description Generates changelog data from @boardier-since annotations.
- * Groups modules, types, classes, and functions by the version they were introduced.
- * Outputs `website/src/data/changelog.json` consumed by the /changelog page.
+ * @boardier-description Generates changelog data from @boardier-since and @boardier-changed annotations.
+ * Groups new modules by the version they were introduced, and changed modules by the
+ * version they were modified. Outputs `website/src/data/changelog.json` consumed by the /changelog page.
  *
  * Usage:
  *   npx tsx scripts/generateChangelog.ts
@@ -30,6 +30,8 @@ interface ChangelogEntry {
   classes: string[];
   functions: string[];
   ai: string;
+  kind: 'new' | 'changed';
+  changeNote: string;
 }
 
 interface VersionBlock {
@@ -39,6 +41,8 @@ interface VersionBlock {
   entries: ChangelogEntry[];
   stats: {
     modules: number;
+    newModules: number;
+    changedModules: number;
     types: number;
     classes: number;
     functions: number;
@@ -75,10 +79,11 @@ function main() {
 
   const docs = JSON.parse(fs.readFileSync(docsPath, 'utf-8'));
 
-  // Group by version
+  // Group by version — new modules by @boardier-since, changed modules by @boardier-changed
   const groups: Record<string, ChangelogEntry[]> = {};
 
   for (const doc of docs) {
+    // New module entry
     const version = doc.since || '0.1.0';
     if (!groups[version]) groups[version] = [];
 
@@ -92,7 +97,29 @@ function main() {
       classes: (doc.classes || []).map((c: { name: string }) => c.name).filter(Boolean),
       functions: (doc.functions || []).map((f: { name: string }) => f.name).filter(Boolean),
       ai: doc.ai || '',
+      kind: 'new',
+      changeNote: '',
     });
+
+    // Changed entries — each @boardier-changed tag puts this module into another version's group
+    const changed: { version: string; note: string }[] = doc.changed || [];
+    for (const ch of changed) {
+      if (!ch.version) continue;
+      if (!groups[ch.version]) groups[ch.version] = [];
+      groups[ch.version].push({
+        module: doc.module,
+        category: doc.category,
+        description: doc.description,
+        filePath: doc.filePath,
+        lineCount: doc.lineCount,
+        types: (doc.types || []).map((t: { name: string }) => t.name).filter(Boolean),
+        classes: (doc.classes || []).map((c: { name: string }) => c.name).filter(Boolean),
+        functions: (doc.functions || []).map((f: { name: string }) => f.name).filter(Boolean),
+        ai: doc.ai || '',
+        kind: 'changed',
+        changeNote: ch.note,
+      });
+    }
   }
 
   // Build version blocks sorted newest-first
@@ -109,19 +136,27 @@ function main() {
     const entries = groups[version];
     const meta = VERSION_META[version] || { date: 'Unknown', summary: '' };
 
-    const allTypes = entries.flatMap(e => e.types);
-    const allClasses = entries.flatMap(e => e.classes);
-    const allFunctions = entries.flatMap(e => e.functions);
+    const newEntries = entries.filter(e => e.kind === 'new');
+    const changedEntries = entries.filter(e => e.kind === 'changed');
+    const allTypes = newEntries.flatMap(e => e.types);
+    const allClasses = newEntries.flatMap(e => e.classes);
+    const allFunctions = newEntries.flatMap(e => e.functions);
     const allCategories = [...new Set(entries.map(e => e.category))].sort();
-    const totalLines = entries.reduce((sum, e) => sum + e.lineCount, 0);
+    const totalLines = newEntries.reduce((sum, e) => sum + e.lineCount, 0);
 
     return {
       version,
       date: meta.date,
       summary: meta.summary,
-      entries: entries.sort((a, b) => a.category.localeCompare(b.category) || a.module.localeCompare(b.module)),
+      entries: entries.sort((a, b) => {
+        // New before changed, then by category and module
+        if (a.kind !== b.kind) return a.kind === 'new' ? -1 : 1;
+        return a.category.localeCompare(b.category) || a.module.localeCompare(b.module);
+      }),
       stats: {
-        modules: entries.length,
+        modules: newEntries.length + changedEntries.length,
+        newModules: newEntries.length,
+        changedModules: changedEntries.length,
         types: allTypes.length,
         classes: allClasses.length,
         functions: allFunctions.length,

@@ -20,6 +20,7 @@ export interface DocEntry {
   category: string;
   description: string;
   since: string;
+  changed: { version: string; note: string }[];
   usage: string;
   see: string;
   ai: string;
@@ -92,6 +93,16 @@ function parseFile(filePath: string): DocEntry | null {
   const props = parseTag(moduleBlock, 'props');
   const ref = parseTag(moduleBlock, 'ref');
 
+  // Parse @boardier-changed tags: "0.2.0 Added zigzag fill styles"
+  const changedRaw = parseMultipleTags(moduleBlock, 'changed');
+  const changed = changedRaw.map(c => {
+    const spaceIdx = c.indexOf(' ');
+    return {
+      version: spaceIdx > 0 ? c.substring(0, spaceIdx) : c,
+      note: spaceIdx > 0 ? c.substring(spaceIdx + 1) : '',
+    };
+  });
+
   const params = parseMultipleTags(moduleBlock, 'param').map(p => {
     const spaceIdx = p.indexOf(' ');
     return {
@@ -130,6 +141,7 @@ function parseFile(filePath: string): DocEntry | null {
     category,
     description,
     since,
+    changed,
     usage,
     see,
     ai,

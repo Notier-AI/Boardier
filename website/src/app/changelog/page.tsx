@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowLeft, GitBranch, Clock, Layers, Code2, Box, Sparkles, Tag } from "lucide-react";
+import { ArrowLeft, GitBranch, Clock, Layers, Code2, Box, Sparkles, Tag, Plus, RefreshCw } from "lucide-react";
 import changelogData from "@/data/changelog.json";
 
 interface ChangelogEntry {
@@ -13,6 +13,8 @@ interface ChangelogEntry {
   classes: string[];
   functions: string[];
   ai: string;
+  kind: "new" | "changed";
+  changeNote: string;
 }
 
 interface VersionBlock {
@@ -22,6 +24,8 @@ interface VersionBlock {
   entries: ChangelogEntry[];
   stats: {
     modules: number;
+    newModules: number;
+    changedModules: number;
     types: number;
     classes: number;
     functions: number;
@@ -51,23 +55,40 @@ function formatDate(dateStr: string): string {
 
 function EntryCard({ entry }: { entry: ChangelogEntry }) {
   const colorClass = categoryColors[entry.category] || "border-root-fg/20 bg-root-fg/5 text-root-fg";
+  const isChanged = entry.kind === "changed";
   return (
-    <div className="sketch-card p-4 hover-lift">
+    <div className={`sketch-card p-4 hover-lift ${isChanged ? "border-l-4 border-l-brand-orange" : ""}`}>
       <div className="flex items-start justify-between gap-2 mb-2">
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 flex items-center gap-2">
+          {isChanged ? (
+            <span className="shrink-0 w-5 h-5 rounded-full bg-brand-orange/15 text-brand-orange flex items-center justify-center">
+              <RefreshCw size={11} />
+            </span>
+          ) : (
+            <span className="shrink-0 w-5 h-5 rounded-full bg-brand-green/15 text-brand-green flex items-center justify-center">
+              <Plus size={11} />
+            </span>
+          )}
           <Link
             href={`/docs#${entry.module.replace(/\//g, "-")}`}
             className="text-base font-bold font-caveat hover:text-brand-blue transition-colors"
           >
             {entry.module}
           </Link>
-          <span className="text-[10px] text-root-fg/40 font-mono ml-2">{entry.lineCount} lines</span>
+          <span className="text-[10px] text-root-fg/40 font-mono">{entry.lineCount} lines</span>
         </div>
         <span className={`text-[10px] px-1.5 py-0.5 sketch-border font-semibold whitespace-nowrap ${colorClass}`}>
           {entry.category}
         </span>
       </div>
-      <p className="text-sm text-root-fg/70 leading-relaxed mb-2">{entry.description}</p>
+      {isChanged && entry.changeNote ? (
+        <p className="text-sm text-brand-orange/90 leading-relaxed mb-2 flex items-start gap-1.5">
+          <RefreshCw size={12} className="mt-0.5 shrink-0" />
+          {entry.changeNote}
+        </p>
+      ) : (
+        <p className="text-sm text-root-fg/70 leading-relaxed mb-2">{entry.description}</p>
+      )}
       <div className="flex flex-wrap gap-1.5">
         {entry.types.map((t) => (
           <span key={t} className="text-[10px] px-1.5 py-0.5 bg-brand-blue/10 text-brand-blue rounded font-mono">
@@ -165,9 +186,16 @@ export default function ChangelogPage() {
 
                   {/* Stats bar */}
                   <div className="flex flex-wrap gap-2 mb-6">
-                    <span className="sketch-border px-2.5 py-1 text-xs flex items-center gap-1 bg-white">
-                      <Layers size={13} /> {version.stats.modules} modules
-                    </span>
+                    {version.stats.newModules > 0 && (
+                      <span className="sketch-border px-2.5 py-1 text-xs flex items-center gap-1 bg-brand-green/10 text-brand-green">
+                        <Plus size={13} /> {version.stats.newModules} new
+                      </span>
+                    )}
+                    {version.stats.changedModules > 0 && (
+                      <span className="sketch-border px-2.5 py-1 text-xs flex items-center gap-1 bg-brand-orange/10 text-brand-orange">
+                        <RefreshCw size={13} /> {version.stats.changedModules} changed
+                      </span>
+                    )}
                     <span className="sketch-border px-2.5 py-1 text-xs flex items-center gap-1 bg-white">
                       <Code2 size={13} /> {version.stats.totalLines.toLocaleString()} lines
                     </span>
@@ -196,26 +224,70 @@ export default function ChangelogPage() {
                     ))}
                   </div>
 
-                  {/* Entries grouped by category */}
+                  {/* Entries grouped by kind then category */}
                   {(() => {
-                    const byCategory: Record<string, ChangelogEntry[]> = {};
-                    for (const e of version.entries) {
-                      if (!byCategory[e.category]) byCategory[e.category] = [];
-                      byCategory[e.category].push(e);
-                    }
-                    return Object.entries(byCategory).map(([cat, entries]) => (
-                      <div key={cat} className="mb-6">
-                        <h3 className="text-xl font-bold font-caveat mb-3 pb-1 border-b-2 border-dashed border-root-fg/15">
-                          {cat}
-                          <span className="text-xs text-root-fg/40 ml-2 font-normal">({entries.length})</span>
-                        </h3>
-                        <div className="space-y-3">
-                          {entries.map((entry) => (
-                            <EntryCard key={entry.module} entry={entry} />
-                          ))}
-                        </div>
-                      </div>
-                    ));
+                    const newEntries = version.entries.filter(e => e.kind === 'new');
+                    const changedEntries = version.entries.filter(e => e.kind === 'changed');
+
+                    const groupByCategory = (entries: ChangelogEntry[]) => {
+                      const byCategory: Record<string, ChangelogEntry[]> = {};
+                      for (const e of entries) {
+                        if (!byCategory[e.category]) byCategory[e.category] = [];
+                        byCategory[e.category].push(e);
+                      }
+                      return Object.entries(byCategory);
+                    };
+
+                    return (
+                      <>
+                        {newEntries.length > 0 && (
+                          <div className="mb-8">
+                            <div className="flex items-center gap-2 mb-4">
+                              <span className="w-6 h-6 rounded-full bg-brand-green/15 text-brand-green flex items-center justify-center">
+                                <Plus size={14} />
+                              </span>
+                              <h3 className="text-2xl font-bold font-caveat text-brand-green">New</h3>
+                            </div>
+                            {groupByCategory(newEntries).map(([cat, entries]) => (
+                              <div key={cat} className="mb-5">
+                                <h4 className="text-lg font-bold font-caveat mb-2 pb-1 border-b-2 border-dashed border-root-fg/15">
+                                  {cat}
+                                  <span className="text-xs text-root-fg/40 ml-2 font-normal">({entries.length})</span>
+                                </h4>
+                                <div className="space-y-3">
+                                  {entries.map((entry) => (
+                                    <EntryCard key={entry.module} entry={entry} />
+                                  ))}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        {changedEntries.length > 0 && (
+                          <div className="mb-8">
+                            <div className="flex items-center gap-2 mb-4">
+                              <span className="w-6 h-6 rounded-full bg-brand-orange/15 text-brand-orange flex items-center justify-center">
+                                <RefreshCw size={14} />
+                              </span>
+                              <h3 className="text-2xl font-bold font-caveat text-brand-orange">Changed</h3>
+                            </div>
+                            {groupByCategory(changedEntries).map(([cat, entries]) => (
+                              <div key={cat} className="mb-5">
+                                <h4 className="text-lg font-bold font-caveat mb-2 pb-1 border-b-2 border-dashed border-root-fg/15">
+                                  {cat}
+                                  <span className="text-xs text-root-fg/40 ml-2 font-normal">({entries.length})</span>
+                                </h4>
+                                <div className="space-y-3">
+                                  {entries.map((entry) => (
+                                    <EntryCard key={`${entry.module}-changed`} entry={entry} />
+                                  ))}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    );
                   })()}
                 </div>
               </div>
@@ -226,7 +298,7 @@ export default function ChangelogPage() {
 
       {/* Footer */}
       <footer className="p-4 border-t-2 border-root-fg/20 text-center text-xs text-root-fg/50 hover:text-root-fg/70 transition-colors">
-        Auto-generated from <code className="font-mono">@boardier-since</code> annotations &middot; Run{" "}
+        Auto-generated from <code className="font-mono">@boardier-since</code> and <code className="font-mono">@boardier-changed</code> annotations &middot; Run{" "}
         <code className="font-mono">npx tsx scripts/generateChangelog.ts</code> to regenerate
       </footer>
     </div>

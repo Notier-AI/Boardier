@@ -3,6 +3,7 @@
  * @boardier-category UI
  * @boardier-description Side panel that displays and edits properties of selected elements: stroke color, fill color/style, stroke width/style, opacity, roughness, font, text alignment, border radius, and element-specific fields.
  * @boardier-since 0.1.0
+ * @boardier-changed 0.2.0 Added zigzag and zigzag-line fill style options to the property panel
  */
 import React, { useRef, useState } from 'react';
 import type { BoardierElement, FillStyle, StrokeStyle } from '../core/types';

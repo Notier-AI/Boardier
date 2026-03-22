@@ -13,18 +13,22 @@
         "types": [],
         "classes": [],
         "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "ai/index",
         "category": "AI",
         "description": "Barrel export for all Boardier AI modules.",
         "filePath": "ai/index.ts",
-        "lineCount": 53,
+        "lineCount": 62,
         "types": [],
         "classes": [],
         "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "ai/layout",
@@ -35,18 +39,22 @@
         "types": [],
         "classes": [],
         "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "ai/orchestrator",
         "category": "AI",
         "description": "Provider-agnostic AI orchestrator for the Boardier whiteboard engine. Accepts a pluggable AI provider function so the host app can use any LLM backend (OpenAI, Gemini, Anthropic, local models, etc.). Routes requests between local handlers (mermaid, simple commands) and the remote AI provider (complex generation).",
         "filePath": "ai/orchestrator.ts",
-        "lineCount": 542,
+        "lineCount": 591,
         "types": [],
         "classes": [],
         "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "ai/schema",
@@ -57,7 +65,9 @@
         "types": [],
         "classes": [],
         "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "ai/styles",
@@ -68,105 +78,16 @@
         "types": [],
         "classes": [],
         "functions": [],
-        "ai": ""
-      }
-    ],
-    "stats": {
-      "modules": 6,
-      "types": 0,
-      "classes": 0,
-      "functions": 0,
-      "totalLines": 2048,
-      "categories": [
-        "AI"
-      ]
-    }
-  },
-  {
-    "version": "0.1.0",
-    "date": "2026-02-01",
-    "summary": "Initial release — core engine, renderer, element system, tools, themes, and UI components.",
-    "entries": [
-      {
-        "module": "scripts/parseDocsFromSource",
-        "category": "Build",
-        "description": "Parses all @boardier- JSDoc annotations from the boardier source tree and outputs a structured JSON file consumed by the /docs page at build time.",
-        "filePath": "scripts/parseDocsFromSource.ts",
-        "lineCount": 195,
-        "types": [],
-        "classes": [],
-        "functions": [],
-        "ai": ""
-      },
-      {
-        "module": "core/Clipboard",
-        "category": "Core",
-        "description": "In-memory clipboard for copy/paste of canvas elements. Deep-clones elements to prevent mutation, assigns fresh IDs on paste, and applies a spatial offset so pasted content is visually distinct.",
-        "filePath": "core/Clipboard.ts",
-        "lineCount": 35,
-        "types": [],
-        "classes": [
-          "Clipboard"
-        ],
-        "functions": [],
-        "ai": ""
-      },
-      {
-        "module": "core/Engine",
-        "category": "Core",
-        "description": "The central orchestrator of the Boardier whiteboard. `BoardierEngine` owns the scene graph, undo/redo history, renderer, clipboard, and the active tool. It exposes a public API for tool switching, element manipulation, multi-page support, viewport control, theming, and an AI-facing interface for LLM integration.",
-        "filePath": "core/Engine.ts",
-        "lineCount": 1033,
-        "types": [],
-        "classes": [
-          "BoardierEngine"
-        ],
-        "functions": [],
-        "ai": ""
-      },
-      {
-        "module": "core/History",
-        "category": "Core",
-        "description": "Simple undo/redo stack using full-scene snapshots. Snapshots are deep-cloned via `structuredClone`, so mutations to the live scene don't affect history entries.",
-        "filePath": "core/History.ts",
-        "lineCount": 67,
-        "types": [],
-        "classes": [
-          "History"
-        ],
-        "functions": [],
-        "ai": ""
-      },
-      {
-        "module": "core/Renderer",
-        "category": "Core",
-        "description": "Canvas 2D renderer responsible for drawing all elements, the grid, selection overlays, smart guides, and lasso outlines. Performs viewport culling, coordinate transforms (screen ↔ world), and theme-aware color adaptation for dark backgrounds.",
-        "filePath": "core/Renderer.ts",
-        "lineCount": 465,
-        "types": [],
-        "classes": [],
-        "functions": [],
-        "ai": ""
-      },
-      {
-        "module": "core/Scene",
-        "category": "Core",
-        "description": "In-memory scene graph that holds all elements and the current selection. Provides CRUD operations, hit-testing, z-ordering, and serialisation. Emits change and selection events consumed by the engine and UI.",
-        "filePath": "core/Scene.ts",
-        "lineCount": 184,
-        "types": [],
-        "classes": [
-          "Scene"
-        ],
-        "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "core/types",
         "category": "Core",
         "description": "All type definitions for the Boardier whiteboard engine. This module contains zero runtime code — it is purely TypeScript type declarations used across every other module. Import only what you need for tree-shaking.",
         "filePath": "core/types.ts",
-        "lineCount": 403,
+        "lineCount": 404,
         "types": [
           "Vec2",
           "Bounds",
@@ -181,7 +102,167 @@
         ],
         "classes": [],
         "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "changed",
+        "changeNote": "Added zigzag and zigzag-line to the FillStyle union type"
+      },
+      {
+        "module": "ui/PropertyPanel",
+        "category": "UI",
+        "description": "Side panel that displays and edits properties of selected elements: stroke color, fill color/style, stroke width/style, opacity, roughness, font, text alignment, border radius, and element-specific fields.",
+        "filePath": "ui/PropertyPanel.tsx",
+        "lineCount": 512,
+        "types": [],
+        "classes": [],
+        "functions": [],
+        "ai": "",
+        "kind": "changed",
+        "changeNote": "Added zigzag and zigzag-line fill style options to the property panel"
+      },
+      {
+        "module": "utils/renderHelpers",
+        "category": "Utilities",
+        "description": "Shared Canvas 2D rendering helpers: applyStrokeStyle() for dash patterns and drawPatternFill() for hachure/cross-hatch/dot/zigzag fill patterns used by shape renderers.",
+        "filePath": "utils/renderHelpers.ts",
+        "lineCount": 132,
+        "types": [],
+        "classes": [],
+        "functions": [],
+        "ai": "",
+        "kind": "changed",
+        "changeNote": "Added zigzag and zigzag-line fill pattern rendering"
+      }
+    ],
+    "stats": {
+      "modules": 9,
+      "newModules": 6,
+      "changedModules": 3,
+      "types": 0,
+      "classes": 0,
+      "functions": 0,
+      "totalLines": 2106,
+      "categories": [
+        "AI",
+        "Core",
+        "UI",
+        "Utilities"
+      ]
+    }
+  },
+  {
+    "version": "0.1.0",
+    "date": "2026-02-01",
+    "summary": "Initial release — core engine, renderer, element system, tools, themes, and UI components.",
+    "entries": [
+      {
+        "module": "scripts/parseDocsFromSource",
+        "category": "Build",
+        "description": "Parses all @boardier- JSDoc annotations from the boardier source tree and outputs a structured JSON file consumed by the /docs page at build time.",
+        "filePath": "scripts/parseDocsFromSource.ts",
+        "lineCount": 207,
+        "types": [],
+        "classes": [],
+        "functions": [],
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
+      },
+      {
+        "module": "core/Clipboard",
+        "category": "Core",
+        "description": "In-memory clipboard for copy/paste of canvas elements. Deep-clones elements to prevent mutation, assigns fresh IDs on paste, and applies a spatial offset so pasted content is visually distinct.",
+        "filePath": "core/Clipboard.ts",
+        "lineCount": 35,
+        "types": [],
+        "classes": [
+          "Clipboard"
+        ],
+        "functions": [],
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
+      },
+      {
+        "module": "core/Engine",
+        "category": "Core",
+        "description": "The central orchestrator of the Boardier whiteboard. `BoardierEngine` owns the scene graph, undo/redo history, renderer, clipboard, and the active tool. It exposes a public API for tool switching, element manipulation, multi-page support, viewport control, theming, and an AI-facing interface for LLM integration.",
+        "filePath": "core/Engine.ts",
+        "lineCount": 1033,
+        "types": [],
+        "classes": [
+          "BoardierEngine"
+        ],
+        "functions": [],
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
+      },
+      {
+        "module": "core/History",
+        "category": "Core",
+        "description": "Simple undo/redo stack using full-scene snapshots. Snapshots are deep-cloned via `structuredClone`, so mutations to the live scene don't affect history entries.",
+        "filePath": "core/History.ts",
+        "lineCount": 67,
+        "types": [],
+        "classes": [
+          "History"
+        ],
+        "functions": [],
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
+      },
+      {
+        "module": "core/Renderer",
+        "category": "Core",
+        "description": "Canvas 2D renderer responsible for drawing all elements, the grid, selection overlays, smart guides, and lasso outlines. Performs viewport culling, coordinate transforms (screen ↔ world), and theme-aware color adaptation for dark backgrounds.",
+        "filePath": "core/Renderer.ts",
+        "lineCount": 465,
+        "types": [],
+        "classes": [],
+        "functions": [],
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
+      },
+      {
+        "module": "core/Scene",
+        "category": "Core",
+        "description": "In-memory scene graph that holds all elements and the current selection. Provides CRUD operations, hit-testing, z-ordering, and serialisation. Emits change and selection events consumed by the engine and UI.",
+        "filePath": "core/Scene.ts",
+        "lineCount": 184,
+        "types": [],
+        "classes": [
+          "Scene"
+        ],
+        "functions": [],
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
+      },
+      {
+        "module": "core/types",
+        "category": "Core",
+        "description": "All type definitions for the Boardier whiteboard engine. This module contains zero runtime code — it is purely TypeScript type declarations used across every other module. Import only what you need for tree-shaking.",
+        "filePath": "core/types.ts",
+        "lineCount": 404,
+        "types": [
+          "Vec2",
+          "Bounds",
+          "BoardierElementType",
+          "FillStyle",
+          "BoardierElementBase",
+          "BoardierElement",
+          "ViewState",
+          "BoardierSceneData",
+          "BoardierConfig",
+          "BoardierAIConfig"
+        ],
+        "classes": [],
+        "functions": [],
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "elements/arrow",
@@ -192,7 +273,9 @@
         "types": [],
         "classes": [],
         "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "elements/base",
@@ -205,7 +288,9 @@
         "functions": [
           "registerElement"
         ],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "elements/checkbox",
@@ -216,7 +301,9 @@
         "types": [],
         "classes": [],
         "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "elements/comment",
@@ -227,7 +314,9 @@
         "types": [],
         "classes": [],
         "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "elements/diamond",
@@ -238,7 +327,9 @@
         "types": [],
         "classes": [],
         "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "elements/ellipse",
@@ -249,7 +340,9 @@
         "types": [],
         "classes": [],
         "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "elements/embed",
@@ -260,7 +353,9 @@
         "types": [],
         "classes": [],
         "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "elements/frame",
@@ -271,7 +366,9 @@
         "types": [],
         "classes": [],
         "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "elements/freehand",
@@ -282,7 +379,9 @@
         "types": [],
         "classes": [],
         "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "elements/icon",
@@ -293,7 +392,9 @@
         "types": [],
         "classes": [],
         "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "elements/image",
@@ -304,7 +405,9 @@
         "types": [],
         "classes": [],
         "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "elements/line",
@@ -315,7 +418,9 @@
         "types": [],
         "classes": [],
         "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "elements/marker",
@@ -326,7 +431,9 @@
         "types": [],
         "classes": [],
         "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "elements/radiogroup",
@@ -337,7 +444,9 @@
         "types": [],
         "classes": [],
         "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "elements/rectangle",
@@ -348,7 +457,9 @@
         "types": [],
         "classes": [],
         "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "elements/table",
@@ -359,7 +470,9 @@
         "types": [],
         "classes": [],
         "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "elements/text",
@@ -370,7 +483,9 @@
         "types": [],
         "classes": [],
         "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "index",
@@ -381,7 +496,9 @@
         "types": [],
         "classes": [],
         "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "themes/defaultTheme",
@@ -392,7 +509,9 @@
         "types": [],
         "classes": [],
         "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "themes/notierTheme",
@@ -403,7 +522,9 @@
         "types": [],
         "classes": [],
         "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "themes/types",
@@ -416,7 +537,9 @@
         ],
         "classes": [],
         "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "tools/BaseTool",
@@ -427,7 +550,9 @@
         "types": [],
         "classes": [],
         "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "tools/CommentTool",
@@ -438,7 +563,9 @@
         "types": [],
         "classes": [],
         "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "tools/EraseTool",
@@ -449,7 +576,9 @@
         "types": [],
         "classes": [],
         "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "tools/FreehandTool",
@@ -460,7 +589,9 @@
         "types": [],
         "classes": [],
         "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "tools/IconTool",
@@ -471,7 +602,9 @@
         "types": [],
         "classes": [],
         "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "tools/ImageTool",
@@ -482,7 +615,9 @@
         "types": [],
         "classes": [],
         "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "tools/LineTool",
@@ -493,7 +628,9 @@
         "types": [],
         "classes": [],
         "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "tools/MarkerTool",
@@ -504,7 +641,9 @@
         "types": [],
         "classes": [],
         "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "tools/PanTool",
@@ -515,7 +654,9 @@
         "types": [],
         "classes": [],
         "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "tools/SelectTool",
@@ -526,7 +667,9 @@
         "types": [],
         "classes": [],
         "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "tools/ShapeTool",
@@ -537,7 +680,9 @@
         "types": [],
         "classes": [],
         "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "tools/TextTool",
@@ -548,7 +693,9 @@
         "types": [],
         "classes": [],
         "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "tools/WidgetTool",
@@ -559,29 +706,35 @@
         "types": [],
         "classes": [],
         "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "ui/BoardierCanvas",
         "category": "UI",
         "description": "The top-level React component for embedding the Boardier whiteboard. Wraps the BoardierEngine with a canvas element and provides a complete UI including toolbar, property panel, zoom controls, export dialog, text editor overlays, context menu, minimap, page navigator, and presentation mode. All UI panels are draggable via the DraggablePanel system.",
         "filePath": "ui/BoardierCanvas.tsx",
-        "lineCount": 1095,
+        "lineCount": 1105,
         "types": [],
         "classes": [],
         "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "ui/ContextMenu",
         "category": "UI",
-        "description": "Right-click context menu for the canvas. Shows element operations (copy, paste, delete, duplicate, z-order, select all) positioned at the cursor.",
+        "description": "Right-click context menu for the canvas. Shows element operations (copy, paste, delete, duplicate, z-order, arrange submenu, send to AI, select all) positioned at the cursor.",
         "filePath": "ui/ContextMenu.tsx",
-        "lineCount": 145,
+        "lineCount": 182,
         "types": [],
         "classes": [],
         "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "ui/DraggablePanel",
@@ -592,7 +745,9 @@
         "types": [],
         "classes": [],
         "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "ui/ExportDialog",
@@ -603,7 +758,9 @@
         "types": [],
         "classes": [],
         "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "ui/IconPicker",
@@ -614,7 +771,9 @@
         "types": [],
         "classes": [],
         "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "ui/Minimap",
@@ -625,7 +784,9 @@
         "types": [],
         "classes": [],
         "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "ui/PageNavigator",
@@ -636,7 +797,9 @@
         "types": [],
         "classes": [],
         "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "ui/PresentationMode",
@@ -647,18 +810,22 @@
         "types": [],
         "classes": [],
         "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "ui/PropertyPanel",
         "category": "UI",
         "description": "Side panel that displays and edits properties of selected elements: stroke color, fill color/style, stroke width/style, opacity, roughness, font, text alignment, border radius, and element-specific fields.",
         "filePath": "ui/PropertyPanel.tsx",
-        "lineCount": 511,
+        "lineCount": 512,
         "types": [],
         "classes": [],
         "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "ui/ShapeLabelEditor",
@@ -669,7 +836,9 @@
         "types": [],
         "classes": [],
         "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "ui/TextEditor",
@@ -680,7 +849,9 @@
         "types": [],
         "classes": [],
         "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "ui/Toolbar",
@@ -691,7 +862,9 @@
         "types": [],
         "classes": [],
         "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "ui/Tooltip",
@@ -702,7 +875,9 @@
         "types": [],
         "classes": [],
         "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "ui/ZoomControls",
@@ -713,7 +888,9 @@
         "types": [],
         "classes": [],
         "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "utils/colors",
@@ -724,7 +901,9 @@
         "types": [],
         "classes": [],
         "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "utils/export",
@@ -735,7 +914,9 @@
         "types": [],
         "classes": [],
         "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "utils/id",
@@ -746,7 +927,9 @@
         "types": [],
         "classes": [],
         "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "utils/math",
@@ -757,7 +940,9 @@
         "types": [],
         "classes": [],
         "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "utils/mermaidParser",
@@ -768,18 +953,22 @@
         "types": [],
         "classes": [],
         "functions": [],
-        "ai": "This module is particularly useful for LLM agents that generate diagrams from natural language."
+        "ai": "This module is particularly useful for LLM agents that generate diagrams from natural language.",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "utils/renderHelpers",
         "category": "Utilities",
-        "description": "Shared Canvas 2D rendering helpers: applyStrokeStyle() for dash patterns and drawPatternFill() for hachure/cross-hatch/dot fill patterns used by shape renderers.",
+        "description": "Shared Canvas 2D rendering helpers: applyStrokeStyle() for dash patterns and drawPatternFill() for hachure/cross-hatch/dot/zigzag fill patterns used by shape renderers.",
         "filePath": "utils/renderHelpers.ts",
-        "lineCount": 131,
+        "lineCount": 132,
         "types": [],
         "classes": [],
         "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       },
       {
         "module": "utils/roughDraw",
@@ -790,15 +979,19 @@
         "types": [],
         "classes": [],
         "functions": [],
-        "ai": ""
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
       }
     ],
     "stats": {
       "modules": 62,
+      "newModules": 62,
+      "changedModules": 0,
       "types": 11,
       "classes": 4,
       "functions": 1,
-      "totalLines": 11391,
+      "totalLines": 11453,
       "categories": [
         "Build",
         "Core",
@@ -808,6 +1001,70 @@
         "Tools",
         "UI",
         "Utilities"
+      ]
+    }
+  },
+  {
+    "version": "and @boardier-changed annotations. Groups new modules by the version they were introduced, and changed modules by the version they were modified. Outputs `website/src/data/changelog.json` consumed by the /changelog page.  Usage: npx tsx scripts/generateChangelog.ts",
+    "date": "Unknown",
+    "summary": "",
+    "entries": [
+      {
+        "module": "scripts/generateChangelog",
+        "category": "Build",
+        "description": "Generates changelog data from @boardier-since and @boardier-changed annotations. Groups new modules by the version they were introduced, and changed modules by the version they were modified. Outputs `website/src/data/changelog.json` consumed by the /changelog page.  Usage: npx tsx scripts/generateChangelog.ts",
+        "filePath": "scripts/generateChangelog.ts",
+        "lineCount": 181,
+        "types": [],
+        "classes": [],
+        "functions": [],
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
+      }
+    ],
+    "stats": {
+      "modules": 1,
+      "newModules": 1,
+      "changedModules": 0,
+      "types": 0,
+      "classes": 0,
+      "functions": 0,
+      "totalLines": 181,
+      "categories": [
+        "Build"
+      ]
+    }
+  },
+  {
+    "version": "annotations.",
+    "date": "Unknown",
+    "summary": "",
+    "entries": [
+      {
+        "module": "scripts/generateChangelog",
+        "category": "Build",
+        "description": "Generates changelog data from @boardier-since and @boardier-changed annotations. Groups new modules by the version they were introduced, and changed modules by the version they were modified. Outputs `website/src/data/changelog.json` consumed by the /changelog page.  Usage: npx tsx scripts/generateChangelog.ts",
+        "filePath": "scripts/generateChangelog.ts",
+        "lineCount": 181,
+        "types": [],
+        "classes": [],
+        "functions": [],
+        "ai": "",
+        "kind": "changed",
+        "changeNote": "Groups new modules by the version they were introduced, and changed modules by the version they were modified. Outputs `website/src/data/changelog.json` consumed by the /changelog page.  Usage: npx tsx scripts/generateChangelog.ts"
+      }
+    ],
+    "stats": {
+      "modules": 1,
+      "newModules": 0,
+      "changedModules": 1,
+      "types": 0,
+      "classes": 0,
+      "functions": 0,
+      "totalLines": 0,
+      "categories": [
+        "Build"
       ]
     }
   }
