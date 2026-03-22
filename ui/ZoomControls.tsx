@@ -37,7 +37,7 @@ export const ZoomControls: React.FC<ZoomControlsProps> = React.memo(({ zoom, onZ
     background: 'transparent',
     cursor: 'pointer',
     color: theme.panelText,
-    borderRadius: 4,
+    borderRadius: theme.uiStyle.buttonBorderRadius,
     fontFamily: theme.uiFontFamily,
   };
 
@@ -49,9 +49,9 @@ export const ZoomControls: React.FC<ZoomControlsProps> = React.memo(({ zoom, onZ
         gap: 2,
         padding: '4px 6px',
         background: theme.panelBackground,
-        border: `1px solid ${theme.panelBorder}`,
-        borderRadius: theme.borderRadius,
-        boxShadow: theme.shadow,
+        border: `${theme.uiStyle.panelBorderWidth}px ${theme.uiStyle.panelBorderStyle} ${theme.panelBorder}`,
+        borderRadius: theme.uiStyle.panelBorderRadius,
+        boxShadow: theme.uiStyle.panelShadow,
         fontFamily: theme.uiFontFamily,
       }}
     >

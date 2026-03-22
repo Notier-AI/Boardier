@@ -162,7 +162,7 @@ export const PresentationMode: React.FC<PresentationModeProps> = ({ elements, th
           justifyContent: 'center',
           background: 'rgba(0,0,0,0.4)',
           border: 'none',
-          borderRadius: 8,
+          borderRadius: theme.uiStyle.buttonBorderRadius,
           color: '#fff',
           cursor: 'pointer',
           fontSize: 18,

@@ -47,9 +47,9 @@ export const PageNavigator: React.FC<PageNavigatorProps> = React.memo(({
         gap: 4,
         padding: '4px 8px',
         background: theme.panelBackground,
-        border: `1px solid ${theme.panelBorder}`,
-        borderRadius: theme.borderRadius,
-        boxShadow: theme.shadow,
+        border: `${theme.uiStyle.panelBorderWidth}px ${theme.uiStyle.panelBorderStyle} ${theme.panelBorder}`,
+        borderRadius: theme.uiStyle.panelBorderRadius,
+        boxShadow: theme.uiStyle.panelShadow,
         zIndex: 10,
         alignItems: 'center',
         fontFamily: theme.uiFontFamily,
@@ -72,7 +72,7 @@ export const PageNavigator: React.FC<PageNavigatorProps> = React.memo(({
               onKeyDown={e => { if (e.key === 'Enter') commitRename(); if (e.key === 'Escape') setEditingId(null); }}
               style={{
                 width: 60, height: 24, fontSize: 11, fontWeight: 600,
-                border: `1px solid ${theme.selectionColor}`, borderRadius: 4,
+                border: `${theme.uiStyle.inputBorderWidth}px solid ${theme.selectionColor}`, borderRadius: theme.uiStyle.inputBorderRadius,
                 background: 'transparent', color: theme.panelText,
                 outline: 'none', textAlign: 'center', fontFamily: 'inherit',
                 padding: '0 4px',
@@ -86,8 +86,8 @@ export const PageNavigator: React.FC<PageNavigatorProps> = React.memo(({
                 padding: '4px 10px',
                 fontSize: 11,
                 fontWeight: page.id === activePageId ? 700 : 500,
-                border: `1px solid ${page.id === activePageId ? theme.selectionColor : theme.panelBorder}`,
-                borderRadius: 4,
+                border: `${theme.uiStyle.buttonBorderWidth}px solid ${page.id === activePageId ? theme.selectionColor : theme.panelBorder}`,
+                borderRadius: theme.uiStyle.buttonBorderRadius,
                 background: page.id === activePageId ? theme.panelActive : 'transparent',
                 cursor: 'pointer',
                 color: theme.panelText,
@@ -117,7 +117,7 @@ export const PageNavigator: React.FC<PageNavigatorProps> = React.memo(({
         title="Add page"
         style={{
           width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center',
-          border: `1px dashed ${theme.panelBorder}`, borderRadius: 4,
+          border: `${theme.uiStyle.buttonBorderWidth}px dashed ${theme.panelBorder}`, borderRadius: theme.uiStyle.buttonBorderRadius,
           background: 'transparent', cursor: 'pointer', color: theme.panelTextSecondary,
           fontSize: 14, fontWeight: 700, fontFamily: 'inherit',
         }}

@@ -6,7 +6,7 @@
  */
 import React, { useRef, useState } from 'react';
 import type { BoardierElement, FillStyle, StrokeStyle } from '../core/types';
-import type { BoardierTheme } from '../themes/types';
+import type { BoardierTheme, BoardierUIStyle } from '../themes/types';
 import { STROKE_COLORS, FILL_COLORS, FONT_SIZES, FONT_FAMILIES, HANDWRITTEN_FONT } from '../utils/colors';
 
 interface PropertyPanelProps {
@@ -73,13 +73,13 @@ const STROKE_STYLE_OPTS: { v: StrokeStyle; label: string; svg: React.ReactNode }
 /* ── slider CSS (injected once) ─────────────────────── */
 const SLIDER_CLASS = 'bdier-slider';
 const NUM_INPUT_CLASS = 'bdier-numinput';
-const sliderCSS = `
-.${SLIDER_CLASS}{-webkit-appearance:none;appearance:none;height:4px;border-radius:4px;outline:none;cursor:pointer;width:100%}
-.${SLIDER_CLASS}::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;border:2px solid var(--bdier-accent);background:#fff;cursor:pointer;margin-top:-4px;box-shadow:0 1px 3px rgba(0,0,0,0.12)}
-.${SLIDER_CLASS}::-moz-range-thumb{width:12px;height:12px;border-radius:50%;border:2px solid var(--bdier-accent);background:#fff;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.12)}
-.${SLIDER_CLASS}::-webkit-slider-runnable-track{height:4px;border-radius:4px}
-.${SLIDER_CLASS}::-moz-range-track{height:4px;border-radius:4px}
-.${NUM_INPUT_CLASS}{width:44px;height:26px;text-align:center;font-size:11px;font-weight:600;border-radius:5px;outline:none;padding:0;font-family:inherit;-moz-appearance:textfield}
+const getSliderCSS = (ui: BoardierUIStyle) => `
+.${SLIDER_CLASS}{-webkit-appearance:none;appearance:none;height:${ui.sliderTrackHeight}px;border-radius:${ui.sliderTrackRadius};outline:none;cursor:pointer;width:100%}
+.${SLIDER_CLASS}::-webkit-slider-thumb{-webkit-appearance:none;width:${ui.sliderThumbSize}px;height:${ui.sliderThumbSize}px;border-radius:50%;border:2px solid var(--bdier-accent);background:#fff;cursor:pointer;margin-top:${-(ui.sliderThumbSize - ui.sliderTrackHeight) / 2}px;box-shadow:0 1px 3px rgba(0,0,0,0.12)}
+.${SLIDER_CLASS}::-moz-range-thumb{width:${ui.sliderThumbSize}px;height:${ui.sliderThumbSize}px;border-radius:50%;border:2px solid var(--bdier-accent);background:#fff;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.12)}
+.${SLIDER_CLASS}::-webkit-slider-runnable-track{height:${ui.sliderTrackHeight}px;border-radius:${ui.sliderTrackRadius}}
+.${SLIDER_CLASS}::-moz-range-track{height:${ui.sliderTrackHeight}px;border-radius:${ui.sliderTrackRadius}}
+.${NUM_INPUT_CLASS}{width:44px;height:26px;text-align:center;font-size:11px;font-weight:600;border-radius:${ui.inputBorderRadius};outline:none;padding:0;font-family:inherit;-moz-appearance:textfield}
 .${NUM_INPUT_CLASS}::-webkit-inner-spin-button,.${NUM_INPUT_CLASS}::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
 .${NUM_INPUT_CLASS}:focus{border-color:var(--bdier-accent) !important}
 `;
@@ -99,14 +99,15 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
   const isEmbed = elements.some(e => e.type === 'embed');
 
   const trackBg = theme.panelBorder;
+  const ui = theme.uiStyle;
 
   /* ── re-usable style helpers ──────────────────────── */
-  const SWATCH_SIZE = 24;
+  const SWATCH_SIZE = ui.swatchSize;
 
   const swatch = (color: string, active: boolean, onClick: () => void) => (
     <button key={color} onClick={onClick} title={color} style={{
-      width: SWATCH_SIZE, height: SWATCH_SIZE, borderRadius: 5,
-      border: active ? `2px solid ${theme.selectionColor}` : `1.5px solid ${theme.panelBorder}`,
+      width: SWATCH_SIZE, height: SWATCH_SIZE, borderRadius: ui.swatchBorderRadius,
+      border: active ? `2px solid ${theme.selectionColor}` : `${ui.inputBorderWidth}px solid ${theme.panelBorder}`,
       background: color === 'transparent'
         ? `repeating-conic-gradient(${theme.panelBorder} 0% 25%, transparent 0% 50%) 50% / 8px 8px`
         : color,
@@ -122,7 +123,7 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
         onChange={e => onPick(e.target.value)} tabIndex={-1}
         style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer', border: 'none', padding: 0 }}
       />
-      <span style={{ width: SWATCH_SIZE, height: SWATCH_SIZE, borderRadius: 5, border: `1.5px dashed ${theme.panelBorder}`, background: 'transparent',
+      <span style={{ width: SWATCH_SIZE, height: SWATCH_SIZE, borderRadius: ui.swatchBorderRadius, border: `${ui.inputBorderWidth}px dashed ${theme.panelBorder}`, background: 'transparent',
         display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.panelTextSecondary, pointerEvents: 'none' }}>
         <svg width={10} height={10} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
       </span>
@@ -132,7 +133,7 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
   /** Section card with subtle background grouping — our own flavor, not Excalidraw's flat list */
   const card = (children: React.ReactNode) => (
     <div style={{
-      padding: '10px 10px', borderRadius: 8,
+      padding: '10px 10px', borderRadius: ui.cardBorderRadius,
       background: theme.panelHover, display: 'flex', flexDirection: 'column', gap: 8, width: '100%',
     }}>{children}</div>
   );
@@ -145,8 +146,8 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
   const pill = (active: boolean, onClick: () => void, child: React.ReactNode, title?: string) => (
     <button onClick={onClick} title={title} style={{
       height: 30, minWidth: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 6px',
-      border: `1.5px solid ${active ? theme.selectionColor : 'transparent'}`,
-      borderRadius: 5, background: active ? theme.panelActive : 'transparent',
+      border: `${ui.buttonBorderWidth}px solid ${active ? theme.selectionColor : 'transparent'}`,
+      borderRadius: ui.buttonBorderRadius, background: active ? theme.panelActive : 'transparent',
       cursor: 'pointer', color: active ? theme.selectionColor : theme.panelText,
       transition: 'all 0.1s ease',
     }}>{child}</button>
@@ -157,7 +158,7 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
       <input className={NUM_INPUT_CLASS} type="number" min={min} max={max} step={step}
         value={step < 1 ? value.toFixed(step < 0.1 ? 2 : 1) : value}
         onChange={e => { const v = parseFloat(e.target.value); if (!isNaN(v) && v >= min && v <= max) onChange(v); }}
-        style={{ border: `1.5px solid ${theme.panelBorder}`, background: theme.panelBackground, color: theme.panelText }}
+        style={{ border: `${ui.inputBorderWidth}px solid ${theme.panelBorder}`, background: theme.panelBackground, color: theme.panelText }}
       />
       {unit && <span style={{ fontSize: 9, color: theme.panelTextSecondary, fontWeight: 600 }}>{unit}</span>}
     </div>
@@ -191,12 +192,12 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
 
   return (
     <>
-      <style>{sliderCSS}</style>
+      <style>{getSliderCSS(ui)}</style>
       <div style={{
         position: 'absolute', top: '50%', left: 12, transform: 'translateY(-50%)',
         display: 'flex', flexDirection: 'column', gap: 6, padding: 8,
-        background: theme.panelBackground, border: `1px solid ${theme.panelBorder}`,
-        borderRadius: theme.borderRadius + 4, boxShadow: theme.shadow, zIndex: 10,
+        background: theme.panelBackground, border: `${ui.panelBorderWidth}px ${ui.panelBorderStyle} ${theme.panelBorder}`,
+        borderRadius: ui.panelBorderRadius, boxShadow: ui.panelShadow, zIndex: 10,
         width: 224, fontFamily: theme.uiFontFamily,
         '--bdier-accent': theme.selectionColor,
         maxHeight: 'calc(100vh - 80px)', overflowY: 'auto',
@@ -215,7 +216,7 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
             onBlur={e => { if (!/^#[0-9a-f]{6}$/i.test(e.target.value)) onUpdate({ strokeColor: first.strokeColor }); }}
             style={{
               width: '100%', height: 24, fontSize: 11, fontWeight: 600, fontFamily: 'monospace',
-              border: `1.5px solid ${theme.panelBorder}`, borderRadius: 5,
+              border: `${ui.inputBorderWidth}px solid ${theme.panelBorder}`, borderRadius: ui.inputBorderRadius,
               background: theme.panelBackground, color: theme.panelText,
               padding: '0 8px', outline: 'none',
             }}
@@ -293,7 +294,7 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
                 {numInput(br, 0, 50, 1, v => onUpdate({ borderRadius: v, borderRadii: undefined } as any), 'px')}
                 <button onClick={() => setPerCorner(true)} title="Per-corner radius" style={{
                   width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
-                  border: `1.5px solid ${theme.panelBorder}`, borderRadius: 5, background: 'transparent',
+                  border: `${ui.buttonBorderWidth}px solid ${theme.panelBorder}`, borderRadius: ui.buttonBorderRadius, background: 'transparent',
                   cursor: 'pointer', color: theme.panelTextSecondary, flexShrink: 0,
                 }}>
                   <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -316,14 +317,14 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
                           next[i] = v;
                           onUpdate({ borderRadii: next } as any);
                         }}
-                        style={{ width: 36, border: `1.5px solid ${theme.panelBorder}`, background: theme.panelBackground, color: theme.panelText }}
+                        style={{ width: 36, border: `${ui.inputBorderWidth}px solid ${theme.panelBorder}`, background: theme.panelBackground, color: theme.panelText }}
                       />
                     );
                   })}
                 </div>
                 <button onClick={() => setPerCorner(false)} title="Uniform radius" style={{
                   width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
-                  border: `1.5px solid ${theme.selectionColor}`, borderRadius: 5, background: theme.panelActive,
+                  border: `${ui.buttonBorderWidth}px solid ${theme.selectionColor}`, borderRadius: ui.buttonBorderRadius, background: theme.panelActive,
                   cursor: 'pointer', color: theme.panelText, flexShrink: 0,
                 }}>
                   <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -363,8 +364,8 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
               return (
                 <button key={f.label} onClick={() => onUpdate({ fontFamily: f.value } as any)} style={{
                   padding: '4px 10px', fontSize: 12, fontWeight: 600,
-                  border: `1.5px solid ${isActive ? theme.selectionColor : 'transparent'}`,
-                  borderRadius: 5, background: isActive ? theme.panelActive : 'transparent',
+                  border: `${ui.buttonBorderWidth}px solid ${isActive ? theme.selectionColor : 'transparent'}`,
+                  borderRadius: ui.buttonBorderRadius, background: isActive ? theme.panelActive : 'transparent',
                   cursor: 'pointer', color: isActive ? theme.selectionColor : theme.panelText, fontFamily: f.value,
                   transition: 'all 0.1s',
                 }}>{f.label}</button>
@@ -375,8 +376,8 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
               return (
                 <button onClick={() => onUpdate({ fontFamily: HANDWRITTEN_FONT } as any)} style={{
                   padding: '4px 10px', fontSize: 12, fontWeight: 600,
-                  border: `1.5px solid ${isActive ? theme.selectionColor : 'transparent'}`,
-                  borderRadius: 5, background: isActive ? theme.panelActive : 'transparent',
+                  border: `${ui.buttonBorderWidth}px solid ${isActive ? theme.selectionColor : 'transparent'}`,
+                  borderRadius: ui.buttonBorderRadius, background: isActive ? theme.panelActive : 'transparent',
                   cursor: 'pointer', color: isActive ? theme.selectionColor : theme.panelText, fontFamily: HANDWRITTEN_FONT,
                   transition: 'all 0.1s',
                 }}>Hand</button>
@@ -422,7 +423,7 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
             onChange={e => onUpdate({ url: e.target.value } as any)}
             style={{
               width: '100%', height: 28, fontSize: 11,
-              border: `1.5px solid ${theme.panelBorder}`, borderRadius: 5,
+              border: `${ui.inputBorderWidth}px solid ${theme.panelBorder}`, borderRadius: ui.inputBorderRadius,
               background: theme.panelBackground, color: theme.panelText,
               padding: '0 8px', outline: 'none', fontFamily: 'inherit',
             }}
@@ -434,8 +435,8 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
           <button onClick={() => onUpdate({ locked: !first.locked })} title={first.locked ? 'Unlock' : 'Lock'}
             style={{
               width: 32, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center',
-              border: `1.5px solid ${first.locked ? theme.selectionColor : 'transparent'}`,
-              borderRadius: 5, background: first.locked ? theme.panelActive : 'transparent',
+              border: `${ui.buttonBorderWidth}px solid ${first.locked ? theme.selectionColor : 'transparent'}`,
+              borderRadius: ui.buttonBorderRadius, background: first.locked ? theme.panelActive : 'transparent',
               cursor: 'pointer', color: theme.panelText, padding: 0, transition: 'all 0.1s',
             }}
           >
@@ -452,7 +453,7 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
           <button onClick={onDelete} title="Delete"
             style={{
               width: 32, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center',
-              border: `1.5px solid transparent`, borderRadius: 5, background: 'transparent',
+              border: `${ui.buttonBorderWidth}px solid transparent`, borderRadius: ui.buttonBorderRadius, background: 'transparent',
               cursor: 'pointer', color: '#e03131', padding: 0, transition: 'all 0.1s',
             }}
           >

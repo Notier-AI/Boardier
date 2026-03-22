@@ -6,6 +6,7 @@
  * @boardier-usage `const theme = createNotierTheme({ accent: '#6366f1' });`
  */
 import type { BoardierTheme } from './types';
+import { roughUIStyle, cleanUIStyle } from './defaultTheme';
 
 /**
  * Create a BoardierTheme that matches a Notier app theme.
@@ -59,11 +60,14 @@ export function createNotierTheme(
           ? '4px 4px 0 0 rgba(255,255,255,0.05)'
           : '0 2px 12px rgba(0,0,0,0.25)',
 
+      uiStyle: isElegant ? cleanUIStyle : roughUIStyle,
+
       elementDefaults: {
         strokeColor: '#e9ecef',
         backgroundColor: 'transparent',
         fillStyle: 'none',
         strokeWidth: isWhiteboard ? 3 : 2,
+        roughness: isWhiteboard ? 1.8 : 1.5,
         fontSize: isWhiteboard ? 20 : 18,
         fontFamily,
       },
@@ -104,11 +108,14 @@ export function createNotierTheme(
         ? '4px 4px 0 0 rgba(0,0,0,1)'
         : '0 2px 12px rgba(0,0,0,0.08)',
 
+    uiStyle: isElegant ? cleanUIStyle : roughUIStyle,
+
     elementDefaults: {
       strokeColor: '#1e1e1e',
       backgroundColor: 'transparent',
       fillStyle: 'none',
       strokeWidth: isWhiteboard ? 3 : 2,
+      roughness: isWhiteboard ? 1.8 : 1.5,
       fontSize: isWhiteboard ? 20 : 18,
       fontFamily,
     },

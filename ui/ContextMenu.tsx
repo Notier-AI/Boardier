@@ -68,9 +68,9 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({ position, onAction, on
           minWidth: 200,
           padding: '4px 0',
           background: theme.panelBackground,
-          border: `1px solid ${theme.panelBorder}`,
-          borderRadius: theme.borderRadius,
-          boxShadow: theme.shadow,
+          border: `${theme.uiStyle.panelBorderWidth}px ${theme.uiStyle.panelBorderStyle} ${theme.panelBorder}`,
+          borderRadius: theme.uiStyle.menuBorderRadius,
+          boxShadow: theme.uiStyle.panelShadow,
           zIndex: 51,
           fontFamily: theme.uiFontFamily,
         }}
