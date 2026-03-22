@@ -1,0 +1,59 @@
+{
+  "name": "boardier",
+  "version": "0.1.0",
+  "description": "A free, open source, AI-focused whiteboard engine built as a React component. Themeable, extensible, 100% client-side.",
+  "type": "module",
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./ai": "./ai/index.ts",
+    "./themes": "./themes/index.ts"
+  },
+  "files": [
+    "ai/",
+    "core/",
+    "elements/",
+    "themes/",
+    "tools/",
+    "ui/",
+    "utils/",
+    "index.ts"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "docs": "ts-node scripts/parseDocsFromSource.ts",
+    "changelog": "ts-node scripts/generateChangelog.ts"
+  },
+  "keywords": [
+    "whiteboard",
+    "canvas",
+    "react",
+    "drawing",
+    "diagram",
+    "ai",
+    "mermaid",
+    "open-source"
+  ],
+  "homepage": "https://boardier.dev",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/notierai/boardier.git"
+  },
+  "bugs": {
+    "url": "https://github.com/notierai/boardier/issues"
+  },
+  "license": "MIT",
+  "author": "Notier <hello@notier.ai>",
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
+  },
+  "devDependencies": {
+    "react": "^19.2.1",
+    "react-dom": "^19.2.1",
+    "typescript": "~5.8.2",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0"
+  }
+}

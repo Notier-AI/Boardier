@@ -1,0 +1,8 @@
+node_modules/
+website/
+scripts/
+*.md
+!README.md
+.git/
+.gitignore
+tsconfig.json
