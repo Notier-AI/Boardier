@@ -5,10 +5,18 @@ import HeroSelectAnimation from "./components/HeroSelectAnimation";
 import ScrollReveal from "./components/ScrollReveal";
 import StaggerChildren from "./components/StaggerChildren";
 import { RoughnessDemo, FreehandDemo, ColorDemo, FillStyleDemo, AIGenerateDemo, StrokeWidthDemo } from "./components/FeatureDemos";
+import DrawOnScroll, { DOODLE_ARROW_RIGHT, DOODLE_UNDERLINE } from "./components/DrawOnScroll";
+import ScrollProgress from "./components/ScrollProgress";
+import ParallaxDoodles from "./components/ParallaxDoodles";
 
 export default function Home() {
   return (
     <div className="min-h-screen flex flex-col font-kalam">
+      {/* Scroll-linked squiggly progress line on the left margin */}
+      <ScrollProgress />
+      {/* Parallax doodle scribbles floating in the margins */}
+      <ParallaxDoodles />
+
       {/* Header */}
       <header className="p-4 md:p-6 flex items-center justify-between border-b-2 border-root-fg border-dashed">
         <div className="flex items-center gap-3">
@@ -74,12 +82,35 @@ export default function Home() {
           </div>
         </ScrollReveal>
 
+        {/* Sketchy connector arrow drawn on scroll between hero CTA and features */}
+        <div className="w-full flex justify-center my-4">
+          <DrawOnScroll
+            path={DOODLE_ARROW_RIGHT}
+            color="var(--boardier-green)"
+            strokeWidth={2}
+            width={200}
+            height={60}
+            className="w-48 h-12 opacity-40"
+          />
+        </div>
+
         {/* Interactive Feature Demos */}
         <div id="features" className="w-full mt-12">
           <ScrollReveal delay={100} direction="none">
             <div className="text-center mb-10">
               <h2 className="text-4xl font-bold font-caveat mb-2">Play With It</h2>
               <p className="text-root-fg/60 text-lg">These are real. Go ahead, interact.</p>
+              {/* Wavy underline that draws itself on scroll */}
+              <div className="flex justify-center mt-2">
+                <DrawOnScroll
+                  path={DOODLE_UNDERLINE}
+                  color="var(--boardier-red)"
+                  strokeWidth={2.5}
+                  width={280}
+                  height={70}
+                  className="w-56 h-5 opacity-50"
+                />
+              </div>
             </div>
           </ScrollReveal>
 

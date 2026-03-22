@@ -16,41 +16,42 @@ interface PropertyPanelProps {
   theme: BoardierTheme;
 }
 
-/* ── tiny SVG icons ─────────────────────────────────── */
+/* ── SVG icons (16×16) ──────────────────────────────── */
+
 const iconFillSolid = (
-  <svg width={12} height={12} viewBox="0 0 14 14"><rect x="1" y="1" width="12" height="12" rx="2" fill="currentColor" /></svg>
+  <svg width={16} height={16} viewBox="0 0 16 16"><rect x="2" y="2" width="12" height="12" rx="2" fill="currentColor" /></svg>
 );
 const iconFillHachure = (
-  <svg width={12} height={12} viewBox="0 0 14 14" stroke="currentColor" strokeWidth="1.6" fill="none">
-    <rect x="1" y="1" width="12" height="12" rx="2" />
-    <line x1="3" y1="13" x2="13" y2="3" /><line x1="1" y1="10" x2="10" y2="1" /><line x1="1" y1="6" x2="6" y2="1" />
+  <svg width={16} height={16} viewBox="0 0 16 16" stroke="currentColor" strokeWidth="1.5" fill="none">
+    <rect x="2" y="2" width="12" height="12" rx="2" />
+    <line x1="4" y1="14" x2="14" y2="4" /><line x1="2" y1="11" x2="11" y2="2" /><line x1="2" y1="7" x2="7" y2="2" />
   </svg>
 );
 const iconFillCross = (
-  <svg width={12} height={12} viewBox="0 0 14 14" stroke="currentColor" strokeWidth="1.3" fill="none">
-    <rect x="1" y="1" width="12" height="12" rx="2" />
-    <line x1="3" y1="13" x2="13" y2="3" /><line x1="1" y1="10" x2="10" y2="1" /><line x1="1" y1="6" x2="6" y2="1" />
-    <line x1="1" y1="3" x2="11" y2="13" /><line x1="4" y1="1" x2="13" y2="10" /><line x1="8" y1="1" x2="13" y2="6" />
+  <svg width={16} height={16} viewBox="0 0 16 16" stroke="currentColor" strokeWidth="1.2" fill="none">
+    <rect x="2" y="2" width="12" height="12" rx="2" />
+    <line x1="4" y1="14" x2="14" y2="4" /><line x1="2" y1="11" x2="11" y2="2" /><line x1="2" y1="7" x2="7" y2="2" />
+    <line x1="2" y1="4" x2="12" y2="14" /><line x1="5" y1="2" x2="14" y2="11" /><line x1="9" y1="2" x2="14" y2="7" />
   </svg>
 );
 const iconFillDots = (
-  <svg width={12} height={12} viewBox="0 0 14 14" fill="currentColor" stroke="currentColor" strokeWidth="1.3">
-    <rect x="1" y="1" width="12" height="12" rx="2" fill="none" />
-    <circle cx="4" cy="4" r="1" stroke="none" /><circle cx="10" cy="4" r="1" stroke="none" />
-    <circle cx="7" cy="7" r="1" stroke="none" /><circle cx="4" cy="10" r="1" stroke="none" />
-    <circle cx="10" cy="10" r="1" stroke="none" />
+  <svg width={16} height={16} viewBox="0 0 16 16" fill="currentColor" stroke="currentColor" strokeWidth="1.2">
+    <rect x="2" y="2" width="12" height="12" rx="2" fill="none" />
+    <circle cx="5" cy="5" r="1.2" stroke="none" /><circle cx="11" cy="5" r="1.2" stroke="none" />
+    <circle cx="8" cy="8" r="1.2" stroke="none" /><circle cx="5" cy="11" r="1.2" stroke="none" />
+    <circle cx="11" cy="11" r="1.2" stroke="none" />
   </svg>
 );
 const iconFillZigzag = (
-  <svg width={12} height={12} viewBox="0 0 14 14" stroke="currentColor" strokeWidth="1.4" fill="none">
-    <rect x="1" y="1" width="12" height="12" rx="2" />
-    <polyline points="2,5 5,8 8,5 11,8" /><polyline points="2,9 5,12 8,9 11,12" />
+  <svg width={16} height={16} viewBox="0 0 16 16" stroke="currentColor" strokeWidth="1.4" fill="none">
+    <rect x="2" y="2" width="12" height="12" rx="2" />
+    <polyline points="3,6 6,9 9,6 12,9" /><polyline points="3,10 6,13 9,10 12,13" />
   </svg>
 );
 const iconFillZigzagLine = (
-  <svg width={12} height={12} viewBox="0 0 14 14" stroke="currentColor" strokeWidth="1.2" fill="none">
-    <rect x="1" y="1" width="12" height="12" rx="2" />
-    <polyline points="2,3 4,5 6,3 8,5 10,3 12,5" /><polyline points="2,7 4,9 6,7 8,9 10,7 12,9" /><polyline points="3,11 5,13 7,11 9,13" />
+  <svg width={16} height={16} viewBox="0 0 16 16" stroke="currentColor" strokeWidth="1.2" fill="none">
+    <rect x="2" y="2" width="12" height="12" rx="2" />
+    <polyline points="3,4 5,6 7,4 9,6 11,4 13,6" /><polyline points="3,8 5,10 7,8 9,10 11,8 13,10" />
   </svg>
 );
 
@@ -63,20 +64,24 @@ const FILL_STYLE_OPTS: { v: FillStyle; icon: React.ReactNode; tip: string }[] = 
   { v: 'zigzag-line', icon: iconFillZigzagLine, tip: 'Zigzag-line' },
 ];
 
-const STROKE_STYLE_OPTS: { v: StrokeStyle; svg: React.ReactNode }[] = [
-  { v: 'solid', svg: <svg width={18} height={6} viewBox="0 0 20 6"><line x1="0" y1="3" x2="20" y2="3" stroke="currentColor" strokeWidth="2" /></svg> },
-  { v: 'dashed', svg: <svg width={18} height={6} viewBox="0 0 20 6"><line x1="0" y1="3" x2="20" y2="3" stroke="currentColor" strokeWidth="2" strokeDasharray="4 3" /></svg> },
-  { v: 'dotted', svg: <svg width={18} height={6} viewBox="0 0 20 6"><line x1="0" y1="3" x2="20" y2="3" stroke="currentColor" strokeWidth="2" strokeDasharray="1.5 2.5" strokeLinecap="round" /></svg> },
+const STROKE_STYLE_OPTS: { v: StrokeStyle; label: string; svg: React.ReactNode }[] = [
+  { v: 'solid', label: 'Solid', svg: <svg width={28} height={6} viewBox="0 0 28 6"><line x1="0" y1="3" x2="28" y2="3" stroke="currentColor" strokeWidth="2" /></svg> },
+  { v: 'dashed', label: 'Dashed', svg: <svg width={28} height={6} viewBox="0 0 28 6"><line x1="0" y1="3" x2="28" y2="3" stroke="currentColor" strokeWidth="2" strokeDasharray="5 3" /></svg> },
+  { v: 'dotted', label: 'Dotted', svg: <svg width={28} height={6} viewBox="0 0 28 6"><line x1="0" y1="3" x2="28" y2="3" stroke="currentColor" strokeWidth="2" strokeDasharray="1.5 3" strokeLinecap="round" /></svg> },
 ];
 
 /* ── slider CSS (injected once) ─────────────────────── */
 const SLIDER_CLASS = 'bdier-slider';
+const NUM_INPUT_CLASS = 'bdier-numinput';
 const sliderCSS = `
-.${SLIDER_CLASS}{-webkit-appearance:none;appearance:none;height:3px;border-radius:2px;outline:none;cursor:pointer}
-.${SLIDER_CLASS}::-webkit-slider-thumb{-webkit-appearance:none;width:10px;height:10px;border-radius:50%;border:2px solid var(--bdier-accent);background:#fff;cursor:pointer;margin-top:-3.5px}
-.${SLIDER_CLASS}::-moz-range-thumb{width:10px;height:10px;border-radius:50%;border:2px solid var(--bdier-accent);background:#fff;cursor:pointer}
-.${SLIDER_CLASS}::-webkit-slider-runnable-track{height:3px;border-radius:2px}
-.${SLIDER_CLASS}::-moz-range-track{height:3px;border-radius:2px}
+.${SLIDER_CLASS}{-webkit-appearance:none;appearance:none;height:4px;border-radius:4px;outline:none;cursor:pointer;width:100%}
+.${SLIDER_CLASS}::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;border:2px solid var(--bdier-accent);background:#fff;cursor:pointer;margin-top:-4px;box-shadow:0 1px 3px rgba(0,0,0,0.12)}
+.${SLIDER_CLASS}::-moz-range-thumb{width:12px;height:12px;border-radius:50%;border:2px solid var(--bdier-accent);background:#fff;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.12)}
+.${SLIDER_CLASS}::-webkit-slider-runnable-track{height:4px;border-radius:4px}
+.${SLIDER_CLASS}::-moz-range-track{height:4px;border-radius:4px}
+.${NUM_INPUT_CLASS}{width:44px;height:26px;text-align:center;font-size:11px;font-weight:600;border-radius:5px;outline:none;padding:0;font-family:inherit;-moz-appearance:textfield}
+.${NUM_INPUT_CLASS}::-webkit-inner-spin-button,.${NUM_INPUT_CLASS}::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.${NUM_INPUT_CLASS}:focus{border-color:var(--bdier-accent) !important}
 `;
 
 export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate, onDelete, theme }) => {
@@ -93,50 +98,92 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
   const isRect = elements.some(e => e.type === 'rectangle');
   const isEmbed = elements.some(e => e.type === 'embed');
 
-  /* ── helpers ──────────────────────────────────────── */
+  const trackBg = theme.panelBorder;
+
+  /* ── re-usable style helpers ──────────────────────── */
+  const SWATCH_SIZE = 24;
+
   const swatch = (color: string, active: boolean, onClick: () => void) => (
-    <button key={color} onClick={onClick} style={{
-      width: 18, height: 18, borderRadius: 3,
-      border: active ? `2px solid ${theme.selectionColor}` : `1px solid ${theme.panelBorder}`,
+    <button key={color} onClick={onClick} title={color} style={{
+      width: SWATCH_SIZE, height: SWATCH_SIZE, borderRadius: 5,
+      border: active ? `2px solid ${theme.selectionColor}` : `1.5px solid ${theme.panelBorder}`,
       background: color === 'transparent'
         ? `repeating-conic-gradient(${theme.panelBorder} 0% 25%, transparent 0% 50%) 50% / 8px 8px`
         : color,
       cursor: 'pointer', padding: 0, flexShrink: 0,
+      boxShadow: active ? `0 0 0 2px ${theme.panelBackground}, 0 0 0 3.5px ${theme.selectionColor}` : 'none',
+      transition: 'transform 0.1s, box-shadow 0.12s',
     }} />
   );
 
   const customPicker = (currentColor: string, onPick: (c: string) => void, ref: React.RefObject<HTMLInputElement | null>) => (
-    <span style={{ position: 'relative', display: 'inline-block', width: 18, height: 18 }}>
+    <span style={{ position: 'relative', display: 'inline-block', width: SWATCH_SIZE, height: SWATCH_SIZE }}>
       <input ref={ref} type="color" value={currentColor === 'transparent' ? '#000000' : currentColor}
         onChange={e => onPick(e.target.value)} tabIndex={-1}
         style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer', border: 'none', padding: 0 }}
       />
-      <span style={{ width: 18, height: 18, borderRadius: 3, border: `1px dashed ${theme.panelBorder}`, background: 'transparent',
+      <span style={{ width: SWATCH_SIZE, height: SWATCH_SIZE, borderRadius: 5, border: `1.5px dashed ${theme.panelBorder}`, background: 'transparent',
         display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.panelTextSecondary, pointerEvents: 'none' }}>
-        <svg width={7} height={7} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
+        <svg width={10} height={10} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
       </span>
     </span>
   );
 
-  const sep = <div style={{ height: 1, alignSelf: 'stretch', background: theme.panelBorder, flexShrink: 0 }} />;
-  const lbl: React.CSSProperties = { fontSize: 8, fontWeight: 700, color: theme.panelTextSecondary, letterSpacing: 0.3, textTransform: 'uppercase', lineHeight: 1, whiteSpace: 'nowrap' };
-  const grp: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'center' };
-  const trackBg = theme.panelBorder;
+  /** Section card with subtle background grouping — our own flavor, not Excalidraw's flat list */
+  const card = (children: React.ReactNode) => (
+    <div style={{
+      padding: '10px 10px', borderRadius: 8,
+      background: theme.panelHover, display: 'flex', flexDirection: 'column', gap: 8, width: '100%',
+    }}>{children}</div>
+  );
+
+  const sectionTitle: React.CSSProperties = {
+    fontSize: 10, fontWeight: 700, color: theme.panelTextSecondary,
+    letterSpacing: 0.6, textTransform: 'uppercase', lineHeight: 1,
+  };
 
   const pill = (active: boolean, onClick: () => void, child: React.ReactNode, title?: string) => (
     <button onClick={onClick} title={title} style={{
-      width: 28, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
-      border: `1px solid ${active ? theme.selectionColor : theme.panelBorder}`,
-      borderRadius: 4, background: active ? theme.panelActive : 'transparent',
-      cursor: 'pointer', color: theme.panelText,
+      height: 30, minWidth: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 6px',
+      border: `1.5px solid ${active ? theme.selectionColor : 'transparent'}`,
+      borderRadius: 5, background: active ? theme.panelActive : 'transparent',
+      cursor: 'pointer', color: active ? theme.selectionColor : theme.panelText,
+      transition: 'all 0.1s ease',
     }}>{child}</button>
+  );
+
+  const numInput = (value: number, min: number, max: number, step: number, onChange: (v: number) => void, unit?: string) => (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+      <input className={NUM_INPUT_CLASS} type="number" min={min} max={max} step={step}
+        value={step < 1 ? value.toFixed(step < 0.1 ? 2 : 1) : value}
+        onChange={e => { const v = parseFloat(e.target.value); if (!isNaN(v) && v >= min && v <= max) onChange(v); }}
+        style={{ border: `1.5px solid ${theme.panelBorder}`, background: theme.panelBackground, color: theme.panelText }}
+      />
+      {unit && <span style={{ fontSize: 9, color: theme.panelTextSecondary, fontWeight: 600 }}>{unit}</span>}
+    </div>
   );
 
   const slider = (value: number, min: number, max: number, step: number, onChange: (v: number) => void) => (
     <input className={SLIDER_CLASS} type="range" min={min} max={max} step={step}
       value={value} onChange={e => onChange(parseFloat(e.target.value))}
-      style={{ width: 48, background: `linear-gradient(90deg, ${theme.selectionColor} ${((value - min) / (max - min)) * 100}%, ${trackBg} 0%)` }}
+      style={{ background: `linear-gradient(90deg, ${theme.selectionColor} ${((value - min) / (max - min)) * 100}%, ${trackBg} 0%)` }}
     />
+  );
+
+  /** Compact row: label left, slider center, number input right */
+  const compactSlider = (
+    label: string, value: number, min: number, max: number, step: number,
+    onChange: (v: number) => void, unit?: string,
+  ) => (
+    <div>
+      <span style={sectionTitle}>{label}</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 }}>
+        <div style={{ flex: 1 }}>
+          {slider(value, min, max, step, onChange)}
+        </div>
+        {numInput(value, min, max, step, onChange, unit)}
+      </div>
+    </div>
   );
 
   const borderRadii = (first as any).borderRadii as [number, number, number, number] | undefined;
@@ -147,93 +194,121 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
       <style>{sliderCSS}</style>
       <div style={{
         position: 'absolute', top: '50%', left: 12, transform: 'translateY(-50%)',
-        display: 'flex', flexDirection: 'column', gap: 12, padding: '14px 10px',
+        display: 'flex', flexDirection: 'column', gap: 6, padding: 8,
         background: theme.panelBackground, border: `1px solid ${theme.panelBorder}`,
-        borderRadius: theme.borderRadius, boxShadow: theme.shadow, zIndex: 10,
-        alignItems: 'center', fontFamily: theme.uiFontFamily,
+        borderRadius: theme.borderRadius + 4, boxShadow: theme.shadow, zIndex: 10,
+        width: 224, fontFamily: theme.uiFontFamily,
         '--bdier-accent': theme.selectionColor,
+        maxHeight: 'calc(100vh - 80px)', overflowY: 'auto',
       } as React.CSSProperties}>
 
-        {/* ── Colors (merged) ── */}
-        <div style={grp}>
-          <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
-            <span style={{ ...lbl, width: 12, textAlign: 'right', fontSize: 9 }}>S</span>
-            <div style={{ display: 'flex', gap: 2, flexWrap: 'wrap', maxWidth: 105 }}>
-              {STROKE_COLORS.map(c => swatch(c, first.strokeColor === c, () => onUpdate({ strokeColor: c })))}
-              {customPicker(first.strokeColor, c => onUpdate({ strokeColor: c }), strokePickerRef)}
-            </div>
+        {/* ── Stroke ── */}
+        {card(<>
+          <span style={sectionTitle}>Stroke</span>
+          <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+            {STROKE_COLORS.map(c => swatch(c, first.strokeColor === c, () => onUpdate({ strokeColor: c })))}
+            {customPicker(first.strokeColor, c => onUpdate({ strokeColor: c }), strokePickerRef)}
           </div>
-          {isNotLine && (
-            <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
-              <span style={{ ...lbl, width: 12, textAlign: 'right', fontSize: 9 }}>F</span>
-              <div style={{ display: 'flex', gap: 2, flexWrap: 'wrap', maxWidth: 105 }}>
-                {FILL_COLORS.map(c =>
-                  swatch(c, first.backgroundColor === c, () =>
-                    onUpdate({ backgroundColor: c, fillStyle: c === 'transparent' ? 'none' : (first.fillStyle === 'none' ? 'solid' : first.fillStyle) })))}
-                {customPicker(first.backgroundColor, c => onUpdate({ backgroundColor: c, fillStyle: first.fillStyle === 'none' ? 'solid' : first.fillStyle }), fillPickerRef)}
-              </div>
-            </div>
-          )}
-        </div>
+          {/* Hex input for precise color */}
+          <input type="text" value={first.strokeColor} spellCheck={false}
+            onChange={e => { const v = e.target.value; if (/^#[0-9a-f]{0,6}$/i.test(v) || v === '') onUpdate({ strokeColor: v }); }}
+            onBlur={e => { if (!/^#[0-9a-f]{6}$/i.test(e.target.value)) onUpdate({ strokeColor: first.strokeColor }); }}
+            style={{
+              width: '100%', height: 24, fontSize: 11, fontWeight: 600, fontFamily: 'monospace',
+              border: `1.5px solid ${theme.panelBorder}`, borderRadius: 5,
+              background: theme.panelBackground, color: theme.panelText,
+              padding: '0 8px', outline: 'none',
+            }}
+          />
+        </>)}
 
-        {sep}
-
-        {/* ── Style: fill pattern + stroke style ── */}
-        <div style={grp}>
-          {isNotLine && first.backgroundColor !== 'transparent' && first.fillStyle !== 'none' && (
-            <div style={{ display: 'flex', gap: 3 }}>
+        {/* ── Background ── */}
+        {isNotLine && card(<>
+          <span style={sectionTitle}>Background</span>
+          <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+            {FILL_COLORS.map(c =>
+              swatch(c, first.backgroundColor === c, () =>
+                onUpdate({ backgroundColor: c, fillStyle: c === 'transparent' ? 'none' : (first.fillStyle === 'none' ? 'solid' : first.fillStyle) })))}
+            {customPicker(first.backgroundColor, c => onUpdate({ backgroundColor: c, fillStyle: first.fillStyle === 'none' ? 'solid' : first.fillStyle }), fillPickerRef)}
+          </div>
+          {/* Fill style toggles — show when fill is active */}
+          {first.backgroundColor !== 'transparent' && first.fillStyle !== 'none' && (
+            <div style={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
               {FILL_STYLE_OPTS.map(f => pill(first.fillStyle === f.v, () => onUpdate({ fillStyle: f.v }), f.icon, f.tip))}
             </div>
           )}
-          <div style={{ display: 'flex', gap: 3 }}>
-            {STROKE_STYLE_OPTS.map(s => pill((first.strokeStyle || 'solid') === s.v, () => onUpdate({ strokeStyle: s.v } as any), s.svg, s.v))}
-          </div>
-        </div>
+        </>)}
 
-        {sep}
+        {/* ── Stroke width + style ── */}
+        {card(<>
+          <span style={sectionTitle}>Stroke width</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div style={{ display: 'flex', gap: 2 }}>
+              {([1, 2, 4] as const).map(w => pill(
+                first.strokeWidth === w,
+                () => onUpdate({ strokeWidth: w }),
+                <svg width={24} height={6} viewBox="0 0 24 6"><line x1="2" y1="3" x2="22" y2="3" stroke="currentColor" strokeWidth={w} strokeLinecap="round" /></svg>,
+                `${w}px`,
+              ))}
+            </div>
+            <div style={{ borderLeft: `1px solid ${theme.panelBorder}`, height: 20, flexShrink: 0 }} />
+            {numInput(first.strokeWidth, 1, 20, 1, v => onUpdate({ strokeWidth: v }), 'px')}
+          </div>
 
-        {/* ── Sliders: width, sloppiness, opacity ── */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center' }}>
-          <div style={grp}>
-            <span style={lbl}>{first.strokeWidth}px</span>
-            {slider(first.strokeWidth, 1, 12, 1, v => onUpdate({ strokeWidth: v }))}
+          <span style={{ ...sectionTitle, marginTop: 4 }}>Stroke style</span>
+          <div style={{ display: 'flex', gap: 2 }}>
+            {STROKE_STYLE_OPTS.map(s => pill(
+              (first.strokeStyle || 'solid') === s.v,
+              () => onUpdate({ strokeStyle: s.v } as any),
+              s.svg,
+              s.label,
+            ))}
           </div>
-          <div style={grp}>
-            <span style={lbl}>{first.roughness === 0 ? 'Clean' : first.roughness <= 0.8 ? 'Sketch' : 'Rough'}</span>
-            {slider(first.roughness, 0, 2, 0.1, v => onUpdate({ roughness: v }))}
-          </div>
-          <div style={grp}>
-            <span style={lbl}>{Math.round(first.opacity * 100)}%</span>
-            {slider(first.opacity, 0.1, 1, 0.05, v => onUpdate({ opacity: v }))}
-          </div>
-        </div>
+        </>)}
+
+        {/* ── Sloppiness + Opacity — continuous sliders with number input ── */}
+        {card(<>
+          {compactSlider(
+            'Sloppiness',
+            first.roughness, 0, 3, 0.1,
+            v => onUpdate({ roughness: v }),
+          )}
+          {compactSlider(
+            'Opacity',
+            Math.round(first.opacity * 100), 0, 100, 1,
+            v => onUpdate({ opacity: v / 100 }),
+            '%',
+          )}
+        </>)}
 
         {/* ── Border radius ── */}
-        {isRect && <>
-          {sep}
-          <div style={grp}>
-            <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-              <span style={lbl}>R</span>
-              {!perCorner ? (
-                <>
+        {isRect && card(<>
+          <span style={sectionTitle}>Edges</span>
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+            {!perCorner ? (
+              <>
+                <div style={{ flex: 1 }}>
                   {slider(br, 0, 50, 1, v => onUpdate({ borderRadius: v, borderRadii: undefined } as any))}
-                  <button onClick={() => setPerCorner(true)} title="Per-corner radius" style={{
-                    width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
-                    border: `1px solid ${theme.panelBorder}`, borderRadius: 4, background: 'transparent',
-                    cursor: 'pointer', color: theme.panelTextSecondary,
-                  }}>
-                    <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M1 5V3a2 2 0 0 1 2-2h2" /><path d="M11 1h2a2 2 0 0 1 2 2v2" />
-                      <path d="M15 11v2a2 2 0 0 1-2 2h-2" /><path d="M5 15H3a2 2 0 0 1-2-2v-2" />
-                    </svg>
-                  </button>
-                </>
-              ) : (
-                <div style={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                </div>
+                {numInput(br, 0, 50, 1, v => onUpdate({ borderRadius: v, borderRadii: undefined } as any), 'px')}
+                <button onClick={() => setPerCorner(true)} title="Per-corner radius" style={{
+                  width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
+                  border: `1.5px solid ${theme.panelBorder}`, borderRadius: 5, background: 'transparent',
+                  cursor: 'pointer', color: theme.panelTextSecondary, flexShrink: 0,
+                }}>
+                  <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8">
+                    <path d="M1 5V3a2 2 0 0 1 2-2h2" /><path d="M11 1h2a2 2 0 0 1 2 2v2" />
+                    <path d="M15 11v2a2 2 0 0 1-2 2h-2" /><path d="M5 15H3a2 2 0 0 1-2-2v-2" />
+                  </svg>
+                </button>
+              </>
+            ) : (
+              <>
+                <div style={{ display: 'flex', gap: 3, flex: 1 }}>
                   {(['TL', 'TR', 'BR', 'BL'] as const).map((corner, i) => {
                     const vals = borderRadii || [br, br, br, br];
                     return (
-                      <input key={corner} type="number" min={0} max={50} value={vals[i]}
+                      <input key={corner} className={NUM_INPUT_CLASS} type="number" min={0} max={50} value={vals[i]}
                         title={corner}
                         onChange={e => {
                           const v = Math.max(0, Math.min(50, parseInt(e.target.value) || 0));
@@ -241,173 +316,151 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
                           next[i] = v;
                           onUpdate({ borderRadii: next } as any);
                         }}
-                        style={{
-                          width: 32, height: 20, textAlign: 'center', fontSize: 10, fontWeight: 700,
-                          border: `1px solid ${theme.panelBorder}`, borderRadius: 4,
-                          background: 'transparent', color: theme.panelText, outline: 'none',
-                          fontFamily: 'inherit', padding: 0,
-                        }}
+                        style={{ width: 36, border: `1.5px solid ${theme.panelBorder}`, background: theme.panelBackground, color: theme.panelText }}
                       />
                     );
                   })}
-                  <button onClick={() => setPerCorner(false)} title="Uniform radius" style={{
-                    width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
-                    border: `1px solid ${theme.selectionColor}`, borderRadius: 4, background: theme.panelActive,
-                    cursor: 'pointer', color: theme.panelText,
-                  }}>
-                    <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M1 5V3a2 2 0 0 1 2-2h2" /><path d="M11 1h2a2 2 0 0 1 2 2v2" />
-                      <path d="M15 11v2a2 2 0 0 1-2 2h-2" /><path d="M5 15H3a2 2 0 0 1-2-2v-2" />
-                    </svg>
-                  </button>
                 </div>
-              )}
-            </div>
+                <button onClick={() => setPerCorner(false)} title="Uniform radius" style={{
+                  width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
+                  border: `1.5px solid ${theme.selectionColor}`, borderRadius: 5, background: theme.panelActive,
+                  cursor: 'pointer', color: theme.panelText, flexShrink: 0,
+                }}>
+                  <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8">
+                    <path d="M1 5V3a2 2 0 0 1 2-2h2" /><path d="M11 1h2a2 2 0 0 1 2 2v2" />
+                    <path d="M15 11v2a2 2 0 0 1-2 2h-2" /><path d="M5 15H3a2 2 0 0 1-2-2v-2" />
+                  </svg>
+                </button>
+              </>
+            )}
           </div>
-        </>}
-
-        {sep}
+        </>)}
 
         {/* ── Shadow ── */}
-        <div style={grp}>
-          <span style={lbl}>Shadow</span>
-          <div style={{ display: 'flex', gap: 3 }}>
+        {card(<>
+          <span style={sectionTitle}>Shadow</span>
+          <div style={{ display: 'flex', gap: 2 }}>
             {[
               { label: '—', value: '', tip: 'None' },
               { label: 'S', value: '2 2 4 rgba(0,0,0,0.2)', tip: 'Small' },
               { label: 'M', value: '4 4 10 rgba(0,0,0,0.25)', tip: 'Medium' },
               { label: 'L', value: '6 6 20 rgba(0,0,0,0.3)', tip: 'Large' },
-            ].map(s => (
-              <button key={s.label} onClick={() => onUpdate({ shadow: s.value || undefined } as any)} title={s.tip}
-                style={{
-                  width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  border: `1px solid ${(first.shadow || '') === s.value ? theme.selectionColor : theme.panelBorder}`,
-                  borderRadius: 4, background: (first.shadow || '') === s.value ? theme.panelActive : 'transparent',
-                  cursor: 'pointer', color: theme.panelText, fontSize: 10, fontWeight: 700, padding: 0, fontFamily: 'inherit',
-                }}
-              >{s.label}</button>
+            ].map(s => pill(
+              (first.shadow || '') === s.value,
+              () => onUpdate({ shadow: s.value || undefined } as any),
+              <span style={{ fontSize: 12, fontWeight: 700 }}>{s.label}</span>,
+              s.tip,
             ))}
           </div>
-        </div>
+        </>)}
 
-        {/* ── Font size ── */}
-        {hasText && <>
-          {sep}
-          <div style={grp}>
-            <span style={lbl}>Size</span>
-            <div style={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-              {FONT_SIZES.map(s => (
-                <button key={s} onClick={() => onUpdate({ fontSize: s } as any)} style={{
-                  width: 24, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  border: `1px solid ${(first as any).fontSize === s ? theme.selectionColor : theme.panelBorder}`,
-                  borderRadius: 4, background: (first as any).fontSize === s ? theme.panelActive : 'transparent',
-                  cursor: 'pointer', fontSize: 10, fontWeight: 700, color: theme.panelText, fontFamily: 'inherit', padding: 0,
-                }}>{s}</button>
-              ))}
-              <input type="number" min={8} max={200} value={(first as any).fontSize ?? 18}
-                onChange={e => { const v = parseInt(e.target.value); if (v >= 8 && v <= 200) onUpdate({ fontSize: v } as any); }}
-                style={{
-                  width: 36, height: 22, textAlign: 'center', fontSize: 10, fontWeight: 700,
-                  border: `1px solid ${theme.panelBorder}`, borderRadius: 4,
-                  background: 'transparent', color: theme.panelText, outline: 'none', fontFamily: 'inherit', padding: 0,
-                }}
-              />
-            </div>
-          </div>
-        </>}
-
-        {/* ── Font family ── */}
-        {hasTextOrLabel && <>
-          {sep}
-          <div style={grp}>
-            <span style={lbl}>Font</span>
-            <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
-              {FONT_FAMILIES.map(f => {
-                const isActive = (hasText ? (first as any).fontFamily : undefined) === f.value;
-                return (
-                  <button key={f.label} onClick={() => onUpdate({ fontFamily: f.value } as any)} style={{
-                    padding: '3px 6px', fontSize: 10, fontWeight: 600,
-                    border: `1px solid ${isActive ? theme.selectionColor : theme.panelBorder}`,
-                    borderRadius: 4, background: isActive ? theme.panelActive : 'transparent',
-                    cursor: 'pointer', color: theme.panelText, fontFamily: f.value,
-                  }}>{f.label}</button>
-                );
-              })}
-              {first.roughness > 0 && (
+        {/* ── Font ── */}
+        {hasTextOrLabel && card(<>
+          <span style={sectionTitle}>Font</span>
+          <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+            {FONT_FAMILIES.map(f => {
+              const isActive = (hasText ? (first as any).fontFamily : undefined) === f.value;
+              return (
+                <button key={f.label} onClick={() => onUpdate({ fontFamily: f.value } as any)} style={{
+                  padding: '4px 10px', fontSize: 12, fontWeight: 600,
+                  border: `1.5px solid ${isActive ? theme.selectionColor : 'transparent'}`,
+                  borderRadius: 5, background: isActive ? theme.panelActive : 'transparent',
+                  cursor: 'pointer', color: isActive ? theme.selectionColor : theme.panelText, fontFamily: f.value,
+                  transition: 'all 0.1s',
+                }}>{f.label}</button>
+              );
+            })}
+            {first.roughness > 0 && (() => {
+              const isActive = (first as any).fontFamily === HANDWRITTEN_FONT;
+              return (
                 <button onClick={() => onUpdate({ fontFamily: HANDWRITTEN_FONT } as any)} style={{
-                  padding: '3px 6px', fontSize: 10, fontWeight: 600,
-                  border: `1px solid ${(first as any).fontFamily === HANDWRITTEN_FONT ? theme.selectionColor : theme.panelBorder}`,
-                  borderRadius: 4, background: (first as any).fontFamily === HANDWRITTEN_FONT ? theme.panelActive : 'transparent',
-                  cursor: 'pointer', color: theme.panelText, fontFamily: HANDWRITTEN_FONT,
+                  padding: '4px 10px', fontSize: 12, fontWeight: 600,
+                  border: `1.5px solid ${isActive ? theme.selectionColor : 'transparent'}`,
+                  borderRadius: 5, background: isActive ? theme.panelActive : 'transparent',
+                  cursor: 'pointer', color: isActive ? theme.selectionColor : theme.panelText, fontFamily: HANDWRITTEN_FONT,
+                  transition: 'all 0.1s',
                 }}>Hand</button>
-              )}
-            </div>
+              );
+            })()}
           </div>
-        </>}
 
-        {/* ── Align ── */}
-        {hasText && <>
-          {sep}
-          <div style={{ display: 'flex', gap: 1 }}>
-            {(['left', 'center', 'right'] as const).map(a => pill(
-              (first as any).textAlign === a,
-              () => onUpdate({ textAlign: a } as any),
-              <svg width={9} height={9} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
-                {a === 'left' && <><path d="M3 6h18" /><path d="M3 12h12" /><path d="M3 18h16" /></>}
-                {a === 'center' && <><path d="M3 6h18" /><path d="M6 12h12" /><path d="M4 18h16" /></>}
-                {a === 'right' && <><path d="M3 6h18" /><path d="M9 12h12" /><path d="M5 18h16" /></>}
-              </svg>,
-              a,
-            ))}
-          </div>
-        </>}
+          {/* Align */}
+          {hasText && (
+            <div style={{ display: 'flex', gap: 2 }}>
+              {(['left', 'center', 'right'] as const).map(a => pill(
+                (first as any).textAlign === a,
+                () => onUpdate({ textAlign: a } as any),
+                <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  {a === 'left' && <><path d="M3 6h18" /><path d="M3 12h12" /><path d="M3 18h16" /></>}
+                  {a === 'center' && <><path d="M3 6h18" /><path d="M6 12h12" /><path d="M4 18h16" /></>}
+                  {a === 'right' && <><path d="M3 6h18" /><path d="M9 12h12" /><path d="M5 18h16" /></>}
+                </svg>,
+                a,
+              ))}
+            </div>
+          )}
+
+          {/* Font size — presets + custom input */}
+          {hasText && (<>
+            <span style={{ ...sectionTitle, marginTop: 2 }}>Size</span>
+            <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+              {FONT_SIZES.map(s => pill(
+                (first as any).fontSize === s,
+                () => onUpdate({ fontSize: s } as any),
+                <span style={{ fontSize: 11, fontWeight: 700 }}>{s}</span>,
+              ))}
+              <div style={{ borderLeft: `1px solid ${theme.panelBorder}`, height: 18, flexShrink: 0 }} />
+              {numInput((first as any).fontSize ?? 18, 8, 200, 1, v => onUpdate({ fontSize: v } as any), 'px')}
+            </div>
+          </>)}
+        </>)}
 
         {/* ── Embed URL ── */}
-        {isEmbed && <>
-          {sep}
-          <input type="text" placeholder="URL..." value={(first as any).url || ''}
+        {isEmbed && card(<>
+          <span style={sectionTitle}>Embed URL</span>
+          <input type="text" placeholder="https://..." value={(first as any).url || ''}
             onChange={e => onUpdate({ url: e.target.value } as any)}
             style={{
-              width: 90, height: 18, fontSize: 8,
-              border: `1px solid ${theme.panelBorder}`, borderRadius: 3,
-              background: 'transparent', color: theme.panelText,
-              padding: '0 3px', outline: 'none', fontFamily: 'inherit',
+              width: '100%', height: 28, fontSize: 11,
+              border: `1.5px solid ${theme.panelBorder}`, borderRadius: 5,
+              background: theme.panelBackground, color: theme.panelText,
+              padding: '0 8px', outline: 'none', fontFamily: 'inherit',
             }}
           />
-        </>}
+        </>)}
 
-        {sep}
-
-        {/* ── Lock + Delete ── */}
-        <button onClick={() => onUpdate({ locked: !first.locked })} title={first.locked ? 'Unlock' : 'Lock'}
-          style={{
-            width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center',
-            border: `1px solid ${first.locked ? theme.selectionColor : theme.panelBorder}`,
-            borderRadius: 3, background: first.locked ? theme.panelActive : 'transparent',
-            cursor: 'pointer', color: theme.panelText, padding: 0,
-          }}
-        >
-          {first.locked ? (
-            <svg width={11} height={11} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+        {/* ── Actions ── */}
+        <div style={{ display: 'flex', gap: 4, padding: '2px 6px', justifyContent: 'flex-start' }}>
+          <button onClick={() => onUpdate({ locked: !first.locked })} title={first.locked ? 'Unlock' : 'Lock'}
+            style={{
+              width: 32, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              border: `1.5px solid ${first.locked ? theme.selectionColor : 'transparent'}`,
+              borderRadius: 5, background: first.locked ? theme.panelActive : 'transparent',
+              cursor: 'pointer', color: theme.panelText, padding: 0, transition: 'all 0.1s',
+            }}
+          >
+            {first.locked ? (
+              <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+            ) : (
+              <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 9.9-1" />
+              </svg>
+            )}
+          </button>
+          <button onClick={onDelete} title="Delete"
+            style={{
+              width: 32, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              border: `1.5px solid transparent`, borderRadius: 5, background: 'transparent',
+              cursor: 'pointer', color: '#e03131', padding: 0, transition: 'all 0.1s',
+            }}
+          >
+            <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
             </svg>
-          ) : (
-            <svg width={11} height={11} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 9.9-1" />
-            </svg>
-          )}
-        </button>
-        <button onClick={onDelete} title="Delete"
-          style={{
-            width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center',
-            border: `1px solid ${theme.panelBorder}`, borderRadius: 3, background: 'transparent',
-            cursor: 'pointer', color: '#e03131', padding: 0,
-          }}
-        >
-          <svg width={11} height={11} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-          </svg>
-        </button>
+          </button>
+        </div>
       </div>
     </>
   );
