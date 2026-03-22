@@ -2,7 +2,7 @@
 
 A free, open source, AI-focused whiteboard engine built purely for the community. No license needed.
 
-Built by [Notier.ai](https://notier.ai).
+Built by [Notier.ai](https://notier.ai) and the awesome community.
 
 ## What is Boardier?
 
