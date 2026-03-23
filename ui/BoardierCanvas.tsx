@@ -3,6 +3,7 @@
  * @boardier-category UI
  * @boardier-description The top-level React component for embedding the Boardier whiteboard. Wraps the BoardierEngine with a canvas element and provides a complete UI including toolbar, property panel, zoom controls, export dialog, text editor overlays, context menu, minimap, page navigator, and presentation mode. All UI panels are draggable via the DraggablePanel system.
  * @boardier-since 0.1.0
+ * @boardier-changed 0.3.1 Moved zoom controls into Minimap footer, removed standalone ZoomControls panel
  * @boardier-usage `<BoardierCanvas config={{ showGrid: true }} theme={defaultTheme} onChange={handleChange} />`
  * @boardier-props BoardierCanvasProps
  * @boardier-ref BoardierCanvasRef (via React.forwardRef) — exposes getEngine(), getSceneData(), loadScene(), exportToPNG(), exportToSVG(), exportToJSON()
@@ -614,18 +615,6 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
           />
         )}
 
-        {/* Zoom Controls */}
-        <DraggablePanel id="zoom" layout={fullConfig.layout} theme={resolvedTheme} defaultStyle={{ bottom: 12, right: 12 }}>
-          <ZoomControls
-            zoom={viewState.zoom}
-            onZoomIn={handleZoomIn}
-            onZoomOut={handleZoomOut}
-            onFitView={() => engineRef.current?.zoomToFit()}
-            onResetZoom={() => engineRef.current?.zoomTo(1)}
-            theme={resolvedTheme}
-          />
-        </DraggablePanel>
-
         {/* Back to content button */}
         {isViewportDrifted && (
           <DraggablePanel id="backToContent" layout={fullConfig.layout} theme={resolvedTheme} defaultStyle={{ bottom: 52, right: 12 }}>
@@ -830,6 +819,11 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
             canvasHeight={containerRef.current?.clientHeight ?? 600}
             theme={resolvedTheme}
             onNavigate={handleMinimapNavigate}
+            zoom={viewState.zoom}
+            onZoomIn={handleZoomIn}
+            onZoomOut={handleZoomOut}
+            onFitView={() => engineRef.current?.zoomToFit()}
+            onResetZoom={() => engineRef.current?.zoomTo(1)}
           />
         )}
 

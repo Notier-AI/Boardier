@@ -1,7 +1,7 @@
 /**
  * @boardier-module scripts/generateChangelog
  * @boardier-category Build
- * @boardier-description Generates changelog data from @boardier-since and @boardier-changed annotations.
+ * @boardier-description Generates changelog data from boardier-since and boardier-changed annotations.
  * Groups new modules by the version they were introduced, and changed modules by the
  * version they were modified. Outputs `website/src/data/changelog.json` consumed by the /changelog page.
  *
@@ -63,6 +63,14 @@ const VERSION_META: Record<string, { date: string; summary: string }> = {
   '0.2.0': {
     date: '2026-03-20',
     summary: 'AI layer — prompt-to-board generation, HTML conversion, auto-layout algorithms, schema exports, and fill style additions.',
+  },
+  '0.3.0': {
+    date: '2026-04-10',
+    summary: 'AI Chat — floating chat popup with OpenAI, Anthropic, and Gemini support. Client-side API key management.',
+  },
+  '0.3.1': {
+    date: '2026-04-12',
+    summary: 'Polish — combined minimap + zoom widget, restyled chat button, improved HTML layout generation.',
   },
 };
 

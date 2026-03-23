@@ -4,6 +4,7 @@
  * @boardier-description All type definitions for the Boardier whiteboard engine. This module contains zero runtime code — it is purely TypeScript type declarations used across every other module. Import only what you need for tree-shaking.
  * @boardier-since 0.1.0
  * @boardier-changed 0.2.0 Added zigzag and zigzag-line to the FillStyle union type
+ * @boardier-changed 0.3.0 Added AIChatProvider, AIChatMessage, and AIChatConfig types for the AI chat popup component
  */
 
 // ─── Boardier Core Types ─────────────────────────────────────────────
@@ -394,6 +395,66 @@ export interface BoardierAIConfig {
   apiKey: string;
   model?: string;
   endpoint?: string;
+}
+
+// ─── AI Chat Types ───────────────────────────────────────────────────
+
+/**
+ * @boardier-type AIChatProvider
+ * @boardier-description Supported AI providers for the floating AI chat component.
+ * @boardier-since 0.3.0
+ */
+export type AIChatProvider = 'openai' | 'anthropic' | 'gemini';
+
+/**
+ * @boardier-type AIChatMessage
+ * @boardier-description A single message in the AI chat conversation history.
+ * @boardier-since 0.3.0
+ */
+export interface AIChatMessage {
+  id: string;
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+  timestamp: number;
+  /** Optional metadata about elements created/modified by this message */
+  elementIds?: string[];
+}
+
+/**
+ * @boardier-type AIChatConfig
+ * @boardier-description Configuration for the floating AI chat popup component.
+ * @boardier-since 0.3.0
+ * @boardier-usage `<AIChatPopup config={{ defaultProvider: 'openai', allowHTMLMode: true }} />`
+ */
+export interface AIChatConfig {
+  /** Whether the AI chat is enabled. Default: true. Set to false to completely disable. */
+  enabled?: boolean;
+  /** Default AI provider. User can switch in the UI. */
+  defaultProvider?: AIChatProvider;
+  /** Custom models per provider. If not set, uses sensible defaults. */
+  models?: Partial<Record<AIChatProvider, string>>;
+  /** Whether to allow HTML generation mode (smart editing). Default: true. */
+  allowHTMLMode?: boolean;
+  /** Whether to persist API keys in localStorage. Default: true. */
+  persistKeys?: boolean;
+  /** Custom system prompt prefix. */
+  systemPromptPrefix?: string;
+  /** Maximum conversation history to send to the AI. Default: 20 messages. */
+  maxHistory?: number;
+  /** Temperature for AI responses. Default: 0.7. */
+  temperature?: number;
+  /** Maximum tokens in response. Default: 4096. */
+  maxTokens?: number;
+  /** Position of the chat popup. Default: 'bottom-right'. */
+  position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
+  /** Custom placeholder text for the input. */
+  placeholder?: string;
+  /** Whether to show the provider selector. Default: true. */
+  showProviderSelector?: boolean;
+  /** Pre-filled API keys (if the developer wants to provide them). Keys are per-provider. */
+  apiKeys?: Partial<Record<AIChatProvider, string>>;
+  /** Callback when elements are created/modified by AI */
+  onElementsGenerated?: (elements: BoardierElement[]) => void;
 }
 
 // ─── Event handler signatures ────────────────────────────────────────

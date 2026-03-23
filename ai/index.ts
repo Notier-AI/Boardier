@@ -3,6 +3,7 @@
  * @boardier-category AI
  * @boardier-description Barrel export for all Boardier AI modules.
  * @boardier-since 0.2.0
+ * @boardier-changed 0.3.0 Added chatClient exports for client-side AI chat functionality
  */
 
 // Orchestrator (main entry point for AI interaction)
@@ -59,3 +60,17 @@ export {
   type StylePreset,
   type ElementStyle,
 } from './styles';
+
+// Chat client (client-side AI chat with multi-provider support)
+export {
+  sendChatRequest,
+  validateApiKeyFormat,
+  getProviderDisplayName,
+  getStoredApiKey,
+  setStoredApiKey,
+  DEFAULT_MODELS,
+  API_KEY_STORAGE_PREFIX,
+  type ChatClientConfig,
+  type ChatRequest,
+  type ChatResponse,
+} from './chatClient';

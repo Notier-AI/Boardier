@@ -3,6 +3,7 @@
  * @boardier-category Public API
  * @boardier-description Main entry point for the Boardier library. Re-exports all public components, types, themes, element factories, engine, utilities, and rendering helpers. Import from this module for the cleanest consumer experience.
  * @boardier-since 0.1.0
+ * @boardier-changed 0.3.0 Added AIChatPopup component and AI chat client exports for client-side multi-provider AI integration
  * @boardier-usage `import { BoardierCanvas, defaultTheme, createElement } from 'boardier';`
  */
 
@@ -12,6 +13,10 @@
 // Main component
 export { BoardierCanvas } from './ui/BoardierCanvas';
 export type { BoardierCanvasProps, BoardierCanvasRef } from './ui/BoardierCanvas';
+
+// AI Chat component
+export { AIChatPopup } from './ui/AIChatPopup';
+export type { AIChatPopupProps } from './ui/AIChatPopup';
 
 // Tooltip component (for developer theming)
 export { Tooltip } from './ui/Tooltip';
@@ -30,6 +35,9 @@ export type {
   BoardierPanelId,
   BoardierSceneData,
   BoardierAIConfig,
+  AIChatProvider,
+  AIChatMessage,
+  AIChatConfig,
   ViewState,
   Vec2,
   Bounds,
@@ -129,4 +137,15 @@ export {
   applyStyle,
   type StylePreset,
   type ElementStyle,
+  // Chat client (v0.3.0)
+  sendChatRequest,
+  validateApiKeyFormat,
+  getProviderDisplayName,
+  getStoredApiKey,
+  setStoredApiKey,
+  DEFAULT_MODELS,
+  API_KEY_STORAGE_PREFIX,
+  type ChatClientConfig,
+  type ChatRequest,
+  type ChatResponse,
 } from './ai';

@@ -1,5 +1,178 @@
 [
   {
+    "version": "0.3.1",
+    "date": "2026-04-12",
+    "summary": "Polish — combined minimap + zoom widget, restyled chat button, improved HTML layout generation.",
+    "entries": [
+      {
+        "module": "ai/chatClient",
+        "category": "AI",
+        "description": "Client-side AI chat utilities for calling OpenAI, Anthropic, and Gemini APIs. Provides a unified interface for sending chat requests to multiple LLM providers directly from the browser. API keys are provided by the user at runtime.",
+        "filePath": "ai/chatClient.ts",
+        "lineCount": 428,
+        "types": [],
+        "classes": [],
+        "functions": [],
+        "ai": "",
+        "kind": "changed",
+        "changeNote": "Auto-increase maxTokens for HTML mode, improved response parsing"
+      },
+      {
+        "module": "ui/AIChatPopup",
+        "category": "UI",
+        "description": "Floating AI chat popup component for conversational whiteboard editing. Supports OpenAI, Anthropic (Claude), and Google Gemini providers. Users provide their own API keys. Integrates with Boardier's AI capabilities including element generation and HTML-based smart layouts.",
+        "filePath": "ui/AIChatPopup.tsx",
+        "lineCount": 699,
+        "types": [],
+        "classes": [],
+        "functions": [],
+        "ai": "",
+        "kind": "changed",
+        "changeNote": "Restyled toggle button to match theme uiStyle"
+      },
+      {
+        "module": "ui/BoardierCanvas",
+        "category": "UI",
+        "description": "The top-level React component for embedding the Boardier whiteboard. Wraps the BoardierEngine with a canvas element and provides a complete UI including toolbar, property panel, zoom controls, export dialog, text editor overlays, context menu, minimap, page navigator, and presentation mode. All UI panels are draggable via the DraggablePanel system.",
+        "filePath": "ui/BoardierCanvas.tsx",
+        "lineCount": 1098,
+        "types": [],
+        "classes": [],
+        "functions": [],
+        "ai": "",
+        "kind": "changed",
+        "changeNote": "Moved zoom controls into Minimap footer, removed standalone ZoomControls panel"
+      },
+      {
+        "module": "ui/Minimap",
+        "category": "UI",
+        "description": "A small overview map of the entire scene shown in a corner, with integrated zoom controls as a footer. Renders a scaled-down view of all elements and a viewport indicator. Click-to-navigate and drag-to-pan are supported.",
+        "filePath": "ui/Minimap.tsx",
+        "lineCount": 214,
+        "types": [],
+        "classes": [],
+        "functions": [],
+        "ai": "",
+        "kind": "changed",
+        "changeNote": "Combined zoom controls into the minimap footer"
+      }
+    ],
+    "stats": {
+      "modules": 4,
+      "newModules": 0,
+      "changedModules": 4,
+      "types": 0,
+      "classes": 0,
+      "functions": 0,
+      "totalLines": 0,
+      "categories": [
+        "AI",
+        "UI"
+      ]
+    }
+  },
+  {
+    "version": "0.3.0",
+    "date": "2026-04-10",
+    "summary": "AI Chat — floating chat popup with OpenAI, Anthropic, and Gemini support. Client-side API key management.",
+    "entries": [
+      {
+        "module": "ai/chatClient",
+        "category": "AI",
+        "description": "Client-side AI chat utilities for calling OpenAI, Anthropic, and Gemini APIs. Provides a unified interface for sending chat requests to multiple LLM providers directly from the browser. API keys are provided by the user at runtime.",
+        "filePath": "ai/chatClient.ts",
+        "lineCount": 428,
+        "types": [],
+        "classes": [],
+        "functions": [],
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
+      },
+      {
+        "module": "ui/AIChatPopup",
+        "category": "UI",
+        "description": "Floating AI chat popup component for conversational whiteboard editing. Supports OpenAI, Anthropic (Claude), and Google Gemini providers. Users provide their own API keys. Integrates with Boardier's AI capabilities including element generation and HTML-based smart layouts.",
+        "filePath": "ui/AIChatPopup.tsx",
+        "lineCount": 699,
+        "types": [],
+        "classes": [],
+        "functions": [],
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
+      },
+      {
+        "module": "ai/index",
+        "category": "AI",
+        "description": "Barrel export for all Boardier AI modules.",
+        "filePath": "ai/index.ts",
+        "lineCount": 77,
+        "types": [],
+        "classes": [],
+        "functions": [],
+        "ai": "",
+        "kind": "changed",
+        "changeNote": "Added chatClient exports for client-side AI chat functionality"
+      },
+      {
+        "module": "core/types",
+        "category": "Core",
+        "description": "All type definitions for the Boardier whiteboard engine. This module contains zero runtime code — it is purely TypeScript type declarations used across every other module. Import only what you need for tree-shaking.",
+        "filePath": "core/types.ts",
+        "lineCount": 465,
+        "types": [
+          "Vec2",
+          "Bounds",
+          "BoardierElementType",
+          "FillStyle",
+          "BoardierElementBase",
+          "BoardierElement",
+          "ViewState",
+          "BoardierSceneData",
+          "BoardierConfig",
+          "BoardierAIConfig",
+          "AIChatProvider",
+          "AIChatMessage",
+          "AIChatConfig"
+        ],
+        "classes": [],
+        "functions": [],
+        "ai": "",
+        "kind": "changed",
+        "changeNote": "Added AIChatProvider, AIChatMessage, and AIChatConfig types for the AI chat popup component"
+      },
+      {
+        "module": "index",
+        "category": "Public API",
+        "description": "Main entry point for the Boardier library. Re-exports all public components, types, themes, element factories, engine, utilities, and rendering helpers. Import from this module for the cleanest consumer experience.",
+        "filePath": "index.ts",
+        "lineCount": 152,
+        "types": [],
+        "classes": [],
+        "functions": [],
+        "ai": "",
+        "kind": "changed",
+        "changeNote": "Added AIChatPopup component and AI chat client exports for client-side multi-provider AI integration"
+      }
+    ],
+    "stats": {
+      "modules": 5,
+      "newModules": 2,
+      "changedModules": 3,
+      "types": 0,
+      "classes": 0,
+      "functions": 0,
+      "totalLines": 1127,
+      "categories": [
+        "AI",
+        "Core",
+        "Public API",
+        "UI"
+      ]
+    }
+  },
+  {
     "version": "0.2.0",
     "date": "2026-03-20",
     "summary": "AI layer — prompt-to-board generation, HTML conversion, auto-layout algorithms, schema exports, and fill style additions.",
@@ -22,7 +195,7 @@
         "category": "AI",
         "description": "Barrel export for all Boardier AI modules.",
         "filePath": "ai/index.ts",
-        "lineCount": 62,
+        "lineCount": 77,
         "types": [],
         "classes": [],
         "functions": [],
@@ -83,11 +256,24 @@
         "changeNote": ""
       },
       {
+        "module": "scripts/generateChangelog",
+        "category": "Build",
+        "description": "Generates changelog data from boardier-since and boardier-changed annotations. Groups new modules by the version they were introduced, and changed modules by the version they were modified. Outputs `website/src/data/changelog.json` consumed by the /changelog page.  Usage: npx tsx scripts/generateChangelog.ts",
+        "filePath": "scripts/generateChangelog.ts",
+        "lineCount": 189,
+        "types": [],
+        "classes": [],
+        "functions": [],
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
+      },
+      {
         "module": "core/types",
         "category": "Core",
         "description": "All type definitions for the Boardier whiteboard engine. This module contains zero runtime code — it is purely TypeScript type declarations used across every other module. Import only what you need for tree-shaking.",
         "filePath": "core/types.ts",
-        "lineCount": 404,
+        "lineCount": 465,
         "types": [
           "Vec2",
           "Bounds",
@@ -98,7 +284,10 @@
           "ViewState",
           "BoardierSceneData",
           "BoardierConfig",
-          "BoardierAIConfig"
+          "BoardierAIConfig",
+          "AIChatProvider",
+          "AIChatMessage",
+          "AIChatConfig"
         ],
         "classes": [],
         "functions": [],
@@ -134,15 +323,16 @@
       }
     ],
     "stats": {
-      "modules": 9,
-      "newModules": 6,
+      "modules": 10,
+      "newModules": 7,
       "changedModules": 3,
       "types": 0,
       "classes": 0,
       "functions": 0,
-      "totalLines": 2106,
+      "totalLines": 2310,
       "categories": [
         "AI",
+        "Build",
         "Core",
         "UI",
         "Utilities"
@@ -245,7 +435,7 @@
         "category": "Core",
         "description": "All type definitions for the Boardier whiteboard engine. This module contains zero runtime code — it is purely TypeScript type declarations used across every other module. Import only what you need for tree-shaking.",
         "filePath": "core/types.ts",
-        "lineCount": 404,
+        "lineCount": 465,
         "types": [
           "Vec2",
           "Bounds",
@@ -256,7 +446,10 @@
           "ViewState",
           "BoardierSceneData",
           "BoardierConfig",
-          "BoardierAIConfig"
+          "BoardierAIConfig",
+          "AIChatProvider",
+          "AIChatMessage",
+          "AIChatConfig"
         ],
         "classes": [],
         "functions": [],
@@ -492,7 +685,7 @@
         "category": "Public API",
         "description": "Main entry point for the Boardier library. Re-exports all public components, types, themes, element factories, engine, utilities, and rendering helpers. Import from this module for the cleanest consumer experience.",
         "filePath": "index.ts",
-        "lineCount": 133,
+        "lineCount": 152,
         "types": [],
         "classes": [],
         "functions": [],
@@ -715,7 +908,7 @@
         "category": "UI",
         "description": "The top-level React component for embedding the Boardier whiteboard. Wraps the BoardierEngine with a canvas element and provides a complete UI including toolbar, property panel, zoom controls, export dialog, text editor overlays, context menu, minimap, page navigator, and presentation mode. All UI panels are draggable via the DraggablePanel system.",
         "filePath": "ui/BoardierCanvas.tsx",
-        "lineCount": 1105,
+        "lineCount": 1098,
         "types": [],
         "classes": [],
         "functions": [],
@@ -778,9 +971,9 @@
       {
         "module": "ui/Minimap",
         "category": "UI",
-        "description": "A small overview map of the entire scene shown in a corner. Renders a scaled-down view of all elements and a viewport indicator. Click-to-navigate and drag-to-pan are supported.",
+        "description": "A small overview map of the entire scene shown in a corner, with integrated zoom controls as a footer. Renders a scaled-down view of all elements and a viewport indicator. Click-to-navigate and drag-to-pan are supported.",
         "filePath": "ui/Minimap.tsx",
-        "lineCount": 160,
+        "lineCount": 214,
         "types": [],
         "classes": [],
         "functions": [],
@@ -988,10 +1181,10 @@
       "modules": 62,
       "newModules": 62,
       "changedModules": 0,
-      "types": 11,
+      "types": 14,
       "classes": 4,
       "functions": 1,
-      "totalLines": 11453,
+      "totalLines": 11580,
       "categories": [
         "Build",
         "Core",
@@ -1001,70 +1194,6 @@
         "Tools",
         "UI",
         "Utilities"
-      ]
-    }
-  },
-  {
-    "version": "and @boardier-changed annotations. Groups new modules by the version they were introduced, and changed modules by the version they were modified. Outputs `website/src/data/changelog.json` consumed by the /changelog page.  Usage: npx tsx scripts/generateChangelog.ts",
-    "date": "Unknown",
-    "summary": "",
-    "entries": [
-      {
-        "module": "scripts/generateChangelog",
-        "category": "Build",
-        "description": "Generates changelog data from @boardier-since and @boardier-changed annotations. Groups new modules by the version they were introduced, and changed modules by the version they were modified. Outputs `website/src/data/changelog.json` consumed by the /changelog page.  Usage: npx tsx scripts/generateChangelog.ts",
-        "filePath": "scripts/generateChangelog.ts",
-        "lineCount": 181,
-        "types": [],
-        "classes": [],
-        "functions": [],
-        "ai": "",
-        "kind": "new",
-        "changeNote": ""
-      }
-    ],
-    "stats": {
-      "modules": 1,
-      "newModules": 1,
-      "changedModules": 0,
-      "types": 0,
-      "classes": 0,
-      "functions": 0,
-      "totalLines": 181,
-      "categories": [
-        "Build"
-      ]
-    }
-  },
-  {
-    "version": "annotations.",
-    "date": "Unknown",
-    "summary": "",
-    "entries": [
-      {
-        "module": "scripts/generateChangelog",
-        "category": "Build",
-        "description": "Generates changelog data from @boardier-since and @boardier-changed annotations. Groups new modules by the version they were introduced, and changed modules by the version they were modified. Outputs `website/src/data/changelog.json` consumed by the /changelog page.  Usage: npx tsx scripts/generateChangelog.ts",
-        "filePath": "scripts/generateChangelog.ts",
-        "lineCount": 181,
-        "types": [],
-        "classes": [],
-        "functions": [],
-        "ai": "",
-        "kind": "changed",
-        "changeNote": "Groups new modules by the version they were introduced, and changed modules by the version they were modified. Outputs `website/src/data/changelog.json` consumed by the /changelog page.  Usage: npx tsx scripts/generateChangelog.ts"
-      }
-    ],
-    "stats": {
-      "modules": 1,
-      "newModules": 0,
-      "changedModules": 1,
-      "types": 0,
-      "classes": 0,
-      "functions": 0,
-      "totalLines": 0,
-      "categories": [
-        "Build"
       ]
     }
   }

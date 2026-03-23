@@ -1,8 +1,9 @@
 /**
  * @boardier-module ui/Minimap
  * @boardier-category UI
- * @boardier-description A small overview map of the entire scene shown in a corner. Renders a scaled-down view of all elements and a viewport indicator. Click-to-navigate and drag-to-pan are supported.
+ * @boardier-description A small overview map of the entire scene shown in a corner, with integrated zoom controls as a footer. Renders a scaled-down view of all elements and a viewport indicator. Click-to-navigate and drag-to-pan are supported.
  * @boardier-since 0.1.0
+ * @boardier-changed 0.3.1 Combined zoom controls into the minimap footer
  */
 import React, { useRef, useEffect, useCallback } from 'react';
 import type { BoardierElement, ViewState } from '../core/types';
@@ -16,6 +17,11 @@ interface MinimapProps {
   canvasHeight: number;
   theme: BoardierTheme;
   onNavigate: (scrollX: number, scrollY: number) => void;
+  zoom?: number;
+  onZoomIn?: () => void;
+  onZoomOut?: () => void;
+  onFitView?: () => void;
+  onResetZoom?: () => void;
 }
 
 const MINIMAP_WIDTH = 160;
@@ -23,8 +29,10 @@ const MINIMAP_HEIGHT = 100;
 
 export const Minimap: React.FC<MinimapProps> = React.memo(({
   elements, viewState, canvasWidth, canvasHeight, theme, onNavigate,
+  zoom, onZoomIn, onZoomOut, onFitView, onResetZoom,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const hasZoom = zoom !== undefined && onZoomIn && onZoomOut && onFitView && onResetZoom;
 
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
@@ -132,11 +140,26 @@ export const Minimap: React.FC<MinimapProps> = React.memo(({
     onNavigate(newScrollX, newScrollY);
   }, [elements, viewState, canvasWidth, canvasHeight, onNavigate]);
 
+  const zoomBtnStyle: React.CSSProperties = {
+    width: 26,
+    height: 24,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    border: 'none',
+    background: 'transparent',
+    cursor: 'pointer',
+    color: theme.panelText,
+    borderRadius: theme.uiStyle.buttonBorderRadius,
+    fontFamily: theme.uiFontFamily,
+    padding: 0,
+  };
+
   return (
     <div
       style={{
         position: 'absolute',
-        bottom: 48,
+        bottom: 12,
         right: 12,
         background: theme.panelBackground,
         border: `${theme.uiStyle.panelBorderWidth}px ${theme.uiStyle.panelBorderStyle} ${theme.panelBorder}`,
@@ -144,14 +167,45 @@ export const Minimap: React.FC<MinimapProps> = React.memo(({
         boxShadow: theme.uiStyle.panelShadow,
         overflow: 'hidden',
         zIndex: 10,
-        cursor: 'pointer',
       }}
-      onClick={handleClick}
     >
-      <canvas
-        ref={canvasRef}
-        style={{ width: MINIMAP_WIDTH, height: MINIMAP_HEIGHT, display: 'block' }}
-      />
+      <div style={{ cursor: 'pointer' }} onClick={handleClick}>
+        <canvas
+          ref={canvasRef}
+          style={{ width: MINIMAP_WIDTH, height: MINIMAP_HEIGHT, display: 'block' }}
+        />
+      </div>
+      {hasZoom && (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 2,
+            padding: '3px 4px',
+            borderTop: `1px solid ${theme.panelBorder}`,
+            fontFamily: theme.uiFontFamily,
+          }}
+        >
+          <button style={zoomBtnStyle} onClick={onZoomOut} title="Zoom out">
+            <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M5 12h14" /></svg>
+          </button>
+          <button
+            style={{ ...zoomBtnStyle, width: 'auto', fontSize: 10, fontWeight: 600, padding: '0 2px' }}
+            onClick={onResetZoom}
+            title="Reset zoom"
+          >
+            {Math.round(zoom! * 100)}%
+          </button>
+          <button style={zoomBtnStyle} onClick={onZoomIn} title="Zoom in">
+            <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
+          </button>
+          <div style={{ width: 1, height: 14, background: theme.panelBorder, margin: '0 1px' }} />
+          <button style={zoomBtnStyle} onClick={onFitView} title="Fit to content">
+            <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" /></svg>
+          </button>
+        </div>
+      )}
     </div>
   );
 });

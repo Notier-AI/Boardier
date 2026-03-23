@@ -181,6 +181,11 @@ export default function ChangelogPage() {
                         Latest
                       </span>
                     )}
+                    {version.version.startsWith("0.") && (
+                      <span className="text-[9px] text-root-fg/30 font-mono tracking-wide uppercase">
+                        beta
+                      </span>
+                    )}
                   </div>
                   <p className="text-root-fg/70 text-lg mb-4">{version.summary}</p>
 
