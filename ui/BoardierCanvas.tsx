@@ -39,7 +39,7 @@ import { DraggablePanel } from './DraggablePanel';
 import { Minimap } from './Minimap';
 import { PageNavigator } from './PageNavigator';
 import { PresentationMode } from './PresentationMode';
-import { createIcon } from '../elements/base';
+import { createIcon, createComment } from '../elements/base';
 import { getElementBounds } from '../elements/base';
 import { mermaidToBoardier } from '../utils/mermaidParser';
 import { measureText } from '../elements/text';
@@ -455,7 +455,6 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
           if (selected.length > 0) {
             const first = selected[0];
             const b = getElementBounds(first);
-            const { createComment } = require('../elements/base');
             const comment = createComment({
               x: b.x + b.width + 10, y: b.y,
               text: '', author: '', markerColor: '#f59e0b',
