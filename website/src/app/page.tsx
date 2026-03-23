@@ -6,14 +6,11 @@ import ScrollReveal from "./components/ScrollReveal";
 import StaggerChildren from "./components/StaggerChildren";
 import { RoughnessDemo, FreehandDemo, ColorDemo, FillStyleDemo, AIGenerateDemo, StrokeWidthDemo } from "./components/FeatureDemos";
 import DrawOnScroll, { DOODLE_ARROW_RIGHT, DOODLE_UNDERLINE } from "./components/DrawOnScroll";
-import ScrollProgress from "./components/ScrollProgress";
 import ParallaxDoodles from "./components/ParallaxDoodles";
 
 export default function Home() {
   return (
     <div className="min-h-screen flex flex-col font-kalam">
-      {/* Scroll-linked squiggly progress line on the left margin */}
-      <ScrollProgress />
       {/* Parallax doodle scribbles floating in the margins */}
       <ParallaxDoodles />
 
