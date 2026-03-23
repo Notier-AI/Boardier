@@ -23,7 +23,8 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "docs": "ts-node scripts/parseDocsFromSource.ts",
-    "changelog": "ts-node scripts/generateChangelog.ts"
+    "changelog": "ts-node scripts/generateChangelog.ts",
+    "release": "npm version"
   },
   "keywords": [
     "whiteboard",
