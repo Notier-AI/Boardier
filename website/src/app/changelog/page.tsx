@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowLeft, GitBranch, Clock, Layers, Code2, Box, Sparkles, Tag, Plus, RefreshCw } from "lucide-react";
 import changelogData from "@/data/changelog.json";
+import ThemeToggle from "../components/ThemeToggle";
 
 interface ChangelogEntry {
   module: string;
@@ -122,9 +123,9 @@ export default function ChangelogPage() {
   return (
     <div className="min-h-screen flex flex-col font-kalam">
       {/* Header */}
-      <header className="p-4 md:p-6 flex items-center justify-between border-b-2 border-root-fg border-dashed sticky top-0 bg-[#fffdf6] z-50">
+      <header className="p-4 md:p-6 flex items-center justify-between border-b-2 border-root-fg border-dashed sticky top-0 bg-root-bg z-50">
         <div className="flex items-center gap-3">
-          <Link href="/" className="sketch-button p-2 bg-white hover:bg-brand-blue hover:text-white group">
+          <Link href="/" className="sketch-button p-2 bg-card-bg hover:bg-brand-blue hover:text-white group">
             <ArrowLeft size={20} className="group-hover:-translate-x-0.5 transition-transform" />
           </Link>
           <div className="flex items-center gap-2">
@@ -147,11 +148,7 @@ export default function ChangelogPage() {
             <Image src="/notiericon.png" alt="Notier.ai" width={14} height={14} className="rounded-[2px]" />
             <span className="font-semibold">Notier.ai</span>
           </a>
-          <div className="flex gap-1.5">
-            <div className="w-3 h-3 rounded-full bg-brand-red sketch-border hover:scale-150 transition-transform cursor-pointer"></div>
-            <div className="w-3 h-3 rounded-full bg-brand-blue sketch-border hover:scale-150 transition-transform cursor-pointer"></div>
-            <div className="w-3 h-3 rounded-full bg-brand-yellow sketch-border hover:scale-150 transition-transform cursor-pointer"></div>
-          </div>
+          <ThemeToggle />
         </div>
       </header>
 
@@ -166,7 +163,7 @@ export default function ChangelogPage() {
               {/* Version header */}
               <div className="flex items-start gap-4 mb-6">
                 {/* Timeline dot */}
-                <div className="hidden md:flex w-10 h-10 shrink-0 sketch-border bg-white items-center justify-center z-10 relative">
+                <div className="hidden md:flex w-10 h-10 shrink-0 sketch-border bg-card-bg items-center justify-center z-10 relative">
                   <Tag size={18} className={vi === 0 ? "text-brand-green" : "text-root-fg/50"} />
                 </div>
 
@@ -201,7 +198,7 @@ export default function ChangelogPage() {
                         <RefreshCw size={13} /> {version.stats.changedModules} changed
                       </span>
                     )}
-                    <span className="sketch-border px-2.5 py-1 text-xs flex items-center gap-1 bg-white">
+                    <span className="sketch-border px-2.5 py-1 text-xs flex items-center gap-1 bg-card-bg">
                       <Code2 size={13} /> {version.stats.totalLines.toLocaleString()} lines
                     </span>
                     {version.stats.types > 0 && (

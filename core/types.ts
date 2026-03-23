@@ -5,6 +5,7 @@
  * @boardier-since 0.1.0
  * @boardier-changed 0.2.0 Added zigzag and zigzag-line to the FillStyle union type
  * @boardier-changed 0.3.0 Added AIChatProvider, AIChatMessage, and AIChatConfig types for the AI chat popup component
+ * @boardier-changed 0.3.2 Added showDarkModeToggle option to BoardierConfig
  */
 
 // ─── Boardier Core Types ─────────────────────────────────────────────
@@ -365,6 +366,8 @@ export interface BoardierConfig {
   snapToGrid?: boolean;
   minZoom?: number;
   maxZoom?: number;
+  /** Show a light/dark mode toggle button on the canvas. Defaults to true. */
+  showDarkModeToggle?: boolean;
   /** Layout configuration for UI panels (toolbar, zoom, export) */
   layout?: BoardierLayoutConfig;
 }

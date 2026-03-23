@@ -10,6 +10,30 @@
   --boardier-green: #00c853;
   --boardier-orange: #ff9800;
   --boardier-pink: #e91e63;
+
+  --card-bg: #ffffff;
+  --card-bg-hover: rgba(255, 255, 255, 0.5);
+  --hero-badge-bg: rgba(41, 121, 255, 0.1);
+  --dot-grid-color: #000;
+  --shadow-alpha: 0.1;
+}
+
+.dark {
+  --background: #1a1a1e;
+  --foreground: #e4e4e7;
+  
+  --boardier-red: #ff5252;
+  --boardier-blue: #448aff;
+  --boardier-yellow: #ffd740;
+  --boardier-green: #69f0ae;
+  --boardier-orange: #ffab40;
+  --boardier-pink: #ff4081;
+
+  --card-bg: #25252a;
+  --card-bg-hover: rgba(255, 255, 255, 0.06);
+  --hero-badge-bg: rgba(68, 138, 255, 0.15);
+  --dot-grid-color: #888;
+  --shadow-alpha: 0.4;
 }
 
 @theme inline {
@@ -21,6 +45,8 @@
   --color-brand-green: var(--boardier-green);
   --color-brand-orange: var(--boardier-orange);
   --color-brand-pink: var(--boardier-pink);
+  --color-card-bg: var(--card-bg);
+  --color-card-bg-hover: var(--card-bg-hover);
   
   --font-kalam: var(--font-kalam), cursive;
   --font-caveat: var(--font-caveat), cursive;
@@ -30,12 +56,13 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-kalam);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .sketch-border {
   border: 2px solid var(--foreground);
   border-radius: 2px 255px 3px 25px / 255px 5px 225px 3px;
-  background: #ffffff;
+  background: var(--card-bg);
 }
 
 .sketch-button {
@@ -66,8 +93,8 @@ body {
 .sketch-card {
   border: 2px solid var(--foreground);
   border-radius: 8px 12px 6px 15px / 15px 5px 18px 8px;
-  background: #ffffff;
-  box-shadow: 4px 4px 0px rgba(0,0,0,0.1);
+  background: var(--card-bg);
+  box-shadow: 4px 4px 0px rgba(0,0,0,var(--shadow-alpha));
 }
 
 .sketch-box {

@@ -5,11 +5,11 @@
  * Supports OpenAI, Anthropic (Claude), and Google Gemini providers. Users provide their own API keys.
  * Integrates with Boardier's AI capabilities including element generation and HTML-based smart layouts.
  * @boardier-since 0.3.0
- * @boardier-changed 0.3.1 Restyled toggle button to match theme uiStyle
+ * @boardier-changed 0.3.1 Restyled toggle button to match theme uiStyle; added markdown rendering for AI responses
  * @boardier-usage `<AIChatPopup engine={engine} config={{ defaultProvider: 'openai' }} theme={theme} />`
  */
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import type { BoardierTheme } from '../themes/types';
 import type { BoardierEngine } from '../core/Engine';
 import type { AIChatConfig, AIChatProvider, AIChatMessage, BoardierElement } from '../core/types';
@@ -24,6 +24,126 @@ import {
 import { htmlToBoardier } from '../ai/htmlConverter';
 import { materializeElements } from '../ai/orchestrator';
 import { generateId } from '../utils/id';
+
+// ─── Markdown renderer ────────────────────────────────────────────────
+
+/** Renders a subset of Markdown as React elements (code blocks, inline code, bold, italic, links, lists, headings). */
+function renderMarkdown(text: string, colors: { fg: string; accent: string; codeBg: string; border: string }): React.ReactNode {
+  const lines = text.split('\n');
+  const elements: React.ReactNode[] = [];
+  let i = 0;
+  let key = 0;
+
+  const inlineStyle = (line: string): React.ReactNode => {
+    // Process inline markdown: bold, italic, inline code, links
+    const parts: React.ReactNode[] = [];
+    // Regex matches: `code`, **bold**, *italic*, [text](url)
+    const rx = /(`[^`]+`)|\*\*(.+?)\*\*|\*(.+?)\*|\[([^\]]+)\]\(([^)]+)\)/g;
+    let last = 0;
+    let m: RegExpExecArray | null;
+    let ik = 0;
+    while ((m = rx.exec(line)) !== null) {
+      if (m.index > last) parts.push(line.slice(last, m.index));
+      if (m[1]) {
+        // inline code
+        parts.push(
+          <code key={ik++} style={{ background: colors.codeBg, padding: '1px 4px', borderRadius: 3, fontSize: '0.9em', fontFamily: 'monospace' }}>
+            {m[1].slice(1, -1)}
+          </code>
+        );
+      } else if (m[2]) {
+        parts.push(<strong key={ik++}>{m[2]}</strong>);
+      } else if (m[3]) {
+        parts.push(<em key={ik++}>{m[3]}</em>);
+      } else if (m[4] && m[5]) {
+        parts.push(
+          <a key={ik++} href={m[5]} target="_blank" rel="noopener noreferrer" style={{ color: colors.accent, textDecoration: 'underline' }}>
+            {m[4]}
+          </a>
+        );
+      }
+      last = m.index + m[0].length;
+    }
+    if (last < line.length) parts.push(line.slice(last));
+    return parts.length === 1 ? parts[0] : <>{parts}</>;
+  };
+
+  while (i < lines.length) {
+    const line = lines[i];
+
+    // Fenced code block
+    if (line.trimStart().startsWith('```')) {
+      const codeLines: string[] = [];
+      i++;
+      while (i < lines.length && !lines[i].trimStart().startsWith('```')) {
+        codeLines.push(lines[i]);
+        i++;
+      }
+      i++; // skip closing ```
+      elements.push(
+        <pre key={key++} style={{ background: colors.codeBg, padding: '8px 10px', borderRadius: 6, overflow: 'auto', fontSize: '0.85em', fontFamily: 'monospace', margin: '6px 0', border: `1px solid ${colors.border}` }}>
+          <code>{codeLines.join('\n')}</code>
+        </pre>
+      );
+      continue;
+    }
+
+    // Heading
+    const headingMatch = line.match(/^(#{1,3})\s+(.+)$/);
+    if (headingMatch) {
+      const level = headingMatch[1].length;
+      const fontSize = level === 1 ? '1.15em' : level === 2 ? '1.05em' : '0.95em';
+      elements.push(
+        <div key={key++} style={{ fontWeight: 700, fontSize, margin: '8px 0 2px' }}>
+          {inlineStyle(headingMatch[2])}
+        </div>
+      );
+      i++;
+      continue;
+    }
+
+    // Unordered list item
+    const ulMatch = line.match(/^(\s*)[-*+]\s+(.+)$/);
+    if (ulMatch) {
+      const indent = Math.floor((ulMatch[1] || '').length / 2);
+      elements.push(
+        <div key={key++} style={{ display: 'flex', gap: 6, marginLeft: indent * 14, margin: '1px 0' }}>
+          <span style={{ flexShrink: 0 }}>•</span>
+          <span>{inlineStyle(ulMatch[2])}</span>
+        </div>
+      );
+      i++;
+      continue;
+    }
+
+    // Ordered list item
+    const olMatch = line.match(/^(\s*)(\d+)\.\s+(.+)$/);
+    if (olMatch) {
+      const indent = Math.floor((olMatch[1] || '').length / 2);
+      elements.push(
+        <div key={key++} style={{ display: 'flex', gap: 6, marginLeft: indent * 14, margin: '1px 0' }}>
+          <span style={{ flexShrink: 0 }}>{olMatch[2]}.</span>
+          <span>{inlineStyle(olMatch[3])}</span>
+        </div>
+      );
+      i++;
+      continue;
+    }
+
+    // Blank line
+    if (line.trim() === '') {
+      elements.push(<div key={key++} style={{ height: 6 }} />);
+      i++;
+      continue;
+    }
+
+    // Regular paragraph
+    elements.push(<div key={key++} style={{ margin: '2px 0' }}>{inlineStyle(line)}</div>);
+    i++;
+  }
+
+  return <>{elements}</>;
+}
 
 // ─── Props ────────────────────────────────────────────────────────────
 
@@ -551,7 +671,7 @@ export const AIChatPopup: React.FC<AIChatPopupProps> = ({
                         wordBreak: 'break-word',
                       }}
                     >
-                      {msg.content}
+                      {msg.role === 'user' ? msg.content : renderMarkdown(msg.content, { fg, accent, codeBg: `${border}44`, border })}
                       {msg.elementIds && msg.elementIds.length > 0 && (
                         <div
                           style={{

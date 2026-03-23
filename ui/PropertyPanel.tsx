@@ -147,8 +147,8 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
     letterSpacing: 0.6, textTransform: 'uppercase', lineHeight: 1,
   };
 
-  const pill = (active: boolean, onClick: () => void, child: React.ReactNode, title?: string) => (
-    <button onClick={onClick} title={title} style={{
+  const pill = (active: boolean, onClick: () => void, child: React.ReactNode, title?: string, key?: string | number) => (
+    <button key={key} onClick={onClick} title={title} style={{
       height: 30, minWidth: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 6px',
       border: `${ui.buttonBorderWidth}px solid ${active ? theme.selectionColor : 'transparent'}`,
       borderRadius: ui.buttonBorderRadius, background: active ? theme.panelActive : 'transparent',
@@ -239,7 +239,7 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
           {/* Fill style toggles — show when fill is active */}
           {first.backgroundColor !== 'transparent' && first.fillStyle !== 'none' && (
             <div style={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-              {FILL_STYLE_OPTS.map(f => pill(first.fillStyle === f.v, () => onUpdate({ fillStyle: f.v }), f.icon, f.tip))}
+              {FILL_STYLE_OPTS.map(f => pill(first.fillStyle === f.v, () => onUpdate({ fillStyle: f.v }), f.icon, f.tip, f.v))}
             </div>
           )}
         </>)}
@@ -254,6 +254,7 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
                 () => onUpdate({ strokeWidth: w }),
                 <svg width={24} height={6} viewBox="0 0 24 6"><line x1="2" y1="3" x2="22" y2="3" stroke="currentColor" strokeWidth={w} strokeLinecap="round" /></svg>,
                 `${w}px`,
+                w,
               ))}
             </div>
             <div style={{ borderLeft: `1px solid ${theme.panelBorder}`, height: 20, flexShrink: 0 }} />
@@ -267,6 +268,7 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
               () => onUpdate({ strokeStyle: s.v } as any),
               s.svg,
               s.label,
+              s.v,
             ))}
           </div>
         </>)}
@@ -355,6 +357,7 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
               () => onUpdate({ shadow: s.value || undefined } as any),
               <span style={{ fontSize: 12, fontWeight: 700 }}>{s.label}</span>,
               s.tip,
+              s.label,
             ))}
           </div>
         </>)}
@@ -401,6 +404,7 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
                   {a === 'right' && <><path d="M3 6h18" /><path d="M9 12h12" /><path d="M5 18h16" /></>}
                 </svg>,
                 a,
+                a,
               ))}
             </div>
           )}
@@ -413,6 +417,8 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
                 (first as any).fontSize === s,
                 () => onUpdate({ fontSize: s } as any),
                 <span style={{ fontSize: 11, fontWeight: 700 }}>{s}</span>,
+                undefined,
+                s,
               ))}
               <div style={{ borderLeft: `1px solid ${theme.panelBorder}`, height: 18, flexShrink: 0 }} />
               {numInput((first as any).fontSize ?? 18, 8, 200, 1, v => onUpdate({ fontSize: v } as any), 'px')}

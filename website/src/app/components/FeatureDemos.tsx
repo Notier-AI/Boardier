@@ -151,7 +151,7 @@ export function FreehandDemo() {
         ref={canvasRef}
         width={260}
         height={140}
-        className="w-full max-w-[260px] border-2 border-dashed border-root-fg/20 rounded bg-white cursor-crosshair mb-2 touch-none"
+        className="w-full max-w-[260px] border-2 border-dashed border-root-fg/20 rounded bg-card-bg cursor-crosshair mb-2 touch-none"
         onMouseDown={startDraw}
         onMouseMove={draw}
         onMouseUp={endDraw}
@@ -242,7 +242,7 @@ export function ColorDemo() {
             style={{
               backgroundColor: c.hex,
               transform: color === c.hex ? "scale(1.3)" : undefined,
-              boxShadow: color === c.hex ? `0 0 0 3px #fffdf6, 0 0 0 5px ${c.hex}` : undefined,
+              boxShadow: color === c.hex ? `0 0 0 3px var(--background), 0 0 0 5px ${c.hex}` : undefined,
             }}
             title={c.label}
           />
@@ -464,14 +464,14 @@ export function AIGenerateDemo() {
       </div>
       <h3 className="text-2xl font-bold mb-1 font-caveat text-brand-orange">AI Generate</h3>
       <p className="text-sm text-root-fg/60 mb-3">Describe it. The board draws it for you.</p>
-      <canvas ref={canvasRef} width={260} height={110} className="w-full max-w-[260px] rounded bg-white mb-2 border-2 border-dashed border-brand-orange/20" />
+      <canvas ref={canvasRef} width={260} height={110} className="w-full max-w-[260px] rounded bg-card-bg mb-2 border-2 border-dashed border-brand-orange/20" />
       <div className="flex w-full max-w-[240px] gap-1.5">
         <input
           type="text"
           value={typed}
           onChange={(e) => setTyped(e.target.value)}
           placeholder={aiIdeas[placeholder]}
-          className="sketch-border flex-1 px-2 py-1 text-xs bg-white/80 focus:outline-none focus:border-brand-orange placeholder:text-root-fg/30"
+          className="sketch-border flex-1 px-2 py-1 text-xs bg-card-bg focus:outline-none focus:border-brand-orange placeholder:text-root-fg/30"
         />
         <button
           onClick={handleGenerate}

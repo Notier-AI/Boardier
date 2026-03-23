@@ -37,8 +37,16 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${caveat.variable} ${kalam.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col font-kalam bg-[#fffdf6] text-[#2c2c2c]">{children}</body>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem("boardier-theme");if(t==="dark"||(!t&&window.matchMedia("(prefers-color-scheme:dark)").matches)){document.documentElement.classList.add("dark")}}catch(e){}})();`,
+          }}
+        />
+      </head>
+      <body className="min-h-full flex flex-col font-kalam bg-root-bg text-root-fg">{children}</body>
     </html>
   );
 }

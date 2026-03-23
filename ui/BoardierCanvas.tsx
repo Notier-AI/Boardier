@@ -4,6 +4,7 @@
  * @boardier-description The top-level React component for embedding the Boardier whiteboard. Wraps the BoardierEngine with a canvas element and provides a complete UI including toolbar, property panel, zoom controls, export dialog, text editor overlays, context menu, minimap, page navigator, and presentation mode. All UI panels are draggable via the DraggablePanel system.
  * @boardier-since 0.1.0
  * @boardier-changed 0.3.1 Moved zoom controls into Minimap footer, removed standalone ZoomControls panel
+ * @boardier-changed 0.3.2 Added built-in light/dark mode toggle button with showDarkModeToggle config option
  * @boardier-usage `<BoardierCanvas config={{ showGrid: true }} theme={defaultTheme} onChange={handleChange} />`
  * @boardier-props BoardierCanvasProps
  * @boardier-ref BoardierCanvasRef (via React.forwardRef) — exposes getEngine(), getSceneData(), loadScene(), exportToPNG(), exportToSVG(), exportToJSON()
@@ -102,6 +103,7 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
     const [editingEmbedId, setEditingEmbedId] = useState<string | null>(null);
     const [editingTableCellId, setEditingTableCellId] = useState<string | null>(null);
     const [editingTableCell, setEditingTableCell] = useState<{ row: number; col: number } | null>(null);
+    const [isDark, setIsDark] = useState(darkMode);
 
     // Track whether viewport has drifted from content
     const isViewportDrifted = React.useMemo(() => {
@@ -127,7 +129,6 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
       return !overlaps;
     }, [viewState]);
 
-    const resolvedTheme = themeProp ?? (darkMode ? defaultDarkTheme : defaultTheme);
     const fullConfig: BoardierConfig = {
       readOnly,
       showGrid: true,
@@ -135,8 +136,11 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
       snapToGrid: false,
       minZoom: 0.1,
       maxZoom: 5,
+      showDarkModeToggle: true,
       ...config,
     };
+    const resolvedTheme = themeProp ?? (isDark ? defaultDarkTheme : defaultTheme);
+    const showDarkToggle = fullConfig.showDarkModeToggle !== false;
 
     // ── Engine lifecycle ──────────────────────────────
 
@@ -239,6 +243,10 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
     }, []); // mount/unmount only
 
     // ── Sync theme changes ───────────────────────────
+
+    useEffect(() => {
+      setIsDark(darkMode);
+    }, [darkMode]);
 
     useEffect(() => {
       engineRef.current?.setTheme(resolvedTheme);
@@ -762,6 +770,8 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
             elements={engineRef.current?.scene.getElements() ?? []}
             viewState={viewState}
             backgroundColor={resolvedTheme.canvasBackground}
+            altBackgroundColor={isDark ? defaultTheme.canvasBackground : defaultDarkTheme.canvasBackground}
+            isDark={isDark}
             theme={resolvedTheme}
             onClose={() => setShowExport(false)}
           />
@@ -799,6 +809,43 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
               <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><path d="M7 10l5 5 5-5" /><path d="M12 15V3" /></svg>
             </button>
           </DraggablePanel>
+        )}
+
+        {/* Dark mode toggle (bottom-left, next to export) */}
+        {showDarkToggle && !themeProp && (
+          <div
+            style={{
+              position: 'absolute',
+              bottom: 12,
+              left: readOnly ? 12 : 54,
+              zIndex: 10,
+            }}
+          >
+            <button
+              onClick={() => setIsDark(d => !d)}
+              title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+              style={{
+                width: 34,
+                height: 34,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: `1px solid ${resolvedTheme.panelBorder}`,
+                borderRadius: resolvedTheme.borderRadius,
+                background: resolvedTheme.panelBackground,
+                boxShadow: resolvedTheme.shadow,
+                cursor: 'pointer',
+                color: resolvedTheme.panelText,
+                transition: 'background 0.2s, color 0.2s',
+              }}
+            >
+              {isDark ? (
+                <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5" /><line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" /><line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" /><line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" /><line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" /></svg>
+              ) : (
+                <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></svg>
+              )}
+            </button>
+          </div>
         )}
 
         {/* Mermaid Converter Dialog */}

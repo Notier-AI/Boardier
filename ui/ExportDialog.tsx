@@ -3,6 +3,7 @@
  * @boardier-category UI
  * @boardier-description Modal dialog for exporting the scene to PNG, SVG, or JSON. Provides format selection, scale/padding controls, and a download button.
  * @boardier-since 0.1.0
+ * @boardier-changed 0.3.2 Added light/dark mode export option with current, light, and dark background modes
  */
 import React, { useState } from 'react';
 import type { BoardierTheme } from '../themes/types';
@@ -13,6 +14,10 @@ interface ExportDialogProps {
   elements: BoardierElement[];
   viewState: ViewState;
   backgroundColor: string;
+  /** Background to use when exporting in the alternate mode */
+  altBackgroundColor: string;
+  /** Whether the canvas is currently in dark mode */
+  isDark: boolean;
   theme: BoardierTheme;
   onClose: () => void;
 }
@@ -30,14 +35,21 @@ const CloseIcon = () => (
   <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
 );
 
-export const ExportDialog: React.FC<ExportDialogProps> = ({ elements, viewState, backgroundColor, theme, onClose }) => {
+export const ExportDialog: React.FC<ExportDialogProps> = ({ elements, viewState, backgroundColor, altBackgroundColor, isDark, theme, onClose }) => {
   const [exporting, setExporting] = useState(false);
   const [transparentBg, setTransparentBg] = useState(false);
+  const [exportMode, setExportMode] = useState<'current' | 'light' | 'dark'>('current');
+
+  const resolvedBg = exportMode === 'current'
+    ? backgroundColor
+    : exportMode === 'dark'
+      ? (isDark ? backgroundColor : altBackgroundColor)
+      : (isDark ? altBackgroundColor : backgroundColor);
 
   const handlePNG = async () => {
     setExporting(true);
     try {
-      const blob = await exportToPNG(elements, backgroundColor, 40, 2, transparentBg);
+      const blob = await exportToPNG(elements, resolvedBg, 40, 2, transparentBg);
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -125,6 +137,30 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({ elements, viewState,
             />
             Transparent background (PNG)
           </label>
+          {/* Export mode (light/dark) */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: theme.panelText, marginBottom: 4 }}>
+            <span style={{ fontWeight: 600 }}>Mode:</span>
+            {(['current', 'light', 'dark'] as const).map(m => (
+              <button
+                key={m}
+                onClick={() => setExportMode(m)}
+                style={{
+                  padding: '3px 10px',
+                  fontSize: 11,
+                  fontWeight: exportMode === m ? 700 : 500,
+                  border: `${theme.uiStyle.buttonBorderWidth}px solid ${exportMode === m ? theme.selectionColor : theme.panelBorder}`,
+                  borderRadius: theme.uiStyle.buttonBorderRadius,
+                  background: exportMode === m ? theme.panelActive : 'transparent',
+                  color: exportMode === m ? theme.selectionColor : theme.panelText,
+                  cursor: 'pointer',
+                  fontFamily: theme.uiFontFamily,
+                  transition: 'all 0.1s',
+                }}
+              >
+                {m === 'current' ? (isDark ? '● Dark' : '○ Light') : m === 'light' ? '○ Light' : '● Dark'}
+              </button>
+            ))}
+          </div>
           <button style={btnStyle} onClick={handlePNG} disabled={exporting}>
             <CameraIcon /> {exporting ? 'Exporting...' : 'Export as PNG'}
           </button>

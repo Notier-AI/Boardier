@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowLeft, Book, Cpu, Layers, Wrench, Palette, MousePointerClick, Search, Code2, Sparkles } from "lucide-react";
 import docsData from "@/data/docs.json";
+import ThemeToggle from "../components/ThemeToggle";
 
 interface DocEntry {
   module: string;
@@ -169,9 +170,9 @@ export default function DocsPage() {
   return (
     <div className="min-h-screen flex flex-col font-kalam">
       {/* Header */}
-      <header className="p-4 md:p-6 flex items-center justify-between border-b-2 border-root-fg border-dashed sticky top-0 bg-[#fffdf6] z-50">
+      <header className="p-4 md:p-6 flex items-center justify-between border-b-2 border-root-fg border-dashed sticky top-0 bg-root-bg z-50">
         <div className="flex items-center gap-3">
-          <Link href="/" className="sketch-button p-2 bg-white hover:bg-brand-blue hover:text-white group">
+          <Link href="/" className="sketch-button p-2 bg-card-bg hover:bg-brand-blue hover:text-white group">
             <ArrowLeft size={20} className="group-hover:-translate-x-0.5 transition-transform" />
           </Link>
           <div className="flex items-center gap-2">
@@ -192,11 +193,7 @@ export default function DocsPage() {
             <Image src="/notiericon.png" alt="Notier.ai" width={14} height={14} className="rounded-[2px]" />
             <span className="font-semibold">Notier.ai</span>
           </a>
-          <div className="flex gap-1.5">
-            <div className="w-3 h-3 rounded-full bg-brand-red sketch-border hover:scale-150 transition-transform cursor-pointer"></div>
-            <div className="w-3 h-3 rounded-full bg-brand-blue sketch-border hover:scale-150 transition-transform cursor-pointer"></div>
-            <div className="w-3 h-3 rounded-full bg-brand-yellow sketch-border hover:scale-150 transition-transform cursor-pointer"></div>
-          </div>
+          <ThemeToggle />
         </div>
       </header>
 

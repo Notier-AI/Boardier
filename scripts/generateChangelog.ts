@@ -72,6 +72,10 @@ const VERSION_META: Record<string, { date: string; summary: string }> = {
     date: '2026-04-12',
     summary: 'Polish — combined minimap + zoom widget, restyled chat button, improved HTML layout generation.',
   },
+  '0.3.2': {
+    date: '2026-03-24',
+    summary: 'Dark mode — built-in light/dark toggle on the canvas with export support for both modes.',
+  },
 };
 
 // ─── Main ─────────────────────────────────────────────────────────────

@@ -121,15 +121,15 @@ export default function HeroSelectAnimation() {
           {/* Corner and Mid-edge Handles */}
           {boxVisible && (
             <>
-              <span className="absolute -top-1 -left-1 w-2.5 h-2.5 bg-white border-2 border-[var(--boardier-blue)] rounded-[1px] animate-[scaleIn_0.15s_ease-out]" />
-              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-white border-2 border-[var(--boardier-blue)] rounded-[1px] animate-[scaleIn_0.15s_0.02s_ease-out_both]" />
-              <span className="absolute -bottom-1 -left-1 w-2.5 h-2.5 bg-white border-2 border-[var(--boardier-blue)] rounded-[1px] animate-[scaleIn_0.15s_0.04s_ease-out_both]" />
-              <span className="absolute -bottom-1 -right-1 w-2.5 h-2.5 bg-white border-2 border-[var(--boardier-blue)] rounded-[1px] animate-[scaleIn_0.15s_0.06s_ease-out_both]" />
+              <span className="absolute -top-1 -left-1 w-2.5 h-2.5 bg-card-bg border-2 border-[var(--boardier-blue)] rounded-[1px] animate-[scaleIn_0.15s_ease-out]" />
+              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-card-bg border-2 border-[var(--boardier-blue)] rounded-[1px] animate-[scaleIn_0.15s_0.02s_ease-out_both]" />
+              <span className="absolute -bottom-1 -left-1 w-2.5 h-2.5 bg-card-bg border-2 border-[var(--boardier-blue)] rounded-[1px] animate-[scaleIn_0.15s_0.04s_ease-out_both]" />
+              <span className="absolute -bottom-1 -right-1 w-2.5 h-2.5 bg-card-bg border-2 border-[var(--boardier-blue)] rounded-[1px] animate-[scaleIn_0.15s_0.06s_ease-out_both]" />
               
-              <span className="absolute -top-1 left-1/2 -translate-x-1/2 w-2.5 h-2.5 bg-white border-2 border-[var(--boardier-blue)] rounded-[1px] animate-[scaleIn_0.15s_0.03s_ease-out_both]" />
-              <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2.5 h-2.5 bg-white border-2 border-[var(--boardier-blue)] rounded-[1px] animate-[scaleIn_0.15s_0.05s_ease-out_both]" />
-              <span className="absolute top-1/2 -left-1 -translate-y-1/2 w-2.5 h-2.5 bg-white border-2 border-[var(--boardier-blue)] rounded-[1px] animate-[scaleIn_0.15s_0.04s_ease-out_both]" />
-              <span className="absolute top-1/2 -right-1 -translate-y-1/2 w-2.5 h-2.5 bg-white border-2 border-[var(--boardier-blue)] rounded-[1px] animate-[scaleIn_0.15s_0.06s_ease-out_both]" />
+              <span className="absolute -top-1 left-1/2 -translate-x-1/2 w-2.5 h-2.5 bg-card-bg border-2 border-[var(--boardier-blue)] rounded-[1px] animate-[scaleIn_0.15s_0.03s_ease-out_both]" />
+              <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2.5 h-2.5 bg-card-bg border-2 border-[var(--boardier-blue)] rounded-[1px] animate-[scaleIn_0.15s_0.05s_ease-out_both]" />
+              <span className="absolute top-1/2 -left-1 -translate-y-1/2 w-2.5 h-2.5 bg-card-bg border-2 border-[var(--boardier-blue)] rounded-[1px] animate-[scaleIn_0.15s_0.04s_ease-out_both]" />
+              <span className="absolute top-1/2 -right-1 -translate-y-1/2 w-2.5 h-2.5 bg-card-bg border-2 border-[var(--boardier-blue)] rounded-[1px] animate-[scaleIn_0.15s_0.06s_ease-out_both]" />
             </>
           )}
         </span>
