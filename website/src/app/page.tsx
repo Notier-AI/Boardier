@@ -8,6 +8,7 @@ import { RoughnessDemo, FreehandDemo, ColorDemo, FillStyleDemo, AIGenerateDemo, 
 import DrawOnScroll, { DOODLE_ARROW_RIGHT, DOODLE_UNDERLINE } from "./components/DrawOnScroll";
 import ParallaxDoodles from "./components/ParallaxDoodles";
 import ThemeToggle from "./components/ThemeToggle";
+import MobileNav from "./components/MobileNav";
 
 export default function Home() {
   return (
@@ -16,35 +17,36 @@ export default function Home() {
       <ParallaxDoodles />
 
       {/* Header */}
-      <header className="p-4 md:p-6 flex items-center justify-between border-b-2 border-root-fg border-dashed">
-        <div className="flex items-center gap-3">
-          <div className="sketch-border p-2 bg-brand-yellow text-root-fg animate-wiggle" style={{ animationDelay: "0.5s" }}>
-            <PenTool size={24} />
+      <header className="p-3 sm:p-4 md:p-6 flex items-center justify-between border-b-2 border-root-fg border-dashed gap-2">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <div className="sketch-border p-1.5 sm:p-2 bg-brand-yellow text-root-fg animate-wiggle" style={{ animationDelay: "0.5s" }}>
+            <PenTool size={20} className="sm:w-6 sm:h-6" />
           </div>
           <div className="flex flex-col">
-            <h1 className="text-3xl font-bold font-caveat tracking-wider leading-none">Boardier</h1>
-            <a href="https://notier.ai" target="_blank" className="text-xs text-root-fg/70 hover:text-brand-blue flex items-center gap-1 font-sans mt-0.5 group">
+            <h1 className="text-2xl sm:text-3xl font-bold font-caveat tracking-wider leading-none">Boardier</h1>
+            <a href="https://notier.ai" target="_blank" className="text-xs text-root-fg/70 hover:text-brand-blue flex items-center gap-1 font-sans mt-0.5 group hidden sm:flex">
               <span>built by</span>
               <Image src="/notiericon.png" alt="Notier.ai Icon" width={12} height={12} className="rounded-[2px] group-hover:scale-125 transition-transform" />
               <span className="font-semibold sketch-underline">Notier.ai</span>
             </a>
           </div>
         </div>
-        <nav className="flex items-center gap-4">
+        <nav className="hidden sm:flex items-center gap-4">
           <Link href="/docs" className="sketch-button px-3 py-1.5 flex items-center gap-2 hover:bg-brand-blue hover:text-white group">
             <Book size={18} />
-            <span className="hidden sm:inline group-hover:text-white">Docs</span>
+            <span className="group-hover:text-white">Docs</span>
           </Link>
           <Link href="/changelog" className="sketch-button px-3 py-1.5 flex items-center gap-2 hover:bg-brand-green hover:text-white group">
             <GitBranch size={18} />
-            <span className="hidden sm:inline group-hover:text-white">Changelog</span>
+            <span className="group-hover:text-white">Changelog</span>
           </Link>
           <a href="https://github.com" className="sketch-button px-3 py-1.5 flex items-center gap-2 hover:bg-brand-red hover:text-white group">
             <Github size={18} />
-            <span className="hidden sm:inline group-hover:text-white">GitHub</span>
+            <span className="group-hover:text-white">GitHub</span>
           </a>
           <ThemeToggle />
         </nav>
+        <MobileNav />
       </header>
 
       {/* Hero Section */}

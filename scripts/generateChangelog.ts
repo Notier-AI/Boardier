@@ -90,7 +90,7 @@ const VERSION_META: Record<string, { date: string; summary: string }> = {
   },
   '0.4.2': {
     date: '2026-03-25',
-    summary: 'Mobile responsive — viewport meta, mobile-friendly toolbar with larger touch targets, responsive PropertyPanel bottom sheet, canvas-rendered HTML export preserving roughness, and touch-friendly UI across all panels.',
+    summary: 'Mobile responsive — viewport meta, responsive website header, mobile toolbar with shape/line grouping popups and larger touch targets, Excalidraw-style collapsible PropertyPanel bottom sheet, canvas-rendered HTML export preserving roughness, and touch-friendly UI across all panels.',
   },
 };
 

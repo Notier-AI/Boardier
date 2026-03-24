@@ -646,6 +646,10 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
       [selectedIds, elementVersion],
     );
 
+    // When PropertyPanel icon bar is visible on mobile, push bottom UI elements up
+    const showPropBarMobile = isMobile && !readOnly && selectedElements.length > 0 && !editingTextId;
+    const mobileBottomOffset = showPropBarMobile ? 52 : 0;
+
     // ── Render ───────────────────────────────────────
 
     return (
@@ -870,7 +874,7 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
 
         {/* Export button (bottom-left) */}
         {!readOnly && (
-          <DraggablePanel id="export" layout={fullConfig.layout} theme={resolvedTheme} defaultStyle={{ bottom: 12, left: 12 }}>
+          <DraggablePanel id="export" layout={fullConfig.layout} theme={resolvedTheme} defaultStyle={{ bottom: 12 + mobileBottomOffset, left: 12 }}>
             <button
               onClick={() => setShowExport(true)}
               title="Export"
@@ -898,7 +902,7 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
           <div
             style={{
               position: 'absolute',
-              bottom: 12,
+              bottom: 12 + mobileBottomOffset,
               left: readOnly ? 12 : (isMobile ? 64 : 54),
               zIndex: 10,
             }}
@@ -966,6 +970,7 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
             onDeletePage={handleDeletePage}
             onRenamePage={handleRenamePage}
             theme={resolvedTheme}
+            bottomOffset={mobileBottomOffset}
           />
         )}
 

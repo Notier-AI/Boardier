@@ -1102,7 +1102,7 @@
     "classes": [],
     "functions": [],
     "filePath": "ui/BoardierCanvas.tsx",
-    "lineCount": 1227
+    "lineCount": 1232
   },
   {
     "module": "ui/ContextMenu",
@@ -1241,7 +1241,7 @@
     "classes": [],
     "functions": [],
     "filePath": "ui/PageNavigator.tsx",
-    "lineCount": 132
+    "lineCount": 133
   },
   {
     "module": "ui/PresentationMode",
@@ -1277,7 +1277,7 @@
       },
       {
         "version": "0.4.2",
-        "note": "Mobile-responsive layout — panel repositions to bottom sheet on narrow viewports"
+        "note": "Mobile layout rewritten — horizontal icon bar at bottom with popup property editors and overflow menu"
       }
     ],
     "usage": "",
@@ -1290,7 +1290,7 @@
     "classes": [],
     "functions": [],
     "filePath": "ui/PropertyPanel.tsx",
-    "lineCount": 601
+    "lineCount": 928
   },
   {
     "module": "ui/ShapeLabelEditor",
@@ -1331,12 +1331,12 @@
   {
     "module": "ui/Toolbar",
     "category": "UI",
-    "description": "Main tool-selection toolbar. Renders tool buttons for all element types plus select, pan, and eraser. Supports keyboard shortcuts and active-tool highlighting.",
+    "description": "Main tool-selection toolbar. Renders tool buttons for all element types plus select, pan, and eraser. Supports keyboard shortcuts and active-tool highlighting. On mobile, groups shape and line tools into popups for a compact layout.",
     "since": "0.1.0",
     "changed": [
       {
         "version": "0.4.2",
-        "note": "Mobile-responsive toolbar with larger touch targets (44px), scrollable overflow on narrow viewports, scaled icons"
+        "note": "Mobile-responsive toolbar with larger touch targets (44px), shape/line tool grouping popups, disabled drag-reorder on mobile"
       }
     ],
     "usage": "",
@@ -1349,7 +1349,7 @@
     "classes": [],
     "functions": [],
     "filePath": "ui/Toolbar.tsx",
-    "lineCount": 435
+    "lineCount": 689
   },
   {
     "module": "ui/Tooltip",

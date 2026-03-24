@@ -1,9 +1,9 @@
 /**
  * @boardier-module ui/Toolbar
  * @boardier-category UI
- * @boardier-description Main tool-selection toolbar. Renders tool buttons for all element types plus select, pan, and eraser. Supports keyboard shortcuts and active-tool highlighting.
+ * @boardier-description Main tool-selection toolbar. Renders tool buttons for all element types plus select, pan, and eraser. Supports keyboard shortcuts and active-tool highlighting. On mobile, groups shape and line tools into popups for a compact layout.
  * @boardier-since 0.1.0
- * @boardier-changed 0.4.2 Mobile-responsive toolbar with larger touch targets (44px), scrollable overflow on narrow viewports, scaled icons
+ * @boardier-changed 0.4.2 Mobile-responsive toolbar with larger touch targets (44px), shape/line tool grouping popups, disabled drag-reorder on mobile
  */
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import type { BoardierToolType } from '../core/types';
@@ -64,6 +64,15 @@ const DEFAULT_TOOLS: { type: BoardierToolType; label: string; shortcut: string; 
     icon: <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 11V6a2 2 0 00-4 0v5" /><path d="M14 10V4a2 2 0 00-4 0v6" /><path d="M10 10.5V5a2 2 0 00-4 0v9" /><path d="M18 11a2 2 0 014 0v3a8 8 0 01-8 8h-2c-2.5 0-3.8-.6-5.5-2.3L3 15.5a2 2 0 013-2.7l2 2" /></svg> },
 ];
 
+/** Shape types grouped in a single popup on mobile */
+const SHAPE_GROUP: BoardierToolType[] = ['rectangle', 'ellipse', 'diamond'];
+/** Line types grouped in a single popup on mobile */
+const LINE_GROUP: BoardierToolType[] = ['line', 'arrow'];
+/** All types that get collapsed into groups on mobile */
+const GROUPED_TYPES = new Set([...SHAPE_GROUP, ...LINE_GROUP]);
+/** Compact mobile toolbar order — tools shown directly (not grouped & not in overflow) */
+const MOBILE_TOOLS: BoardierToolType[] = ['select', 'freehand', 'text', 'eraser', 'pan'];
+
 const STORAGE_KEY = 'boardier-toolbar-order';
 const OVERFLOW_KEY = 'boardier-toolbar-overflow';
 
@@ -121,10 +130,116 @@ function useIsMobile(breakpoint = 768): boolean {
   return isMobile;
 }
 
+/* ── Grouped Tool Popup (mobile shapes / lines) ────────────────── */
+
+const GroupedToolButton: React.FC<{
+  tools: BoardierToolType[];
+  activeTool: BoardierToolType;
+  onToolChange: (t: BoardierToolType) => void;
+  theme: BoardierTheme;
+  itemSize: number;
+}> = ({ tools, activeTool, onToolChange, theme, itemSize }) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  // Pick which tool to show as the button face — active if one is selected, else first
+  const activeInGroup = tools.find(t => t === activeTool);
+  const displayType = activeInGroup || tools[0];
+  const displayTool = TOOL_MAP.get(displayType)!;
+  const isActive = tools.includes(activeTool);
+
+  // Close on outside click
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: PointerEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    window.addEventListener('pointerdown', handler);
+    return () => window.removeEventListener('pointerdown', handler);
+  }, [open]);
+
+  return (
+    <div ref={ref} style={{ position: 'relative' }}>
+      <button
+        onClick={() => {
+          if (isActive) { setOpen(v => !v); } // If already on a shape, open picker
+          else { onToolChange(displayType); } // First tap activates the displayed tool
+        }}
+        style={{
+          width: itemSize,
+          height: itemSize,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          border: 'none',
+          borderRadius: theme.uiStyle.buttonBorderRadius,
+          cursor: 'pointer',
+          background: isActive ? theme.panelActive : 'transparent',
+          color: isActive ? theme.selectionColor : theme.panelText,
+          touchAction: 'none',
+          userSelect: 'none',
+          fontFamily: 'inherit',
+          position: 'relative',
+        }}
+      >
+        <span style={{ display: 'flex', transform: 'scale(1.35)' }}>{displayTool.icon}</span>
+        {/* Small triangle indicator showing it's a group */}
+        <svg width={6} height={6} viewBox="0 0 6 6" style={{ position: 'absolute', bottom: 3, right: 3 }} fill="currentColor" opacity={0.5}>
+          <polygon points="0,0 6,6 6,0" />
+        </svg>
+      </button>
+      {open && (
+        <div style={{
+          position: 'absolute',
+          top: '100%',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          marginTop: 6,
+          display: 'flex',
+          flexDirection: 'row',
+          gap: 2,
+          padding: 4,
+          background: theme.panelBackground,
+          border: `${theme.uiStyle.panelBorderWidth}px ${theme.uiStyle.panelBorderStyle} ${theme.panelBorder}`,
+          borderRadius: theme.uiStyle.menuBorderRadius,
+          boxShadow: theme.uiStyle.panelShadow,
+          zIndex: 20,
+        }}>
+          {tools.map(type => {
+            const t = TOOL_MAP.get(type)!;
+            const active = activeTool === type;
+            return (
+              <button
+                key={type}
+                onClick={() => { onToolChange(type); setOpen(false); }}
+                title={`${t.label}${t.shortcut ? ` (${t.shortcut})` : ''}`}
+                style={{
+                  width: itemSize,
+                  height: itemSize,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  border: 'none',
+                  borderRadius: theme.uiStyle.buttonBorderRadius,
+                  cursor: 'pointer',
+                  background: active ? theme.panelActive : 'transparent',
+                  color: active ? theme.selectionColor : theme.panelText,
+                  touchAction: 'none',
+                  fontFamily: 'inherit',
+                }}
+              >
+                <span style={{ display: 'flex', transform: 'scale(1.35)' }}>{t.icon}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
+
 export const Toolbar: React.FC<ToolbarProps> = React.memo(({ activeTool, onToolChange, theme, onMermaidConvert }) => {
   const isMobile = useIsMobile();
   const itemSize = isMobile ? ITEM_SIZE_MOBILE : ITEM_SIZE;
-  const iconSize = isMobile ? 20 : 16;
   const [order, setOrder] = useState<BoardierToolType[]>(loadOrder);
   const [overflow, setOverflow] = useState<BoardierToolType[]>(loadOverflow);
   const [showMore, setShowMore] = useState(false);
@@ -152,6 +267,11 @@ export const Toolbar: React.FC<ToolbarProps> = React.memo(({ activeTool, onToolC
   const tools = order.filter(t => !overflow.includes(t)).map(type => TOOL_MAP.get(type)!).filter(Boolean);
   const overflowTools = overflow.map(type => TOOL_MAP.get(type)!).filter(Boolean);
 
+  // On mobile, collect all non-mobile, non-grouped, non-overflow tools into "more"
+  const mobileExtraTools = isMobile
+    ? DEFAULT_TOOLS.filter(t => !MOBILE_TOOLS.includes(t.type) && !GROUPED_TYPES.has(t.type) && !overflow.includes(t.type))
+    : [];
+
   const moveToOverflow = useCallback((toolType: BoardierToolType) => {
     setOverflow(prev => {
       const next = [...prev, toolType];
@@ -176,14 +296,20 @@ export const Toolbar: React.FC<ToolbarProps> = React.memo(({ activeTool, onToolC
     });
   }, []);
 
+  // Desktop drag-to-reorder — disabled on mobile
   const handlePointerDown = useCallback((e: React.PointerEvent, idx: number) => {
+    if (isMobile) {
+      // On mobile, just select the tool immediately (no drag)
+      const visibleTypes = order.filter(t => !overflow.includes(t));
+      onToolChange(visibleTypes[idx]);
+      return;
+    }
     dragStartY.current = e.clientY;
     dragOriginIdx.current = idx;
 
     const pointerId = e.pointerId;
     const target = e.currentTarget as HTMLElement;
     let moved = false;
-    // Get the currently visible tool types for correct index mapping
     const visibleTypes = order.filter(t => !overflow.includes(t));
 
     const onMove = (ev: PointerEvent) => {
@@ -195,7 +321,7 @@ export const Toolbar: React.FC<ToolbarProps> = React.memo(({ activeTool, onToolC
       }
       if (moved && containerRef.current) {
         const rect = containerRef.current.getBoundingClientRect();
-        const relY = ev.clientY - rect.top - 6; // 6 = padding
+        const relY = ev.clientY - rect.top - 6;
         const hoverIdx = Math.max(0, Math.min(visibleTypes.length - 1, Math.floor(relY / (itemSize + GAP))));
         setOverIdx(hoverIdx);
       }
@@ -208,7 +334,6 @@ export const Toolbar: React.FC<ToolbarProps> = React.memo(({ activeTool, onToolC
         setDragIdx(null);
         setOverIdx(prev => {
           if (prev !== null && prev !== dragOriginIdx.current) {
-            // Reorder within the full order array using visible indices
             const fromType = visibleTypes[dragOriginIdx.current];
             const toType = visibleTypes[prev];
             setOrder(old => {
@@ -226,14 +351,13 @@ export const Toolbar: React.FC<ToolbarProps> = React.memo(({ activeTool, onToolC
           return null;
         });
       } else {
-        // Was a click, not a drag
         onToolChange(visibleTypes[idx]);
       }
     };
 
     window.addEventListener('pointermove', onMove);
     window.addEventListener('pointerup', onUp);
-  }, [order, overflow, onToolChange, itemSize]);
+  }, [order, overflow, onToolChange, itemSize, isMobile]);
 
   const btnStyle = useCallback((active: boolean, isDragging: boolean, isDropTarget: boolean): React.CSSProperties => ({
     width: itemSize,
@@ -259,6 +383,23 @@ export const Toolbar: React.FC<ToolbarProps> = React.memo(({ activeTool, onToolC
     userSelect: 'none',
   }), [theme, itemSize]);
 
+  const moreItemStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    padding: '8px 10px',
+    border: 'none',
+    borderRadius: theme.uiStyle.buttonBorderRadius,
+    background: 'transparent',
+    color: theme.panelText,
+    cursor: 'pointer',
+    fontSize: 13,
+    fontFamily: 'inherit',
+    textAlign: 'left',
+    whiteSpace: 'nowrap',
+    minHeight: 36,
+  };
+
   return (
     <div
       ref={containerRef}
@@ -273,162 +414,275 @@ export const Toolbar: React.FC<ToolbarProps> = React.memo(({ activeTool, onToolC
         boxShadow: theme.uiStyle.panelShadow,
         fontFamily: theme.uiFontFamily,
         touchAction: 'none',
-        ...(isMobile ? { maxWidth: 'calc(100vw - 24px)', overflowX: 'auto', overflowY: 'hidden' } : {}),
       }}
     >
-      {tools.map((t, i) => {
-        const isDragging = dragIdx === i;
-        const isDropTarget = dragIdx !== null && overIdx === i && dragIdx !== i;
-        return (
-          <Tooltip key={t.type} text={t.label} shortcut={t.shortcut || undefined} theme={theme} placement="bottom">
-            <button
-              onPointerDown={e => handlePointerDown(e, i)}
-              onContextMenu={e => { e.preventDefault(); e.stopPropagation(); moveToOverflow(t.type); }}
-              style={btnStyle(activeTool === t.type, isDragging, isDropTarget)}
-              onMouseEnter={e => { if (activeTool !== t.type && dragIdx === null) (e.currentTarget as HTMLElement).style.background = theme.panelHover; }}
-              onMouseLeave={e => { if (activeTool !== t.type && dragIdx === null) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
-            >
-              <span style={isMobile ? { display: 'flex', transform: 'scale(1.35)' } : undefined}>{t.icon}</span>
-            </button>
-          </Tooltip>
-        );
-      })}
+      {isMobile ? (
+        /* ── Mobile layout: grouped shapes, grouped lines, core tools, "more" ── */
+        <>
+          {/* Select */}
+          {renderMobileBtn('select')}
 
-      {/* Separator + More button */}
-      <div style={{ width: 1, height: itemSize, background: theme.panelBorder, margin: '0 2px' }} />
-      <button
-        title="More tools..."
-        onClick={() => setShowMore(v => !v)}
-        style={{
-          ...btnStyle(showMore, false, false),
-          background: showMore ? theme.panelActive : 'transparent',
-          color: showMore ? theme.selectionColor : theme.panelText,
-        }}
-        onMouseEnter={e => { if (!showMore) (e.currentTarget as HTMLElement).style.background = theme.panelHover; }}
-        onMouseLeave={e => { if (!showMore) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
-      >
-        <svg width={16} height={16} viewBox="0 0 24 24" fill="currentColor" stroke="none">
-          <circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" />
-        </svg>
-      </button>
+          {/* Shapes group (rect, ellipse, diamond) */}
+          <GroupedToolButton tools={SHAPE_GROUP} activeTool={activeTool} onToolChange={onToolChange} theme={theme} itemSize={itemSize} />
 
-      {/* Overflow panel */}
-      {showMore && (
-        <div
-          ref={moreRef}
-          style={{
-            position: 'absolute',
-            top: '100%',
-            left: 0,
-            marginTop: 8,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 4,
-            padding: 8,
-            background: theme.panelBackground,
-            border: `${theme.uiStyle.panelBorderWidth}px ${theme.uiStyle.panelBorderStyle} ${theme.panelBorder}`,
-            borderRadius: theme.uiStyle.menuBorderRadius,
-            boxShadow: theme.uiStyle.panelShadow,
-            minWidth: 160,
-            zIndex: 11,
-          }}
-        >
-          <div style={{ fontSize: 11, fontWeight: 600, color: theme.panelText, opacity: 0.6, marginBottom: 2, letterSpacing: '0.5px', textTransform: 'uppercase' }}>
-            More Tools
-          </div>
+          {/* Lines group (line, arrow) */}
+          <GroupedToolButton tools={LINE_GROUP} activeTool={activeTool} onToolChange={onToolChange} theme={theme} itemSize={itemSize} />
 
-          {/* Mermaid converter */}
+          {/* Core tools */}
+          {renderMobileBtn('freehand')}
+          {renderMobileBtn('text')}
+          {renderMobileBtn('eraser')}
+          {renderMobileBtn('pan')}
+
+          {/* Separator + More */}
+          <div style={{ width: 1, height: itemSize, background: theme.panelBorder, margin: '0 2px', flexShrink: 0 }} />
           <button
-            onClick={() => { onMermaidConvert?.(); setShowMore(false); }}
+            title="More tools..."
+            onClick={() => setShowMore(v => !v)}
             style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              padding: '6px 8px',
-              border: 'none',
-              borderRadius: theme.uiStyle.buttonBorderRadius,
-              background: 'transparent',
-              color: theme.panelText,
-              cursor: 'pointer',
-              fontSize: 13,
-              fontFamily: 'inherit',
-              textAlign: 'left',
-              whiteSpace: 'nowrap',
+              ...btnStyle(showMore, false, false),
+              background: showMore ? theme.panelActive : 'transparent',
+              color: showMore ? theme.selectionColor : theme.panelText,
+              flexShrink: 0,
             }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = theme.panelHover; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
           >
-            <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M4 5h4l3 10h6l3-10h4" /><circle cx="8" cy="19" r="2" /><circle cx="16" cy="19" r="2" />
-            </svg>
-            Mermaid Converter
+            <span style={{ display: 'flex', transform: 'scale(1.35)' }}>
+              <svg width={16} height={16} viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                <circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" />
+              </svg>
+            </span>
           </button>
 
-          {/* Overflow tools (hidden from main toolbar) */}
-          {overflowTools.length > 0 && (
-            <>
-              <div style={{ width: '100%', height: 1, background: theme.panelBorder, margin: '4px 0' }} />
-              <div style={{ fontSize: 11, color: theme.panelText, opacity: 0.5, marginBottom: 2 }}>Hidden Tools</div>
-              {overflowTools.map(t => (
-                <div key={t.type} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <button
-                    onClick={() => { onToolChange(t.type); setShowMore(false); }}
-                    style={{
-                      flex: 1,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 8,
-                      padding: '6px 8px',
-                      border: 'none',
-                      borderRadius: theme.uiStyle.buttonBorderRadius,
-                      background: activeTool === t.type ? theme.panelActive : 'transparent',
-                      color: activeTool === t.type ? theme.selectionColor : theme.panelText,
-                      cursor: 'pointer',
-                      fontSize: 13,
-                      fontFamily: 'inherit',
-                    }}
-                    onMouseEnter={e => { if (activeTool !== t.type) (e.currentTarget as HTMLElement).style.background = theme.panelHover; }}
-                    onMouseLeave={e => { if (activeTool !== t.type) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
-                  >
-                    {t.icon}
-                    {t.label}
-                  </button>
-                  <button
-                    title="Move back to toolbar"
-                    onClick={() => moveToMain(t.type)}
-                    style={{
-                      width: 22,
-                      height: 22,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      border: 'none',
-                      borderRadius: theme.uiStyle.buttonBorderRadius,
-                      background: 'transparent',
-                      color: theme.panelText,
-                      cursor: 'pointer',
-                      opacity: 0.5,
-                    }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '0.5'; }}
-                  >
-                    <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l-6-6 6-6" /><path d="M3 12h18" /></svg>
-                  </button>
-                </div>
-              ))}
-            </>
-          )}
+          {/* Mobile overflow panel */}
+          {showMore && (
+            <div
+              ref={moreRef}
+              style={{
+                position: 'absolute',
+                top: '100%',
+                left: 0,
+                right: 0,
+                marginTop: 8,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 4,
+                padding: 8,
+                background: theme.panelBackground,
+                border: `${theme.uiStyle.panelBorderWidth}px ${theme.uiStyle.panelBorderStyle} ${theme.panelBorder}`,
+                borderRadius: theme.uiStyle.menuBorderRadius,
+                boxShadow: theme.uiStyle.panelShadow,
+                minWidth: 200,
+                zIndex: 11,
+              }}
+            >
+              <div style={{ fontSize: 11, fontWeight: 600, color: theme.panelText, opacity: 0.6, marginBottom: 2, letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+                More Tools
+              </div>
 
-          {/* Drag tools here hint */}
-          {overflowTools.length === 0 && (
-            <div style={{ fontSize: 11, color: theme.panelText, opacity: 0.4, padding: '4px 8px', fontStyle: 'italic' }}>
-              Right-click a tool to hide it here
+              {/* Mermaid converter */}
+              <button
+                onClick={() => { onMermaidConvert?.(); setShowMore(false); }}
+                style={moreItemStyle}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = theme.panelHover; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+              >
+                <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 5h4l3 10h6l3-10h4" /><circle cx="8" cy="19" r="2" /><circle cx="16" cy="19" r="2" />
+                </svg>
+                Mermaid Converter
+              </button>
+
+              {/* Extra tools not shown in main mobile bar */}
+              {mobileExtraTools.length > 0 && (
+                <>
+                  <div style={{ width: '100%', height: 1, background: theme.panelBorder, margin: '4px 0' }} />
+                  {mobileExtraTools.map(t => (
+                    <button
+                      key={t.type}
+                      onClick={() => { onToolChange(t.type); setShowMore(false); }}
+                      style={{
+                        ...moreItemStyle,
+                        background: activeTool === t.type ? theme.panelActive : 'transparent',
+                        color: activeTool === t.type ? theme.selectionColor : theme.panelText,
+                      }}
+                    >
+                      {t.icon}
+                      {t.label}
+                    </button>
+                  ))}
+                </>
+              )}
+
+              {/* Overflow tools */}
+              {overflowTools.length > 0 && (
+                <>
+                  <div style={{ width: '100%', height: 1, background: theme.panelBorder, margin: '4px 0' }} />
+                  <div style={{ fontSize: 11, color: theme.panelText, opacity: 0.5, marginBottom: 2 }}>Hidden Tools</div>
+                  {overflowTools.map(t => (
+                    <button
+                      key={t.type}
+                      onClick={() => { onToolChange(t.type); setShowMore(false); }}
+                      style={{
+                        ...moreItemStyle,
+                        background: activeTool === t.type ? theme.panelActive : 'transparent',
+                        color: activeTool === t.type ? theme.selectionColor : theme.panelText,
+                      }}
+                    >
+                      {t.icon}
+                      {t.label}
+                    </button>
+                  ))}
+                </>
+              )}
             </div>
           )}
-        </div>
+        </>
+      ) : (
+        /* ── Desktop layout: full drag-reorderable toolbar ── */
+        <>
+          {tools.map((t, i) => {
+            const isDragging = dragIdx === i;
+            const isDropTarget = dragIdx !== null && overIdx === i && dragIdx !== i;
+            return (
+              <Tooltip key={t.type} text={t.label} shortcut={t.shortcut || undefined} theme={theme} placement="bottom">
+                <button
+                  onPointerDown={e => handlePointerDown(e, i)}
+                  onContextMenu={e => { e.preventDefault(); e.stopPropagation(); moveToOverflow(t.type); }}
+                  style={btnStyle(activeTool === t.type, isDragging, isDropTarget)}
+                  onMouseEnter={e => { if (activeTool !== t.type && dragIdx === null) (e.currentTarget as HTMLElement).style.background = theme.panelHover; }}
+                  onMouseLeave={e => { if (activeTool !== t.type && dragIdx === null) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+                >
+                  {t.icon}
+                </button>
+              </Tooltip>
+            );
+          })}
+
+          {/* Separator + More button */}
+          <div style={{ width: 1, height: itemSize, background: theme.panelBorder, margin: '0 2px' }} />
+          <button
+            title="More tools..."
+            onClick={() => setShowMore(v => !v)}
+            style={{
+              ...btnStyle(showMore, false, false),
+              background: showMore ? theme.panelActive : 'transparent',
+              color: showMore ? theme.selectionColor : theme.panelText,
+            }}
+            onMouseEnter={e => { if (!showMore) (e.currentTarget as HTMLElement).style.background = theme.panelHover; }}
+            onMouseLeave={e => { if (!showMore) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+          >
+            <svg width={16} height={16} viewBox="0 0 24 24" fill="currentColor" stroke="none">
+              <circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" />
+            </svg>
+          </button>
+
+          {/* Overflow panel (desktop) */}
+          {showMore && (
+            <div
+              ref={moreRef}
+              style={{
+                position: 'absolute',
+                top: '100%',
+                left: 0,
+                marginTop: 8,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 4,
+                padding: 8,
+                background: theme.panelBackground,
+                border: `${theme.uiStyle.panelBorderWidth}px ${theme.uiStyle.panelBorderStyle} ${theme.panelBorder}`,
+                borderRadius: theme.uiStyle.menuBorderRadius,
+                boxShadow: theme.uiStyle.panelShadow,
+                minWidth: 160,
+                zIndex: 11,
+              }}
+            >
+              <div style={{ fontSize: 11, fontWeight: 600, color: theme.panelText, opacity: 0.6, marginBottom: 2, letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+                More Tools
+              </div>
+
+              {/* Mermaid converter */}
+              <button
+                onClick={() => { onMermaidConvert?.(); setShowMore(false); }}
+                style={moreItemStyle}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = theme.panelHover; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+              >
+                <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 5h4l3 10h6l3-10h4" /><circle cx="8" cy="19" r="2" /><circle cx="16" cy="19" r="2" />
+                </svg>
+                Mermaid Converter
+              </button>
+
+              {/* Overflow tools (hidden from main toolbar) */}
+              {overflowTools.length > 0 && (
+                <>
+                  <div style={{ width: '100%', height: 1, background: theme.panelBorder, margin: '4px 0' }} />
+                  <div style={{ fontSize: 11, color: theme.panelText, opacity: 0.5, marginBottom: 2 }}>Hidden Tools</div>
+                  {overflowTools.map(t => (
+                    <div key={t.type} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <button
+                        onClick={() => { onToolChange(t.type); setShowMore(false); }}
+                        style={{
+                          ...moreItemStyle, flex: 1,
+                          background: activeTool === t.type ? theme.panelActive : 'transparent',
+                          color: activeTool === t.type ? theme.selectionColor : theme.panelText,
+                        }}
+                        onMouseEnter={e => { if (activeTool !== t.type) (e.currentTarget as HTMLElement).style.background = theme.panelHover; }}
+                        onMouseLeave={e => { if (activeTool !== t.type) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+                      >
+                        {t.icon}
+                        {t.label}
+                      </button>
+                      <button
+                        title="Move back to toolbar"
+                        onClick={() => moveToMain(t.type)}
+                        style={{
+                          width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          border: 'none', borderRadius: theme.uiStyle.buttonBorderRadius, background: 'transparent',
+                          color: theme.panelText, cursor: 'pointer', opacity: 0.5,
+                        }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '0.5'; }}
+                      >
+                        <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l-6-6 6-6" /><path d="M3 12h18" /></svg>
+                      </button>
+                    </div>
+                  ))}
+                </>
+              )}
+
+              {/* Drag tools here hint */}
+              {overflowTools.length === 0 && (
+                <div style={{ fontSize: 11, color: theme.panelText, opacity: 0.4, padding: '4px 8px', fontStyle: 'italic' }}>
+                  Right-click a tool to hide it here
+                </div>
+              )}
+            </div>
+          )}
+        </>
       )}
     </div>
   );
+
+  /* ── helper: render a single mobile button ── */
+  function renderMobileBtn(type: BoardierToolType) {
+    const t = TOOL_MAP.get(type)!;
+    const active = activeTool === type;
+    return (
+      <button
+        key={type}
+        onClick={() => onToolChange(type)}
+        title={`${t.label}${t.shortcut ? ` (${t.shortcut})` : ''}`}
+        style={{
+          ...btnStyle(active, false, false),
+          flexShrink: 0,
+        }}
+      >
+        <span style={{ display: 'flex', transform: 'scale(1.35)' }}>{t.icon}</span>
+      </button>
+    );
+  }
 });
 
 Toolbar.displayName = 'Toolbar';

@@ -5,7 +5,7 @@
  * @boardier-since 0.1.0
  * @boardier-changed 0.2.0 Added zigzag and zigzag-line fill style options to the property panel
  * @boardier-changed 0.4.1 Added export dropdown button for exporting selected elements in multiple formats
- * @boardier-changed 0.4.2 Mobile-responsive layout — panel repositions to bottom sheet on narrow viewports
+ * @boardier-changed 0.4.2 Mobile layout rewritten — horizontal icon bar at bottom with popup property editors and overflow menu
  */
 import React, { useRef, useState, useEffect } from 'react';
 import type { BoardierElement, FillStyle, StrokeStyle } from '../core/types';
@@ -162,6 +162,7 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
   const fillPickerRef = useRef<HTMLInputElement>(null);
   const [perCorner, setPerCorner] = useState(false);
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
+  const [activePopup, setActivePopup] = useState<string | null>(null);
 
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 767px)');
@@ -211,8 +212,8 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
     </span>
   );
 
-  /** Section card with subtle background grouping — our own flavor, not Excalidraw's flat list */
-  const card = (children: React.ReactNode) => (
+  /** Section card wrapper. */
+  const card = (children: React.ReactNode, _sectionKey?: string) => (
     <div style={{
       padding: '10px 10px', borderRadius: ui.cardBorderRadius,
       background: theme.panelHover, display: 'flex', flexDirection: 'column', gap: 8, width: '100%',
@@ -271,16 +272,340 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
   const borderRadii = (first as any).borderRadii as [number, number, number, number] | undefined;
   const br = (first as any).borderRadius ?? 0;
 
-  const panelPositionStyle: React.CSSProperties = isMobile
-    ? { bottom: 0, left: 0, right: 0, transform: 'none', width: '100%', maxHeight: '45vh', borderRadius: `${ui.panelBorderRadius}px ${ui.panelBorderRadius}px 0 0` }
-    : { top: '50%', left: 12, transform: 'translateY(-50%)', width: 224, maxHeight: 'calc(100vh - 80px)', borderRadius: ui.panelBorderRadius };
+  /* ── Mobile: horizontal icon bar with popup editors ── */
+  if (isMobile) {
+    const togglePopup = (key: string) => setActivePopup(activePopup === key ? null : key);
+    const barBtn = (key: string, icon: React.ReactNode) => (
+      <button key={key} onClick={() => togglePopup(key)} title={key}
+        style={{
+          width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          border: `2px solid ${activePopup === key ? theme.selectionColor : 'transparent'}`,
+          borderRadius: ui.buttonBorderRadius,
+          background: activePopup === key ? theme.panelActive : 'transparent',
+          cursor: 'pointer', color: activePopup === key ? theme.selectionColor : theme.panelText, padding: 0,
+        }}>{icon}</button>
+    );
+    const popupStyle = {
+      position: 'absolute', bottom: 54, left: 8, right: 8,
+      background: theme.panelBackground,
+      border: `${ui.panelBorderWidth}px ${ui.panelBorderStyle} ${theme.panelBorder}`,
+      borderRadius: ui.panelBorderRadius, boxShadow: ui.panelShadow, zIndex: 11,
+      padding: 10, maxHeight: '40vh', overflowY: 'auto',
+      fontFamily: theme.uiFontFamily, display: 'flex', flexDirection: 'column', gap: 8,
+      '--bdier-accent': theme.selectionColor,
+    } as React.CSSProperties;
+    const menuBtn: React.CSSProperties = {
+      display: 'flex', alignItems: 'center', gap: 8, width: '100%',
+      padding: '8px 12px', border: 'none', background: 'transparent',
+      cursor: 'pointer', color: theme.panelText, fontSize: 12, fontWeight: 500, fontFamily: 'inherit',
+    };
 
+    /* Section icons */
+    const iStroke = <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18"/></svg>;
+    const iFill = <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 11H5a4 4 0 00-4 4 4 4 0 004 4h14"/><path d="M12 3v8"/><path d="M8 7l4 4 4-4"/></svg>;
+    const iStyle = <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12" strokeDasharray="5 3"/><line x1="3" y1="18" x2="21" y2="18" strokeDasharray="2 3"/></svg>;
+    const iAdjust = <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>;
+    const iFont = <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M4 20h16"/><path d="M12 4v16"/><path d="M7 4h10"/></svg>;
+    const iShadow = <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="14" height="14" rx="2"/><path d="M7 21h12a2 2 0 002-2V7" strokeDasharray="3 2"/></svg>;
+    const iEdges = <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9V5a2 2 0 012-2h4"/><path d="M15 3h4a2 2 0 012 2v4"/><path d="M21 15v4a2 2 0 01-2 2h-4"/><path d="M9 21H5a2 2 0 01-2-2v-4"/></svg>;
+    const iEmbed = <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>;
+    const iMore = <svg width={16} height={16} viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>;
+
+    /* Build sections list */
+    type MSection = { key: string; icon: React.ReactNode; content: React.ReactNode; overflow?: boolean };
+    const ms: MSection[] = [];
+
+    ms.push({ key: 'stroke', icon: iStroke, content: <>
+      <span style={sectionTitle}>Stroke</span>
+      <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+        {STROKE_COLORS.map(c => swatch(c, first.strokeColor === c, () => onUpdate({ strokeColor: c })))}
+        {customPicker(first.strokeColor, c => onUpdate({ strokeColor: c }), strokePickerRef)}
+      </div>
+      <input type="text" value={first.strokeColor} spellCheck={false}
+        onChange={e => { const v = e.target.value; if (/^#[0-9a-f]{0,6}$/i.test(v) || v === '') onUpdate({ strokeColor: v }); }}
+        onBlur={e => { if (!/^#[0-9a-f]{6}$/i.test(e.target.value)) onUpdate({ strokeColor: first.strokeColor }); }}
+        style={{ width: '100%', height: 24, fontSize: 11, fontWeight: 600, fontFamily: 'monospace',
+          border: `${ui.inputBorderWidth}px solid ${theme.panelBorder}`, borderRadius: ui.inputBorderRadius,
+          background: theme.panelBackground, color: theme.panelText, padding: '0 8px', outline: 'none' }}
+      />
+    </> });
+
+    if (isNotLine) ms.push({ key: 'fill', icon: iFill, content: <>
+      <span style={sectionTitle}>Background</span>
+      <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+        {FILL_COLORS.map(c =>
+          swatch(c, first.backgroundColor === c, () =>
+            onUpdate({ backgroundColor: c, fillStyle: c === 'transparent' ? 'none' : (first.fillStyle === 'none' ? 'solid' : first.fillStyle) })))}
+        {customPicker(first.backgroundColor, c => onUpdate({ backgroundColor: c, fillStyle: first.fillStyle === 'none' ? 'solid' : first.fillStyle }), fillPickerRef)}
+      </div>
+      {first.backgroundColor !== 'transparent' && first.fillStyle !== 'none' && (
+        <div style={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+          {FILL_STYLE_OPTS.map(f => pill(first.fillStyle === f.v, () => onUpdate({ fillStyle: f.v }), f.icon, f.tip, f.v))}
+        </div>
+      )}
+    </> });
+
+    ms.push({ key: 'style', icon: iStyle, content: <>
+      <span style={sectionTitle}>Stroke width</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <div style={{ display: 'flex', gap: 2 }}>
+          {([1, 2, 4] as const).map(w => pill(
+            first.strokeWidth === w, () => onUpdate({ strokeWidth: w }),
+            <svg width={24} height={6} viewBox="0 0 24 6"><line x1="2" y1="3" x2="22" y2="3" stroke="currentColor" strokeWidth={w} strokeLinecap="round" /></svg>,
+            `${w}px`, w,
+          ))}
+        </div>
+        <div style={{ borderLeft: `1px solid ${theme.panelBorder}`, height: 20, flexShrink: 0 }} />
+        {numInput(first.strokeWidth, 1, 20, 1, v => onUpdate({ strokeWidth: v }), 'px')}
+      </div>
+      <span style={{ ...sectionTitle, marginTop: 4 }}>Stroke style</span>
+      <div style={{ display: 'flex', gap: 2 }}>
+        {STROKE_STYLE_OPTS.map(s => pill(
+          (first.strokeStyle || 'solid') === s.v,
+          () => onUpdate({ strokeStyle: s.v } as any), s.svg, s.label, s.v,
+        ))}
+      </div>
+    </> });
+
+    ms.push({ key: 'adjust', icon: iAdjust, content: <>
+      {compactSlider('Sloppiness', first.roughness, 0, 3, 0.1, v => onUpdate({ roughness: v }))}
+      {compactSlider('Opacity', Math.round(first.opacity * 100), 0, 100, 1, v => onUpdate({ opacity: v / 100 }), '%')}
+    </> });
+
+    if (hasTextOrLabel) ms.push({ key: 'font', icon: iFont, content: <>
+      <span style={sectionTitle}>Font</span>
+      <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+        {FONT_FAMILIES.map(f => {
+          const isActive = (hasText ? (first as any).fontFamily : undefined) === f.value;
+          return (
+            <button key={f.label} onClick={() => onUpdate({ fontFamily: f.value } as any)} style={{
+              padding: '4px 10px', fontSize: 12, fontWeight: 600,
+              border: `${ui.buttonBorderWidth}px solid ${isActive ? theme.selectionColor : 'transparent'}`,
+              borderRadius: ui.buttonBorderRadius, background: isActive ? theme.panelActive : 'transparent',
+              cursor: 'pointer', color: isActive ? theme.selectionColor : theme.panelText, fontFamily: f.value,
+              transition: 'all 0.1s',
+            }}>{f.label}</button>
+          );
+        })}
+        {first.roughness > 0 && (() => {
+          const isActive = (first as any).fontFamily === HANDWRITTEN_FONT;
+          return (
+            <button onClick={() => onUpdate({ fontFamily: HANDWRITTEN_FONT } as any)} style={{
+              padding: '4px 10px', fontSize: 12, fontWeight: 600,
+              border: `${ui.buttonBorderWidth}px solid ${isActive ? theme.selectionColor : 'transparent'}`,
+              borderRadius: ui.buttonBorderRadius, background: isActive ? theme.panelActive : 'transparent',
+              cursor: 'pointer', color: isActive ? theme.selectionColor : theme.panelText, fontFamily: HANDWRITTEN_FONT,
+              transition: 'all 0.1s',
+            }}>Hand</button>
+          );
+        })()}
+      </div>
+      {hasText && (
+        <div style={{ display: 'flex', gap: 2 }}>
+          {(['left', 'center', 'right'] as const).map(a => pill(
+            (first as any).textAlign === a,
+            () => onUpdate({ textAlign: a } as any),
+            <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+              {a === 'left' && <><path d="M3 6h18" /><path d="M3 12h12" /><path d="M3 18h16" /></>}
+              {a === 'center' && <><path d="M3 6h18" /><path d="M6 12h12" /><path d="M4 18h16" /></>}
+              {a === 'right' && <><path d="M3 6h18" /><path d="M9 12h12" /><path d="M5 18h16" /></>}
+            </svg>, a, a,
+          ))}
+        </div>
+      )}
+      {hasText && (<>
+        <span style={{ ...sectionTitle, marginTop: 2 }}>Size</span>
+        <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+          {FONT_SIZES.map(s => pill(
+            (first as any).fontSize === s, () => onUpdate({ fontSize: s } as any),
+            <span style={{ fontSize: 11, fontWeight: 700 }}>{s}</span>, undefined, s,
+          ))}
+          <div style={{ borderLeft: `1px solid ${theme.panelBorder}`, height: 18, flexShrink: 0 }} />
+          {numInput((first as any).fontSize ?? 18, 8, 200, 1, v => onUpdate({ fontSize: v } as any), 'px')}
+        </div>
+      </>)}
+    </> });
+
+    /* Overflow sections */
+    ms.push({ key: 'shadow', icon: iShadow, overflow: true, content: <>
+      <span style={sectionTitle}>Shadow</span>
+      <div style={{ display: 'flex', gap: 2 }}>
+        {[
+          { label: '\u2014', value: '', tip: 'None' },
+          { label: 'S', value: '2 2 4 rgba(0,0,0,0.2)', tip: 'Small' },
+          { label: 'M', value: '4 4 10 rgba(0,0,0,0.25)', tip: 'Medium' },
+          { label: 'L', value: '6 6 20 rgba(0,0,0,0.3)', tip: 'Large' },
+        ].map(s => pill(
+          (first.shadow || '') === s.value,
+          () => onUpdate({ shadow: s.value || undefined } as any),
+          <span style={{ fontSize: 12, fontWeight: 700 }}>{s.label}</span>, s.tip, s.label,
+        ))}
+      </div>
+    </> });
+
+    if (isRect) ms.push({ key: 'edges', icon: iEdges, overflow: true, content: <>
+      <span style={sectionTitle}>Edges</span>
+      <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+        {!perCorner ? (<>
+          <div style={{ flex: 1 }}>{slider(br, 0, 50, 1, v => onUpdate({ borderRadius: v, borderRadii: undefined } as any))}</div>
+          {numInput(br, 0, 50, 1, v => onUpdate({ borderRadius: v, borderRadii: undefined } as any), 'px')}
+          <button onClick={() => setPerCorner(true)} title="Per-corner radius" style={{
+            width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
+            border: `${ui.buttonBorderWidth}px solid ${theme.panelBorder}`, borderRadius: ui.buttonBorderRadius, background: 'transparent',
+            cursor: 'pointer', color: theme.panelTextSecondary, flexShrink: 0,
+          }}>
+            <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8">
+              <path d="M1 5V3a2 2 0 0 1 2-2h2" /><path d="M11 1h2a2 2 0 0 1 2 2v2" />
+              <path d="M15 11v2a2 2 0 0 1-2 2h-2" /><path d="M5 15H3a2 2 0 0 1-2-2v-2" />
+            </svg>
+          </button>
+        </>) : (<>
+          <div style={{ display: 'flex', gap: 3, flex: 1 }}>
+            {(['TL', 'TR', 'BR', 'BL'] as const).map((corner, i) => {
+              const vals = borderRadii || [br, br, br, br];
+              return (
+                <input key={corner} className={NUM_INPUT_CLASS} type="number" min={0} max={50} value={vals[i]}
+                  title={corner}
+                  onChange={e => {
+                    const v = Math.max(0, Math.min(50, parseInt(e.target.value) || 0));
+                    const next: [number, number, number, number] = [...(borderRadii || [br, br, br, br])] as any;
+                    next[i] = v;
+                    onUpdate({ borderRadii: next } as any);
+                  }}
+                  style={{ width: 36, border: `${ui.inputBorderWidth}px solid ${theme.panelBorder}`, background: theme.panelBackground, color: theme.panelText }}
+                />
+              );
+            })}
+          </div>
+          <button onClick={() => setPerCorner(false)} title="Uniform radius" style={{
+            width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
+            border: `${ui.buttonBorderWidth}px solid ${theme.selectionColor}`, borderRadius: ui.buttonBorderRadius, background: theme.panelActive,
+            cursor: 'pointer', color: theme.panelText, flexShrink: 0,
+          }}>
+            <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8">
+              <path d="M1 5V3a2 2 0 0 1 2-2h2" /><path d="M11 1h2a2 2 0 0 1 2 2v2" />
+              <path d="M15 11v2a2 2 0 0 1-2 2h-2" /><path d="M5 15H3a2 2 0 0 1-2-2v-2" />
+            </svg>
+          </button>
+        </>)}
+      </div>
+    </> });
+
+    if (isEmbed) ms.push({ key: 'embed', icon: iEmbed, overflow: true, content: <>
+      <span style={sectionTitle}>Embed URL</span>
+      <input type="text" placeholder="https://..." value={(first as any).url || ''}
+        onChange={e => onUpdate({ url: e.target.value } as any)}
+        style={{ width: '100%', height: 28, fontSize: 11,
+          border: `${ui.inputBorderWidth}px solid ${theme.panelBorder}`, borderRadius: ui.inputBorderRadius,
+          background: theme.panelBackground, color: theme.panelText, padding: '0 8px', outline: 'none', fontFamily: 'inherit' }}
+      />
+    </> });
+
+    const primary = ms.filter(s => !s.overflow);
+    const overflow = ms.filter(s => s.overflow);
+    const active = ms.find(s => s.key === activePopup);
+
+    return (
+      <>
+        <style>{getSliderCSS(ui)}</style>
+        {/* Backdrop to dismiss popup */}
+        {activePopup && <div onClick={() => setActivePopup(null)} style={{ position: 'fixed', inset: 0, zIndex: 9 }} />}
+
+        {/* Section content popup */}
+        {active && <div style={popupStyle}>{active.content}</div>}
+
+        {/* Overflow menu */}
+        {activePopup === '..more' && (
+          <div style={{
+            position: 'absolute', bottom: 54, right: 8,
+            background: theme.panelBackground,
+            border: `${ui.panelBorderWidth}px ${ui.panelBorderStyle} ${theme.panelBorder}`,
+            borderRadius: ui.menuBorderRadius, boxShadow: ui.panelShadow, zIndex: 12,
+            padding: 4, minWidth: 140, fontFamily: theme.uiFontFamily,
+          }}>
+            {overflow.map(s => (
+              <button key={s.key} onClick={() => setActivePopup(s.key)} style={menuBtn}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = theme.panelHover; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+              >{s.icon} <span style={{ textTransform: 'capitalize' }}>{s.key}</span></button>
+            ))}
+            <div style={{ height: 1, background: theme.panelBorder, margin: '4px 0' }} />
+            {onCopy && (
+              <button onClick={() => { onCopy(); setActivePopup(null); }} style={menuBtn}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = theme.panelHover; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+              >
+                <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>
+                <span>Copy</span>
+              </button>
+            )}
+            {onDuplicate && (
+              <button onClick={() => { onDuplicate(); setActivePopup(null); }} style={menuBtn}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = theme.panelHover; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+              >
+                <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="8" y="8" width="14" height="14" rx="2" /><path d="M4 16V4a2 2 0 0 1 2-2h12" /></svg>
+                <span>Duplicate</span>
+              </button>
+            )}
+            {onExport && <ExportDropdown onExport={onExport} theme={theme} ui={ui} />}
+            <button onClick={() => { onUpdate({ locked: !first.locked }); setActivePopup(null); }} style={menuBtn}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = theme.panelHover; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+            >
+              {first.locked
+                ? <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
+                : <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 9.9-1" /></svg>}
+              <span>{first.locked ? 'Unlock' : 'Lock'}</span>
+            </button>
+          </div>
+        )}
+
+        {/* Icon bar */}
+        <div style={{
+          position: 'absolute', bottom: 0, left: 0, right: 0,
+          display: 'flex', alignItems: 'center', gap: 2, padding: '6px 8px',
+          background: theme.panelBackground,
+          border: `${ui.panelBorderWidth}px ${ui.panelBorderStyle} ${theme.panelBorder}`,
+          borderRadius: `${ui.panelBorderRadius}px ${ui.panelBorderRadius}px 0 0`,
+          boxShadow: ui.panelShadow, zIndex: 10, fontFamily: theme.uiFontFamily,
+        }}>
+          {primary.map(s => barBtn(s.key, s.icon))}
+          {overflow.length > 0 && barBtn('..more', iMore)}
+          <div style={{ flex: 1 }} />
+          <button onClick={onDelete} title="Delete" style={{
+            width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            border: '2px solid transparent', borderRadius: ui.buttonBorderRadius,
+            background: 'transparent', cursor: 'pointer', color: '#e03131', padding: 0,
+          }}>
+            <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+            </svg>
+          </button>
+          {onClose && (
+            <button onClick={onClose} title="Close" style={{
+              width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              border: '2px solid transparent', borderRadius: ui.buttonBorderRadius,
+              background: 'transparent', cursor: 'pointer', color: theme.panelTextSecondary, padding: 0,
+            }}>
+              <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
+          )}
+        </div>
+      </>
+    );
+  }
+
+  /* ── Desktop: vertical side panel ── */
   return (
     <>
       <style>{getSliderCSS(ui)}</style>
       <div style={{
         position: 'absolute',
-        ...panelPositionStyle,
+        top: '50%', left: 12, transform: 'translateY(-50%)', width: 224,
+        maxHeight: 'calc(100vh - 80px)', borderRadius: ui.panelBorderRadius,
         display: 'flex', flexDirection: 'column', gap: 6, padding: 8,
         background: theme.panelBackground, border: `${ui.panelBorderWidth}px ${ui.panelBorderStyle} ${theme.panelBorder}`,
         boxShadow: ui.panelShadow, zIndex: 10,
@@ -307,7 +632,7 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
               padding: '0 8px', outline: 'none',
             }}
           />
-        </>)}
+        </>, 'Stroke')}
 
         {/* ── Background ── */}
         {isNotLine && card(<>
@@ -324,7 +649,7 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
               {FILL_STYLE_OPTS.map(f => pill(first.fillStyle === f.v, () => onUpdate({ fillStyle: f.v }), f.icon, f.tip, f.v))}
             </div>
           )}
-        </>)}
+        </>, 'Background')}
 
         {/* ── Stroke width + style ── */}
         {card(<>
@@ -353,7 +678,7 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
               s.v,
             ))}
           </div>
-        </>)}
+        </>, 'Stroke Style')}
 
         {/* ── Sloppiness + Opacity — continuous sliders with number input ── */}
         {card(<>
@@ -368,7 +693,7 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
             v => onUpdate({ opacity: v / 100 }),
             '%',
           )}
-        </>)}
+        </>, 'Adjustments')}
 
         {/* ── Border radius ── */}
         {isRect && card(<>
@@ -423,7 +748,7 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
               </>
             )}
           </div>
-        </>)}
+        </>, 'Edges')}
 
         {/* ── Shadow ── */}
         {card(<>
@@ -442,7 +767,7 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
               s.label,
             ))}
           </div>
-        </>)}
+        </>, 'Shadow')}
 
         {/* ── Font ── */}
         {hasTextOrLabel && card(<>
@@ -506,7 +831,7 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
               {numInput((first as any).fontSize ?? 18, 8, 200, 1, v => onUpdate({ fontSize: v } as any), 'px')}
             </div>
           </>)}
-        </>)}
+        </>, 'Font')}
 
         {/* ── Embed URL ── */}
         {isEmbed && card(<>
@@ -520,7 +845,7 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
               padding: '0 8px', outline: 'none', fontFamily: 'inherit',
             }}
           />
-        </>)}
+        </>, 'Embed')}
 
         {/* ── Actions ── */}
         <div style={{ display: 'flex', gap: 4, padding: '2px 6px', justifyContent: 'flex-start', flexWrap: 'wrap' }}>

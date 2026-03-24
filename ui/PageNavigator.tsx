@@ -16,10 +16,11 @@ interface PageNavigatorProps {
   onDeletePage: (pageId: string) => void;
   onRenamePage: (pageId: string, name: string) => void;
   theme: BoardierTheme;
+  bottomOffset?: number;
 }
 
 export const PageNavigator: React.FC<PageNavigatorProps> = React.memo(({
-  pages, activePageId, onSwitchPage, onAddPage, onDeletePage, onRenamePage, theme,
+  pages, activePageId, onSwitchPage, onAddPage, onDeletePage, onRenamePage, theme, bottomOffset = 0,
 }) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
@@ -40,7 +41,7 @@ export const PageNavigator: React.FC<PageNavigatorProps> = React.memo(({
     <div
       style={{
         position: 'absolute',
-        bottom: 12,
+        bottom: 12 + bottomOffset,
         left: '50%',
         transform: 'translateX(-50%)',
         display: 'flex',
