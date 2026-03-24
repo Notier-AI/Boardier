@@ -4,6 +4,7 @@
  * @boardier-description Side panel that displays and edits properties of selected elements: stroke color, fill color/style, stroke width/style, opacity, roughness, font, text alignment, border radius, and element-specific fields.
  * @boardier-since 0.1.0
  * @boardier-changed 0.2.0 Added zigzag and zigzag-line fill style options to the property panel
+ * @boardier-changed 0.4.1 Added export dropdown button for exporting selected elements in multiple formats
  */
 import React, { useRef, useState } from 'react';
 import type { BoardierElement, FillStyle, StrokeStyle } from '../core/types';
@@ -17,6 +18,7 @@ interface PropertyPanelProps {
   onCopy?: () => void;
   onDuplicate?: () => void;
   onClose?: () => void;
+  onExport?: (format: string) => void;
   theme: BoardierTheme;
 }
 
@@ -88,7 +90,72 @@ const getSliderCSS = (ui: BoardierUIStyle) => `
 .${NUM_INPUT_CLASS}:focus{border-color:var(--bdier-accent) !important}
 `;
 
-export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate, onDelete, onCopy, onDuplicate, onClose, theme }) => {
+const EXPORT_FORMATS = [
+  { key: 'png', label: 'PNG' },
+  { key: 'svg', label: 'SVG' },
+  { key: 'html', label: 'HTML' },
+  { key: 'boardier', label: 'Boardier' },
+  { key: 'json', label: 'JSON' },
+];
+
+const ExportDropdown: React.FC<{
+  onExport: (format: string) => void;
+  theme: BoardierTheme;
+  ui: BoardierUIStyle;
+}> = ({ onExport, theme, ui }) => {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ position: 'relative' }}>
+      <button
+        onClick={() => setOpen(!open)}
+        title="Export selection"
+        style={{
+          width: 32, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          border: `${ui.buttonBorderWidth}px solid ${open ? theme.selectionColor : 'transparent'}`,
+          borderRadius: ui.buttonBorderRadius,
+          background: open ? theme.panelActive : 'transparent',
+          cursor: 'pointer', color: theme.panelText, padding: 0, transition: 'all 0.1s',
+        }}
+      >
+        <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><path d="M7 10l5 5 5-5" /><path d="M12 15V3" />
+        </svg>
+      </button>
+      {open && (
+        <>
+          <div style={{ position: 'fixed', inset: 0, zIndex: 60 }} onClick={() => setOpen(false)} />
+          <div style={{
+            position: 'absolute', bottom: '100%', left: 0, marginBottom: 4,
+            minWidth: 120, padding: '4px 0', zIndex: 61,
+            background: theme.panelBackground,
+            border: `${ui.panelBorderWidth}px ${ui.panelBorderStyle} ${theme.panelBorder}`,
+            borderRadius: ui.menuBorderRadius,
+            boxShadow: ui.panelShadow,
+            fontFamily: theme.uiFontFamily,
+          }}>
+            {EXPORT_FORMATS.map(f => (
+              <button
+                key={f.key}
+                onClick={() => { onExport(f.key); setOpen(false); }}
+                style={{
+                  display: 'block', width: '100%', padding: '5px 12px', border: 'none',
+                  background: 'transparent', cursor: 'pointer', fontSize: 12, fontWeight: 500,
+                  color: theme.panelText, textAlign: 'left', fontFamily: 'inherit',
+                }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = theme.panelHover; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
+export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate, onDelete, onCopy, onDuplicate, onClose, onExport, theme }) => {
   if (elements.length === 0) return null;
   const strokePickerRef = useRef<HTMLInputElement>(null);
   const fillPickerRef = useRef<HTMLInputElement>(null);
@@ -467,6 +534,9 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
                 <rect x="8" y="8" width="14" height="14" rx="2" /><path d="M4 16V4a2 2 0 0 1 2-2h12" />
               </svg>
             </button>
+          )}
+          {onExport && (
+            <ExportDropdown onExport={onExport} theme={theme} ui={ui} />
           )}
           <button onClick={() => onUpdate({ locked: !first.locked })} title={first.locked ? 'Unlock' : 'Lock'}
             style={{

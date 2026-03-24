@@ -76,6 +76,18 @@ const VERSION_META: Record<string, { date: string; summary: string }> = {
     date: '2026-03-24',
     summary: 'Dark mode — built-in light/dark toggle on the canvas with export support for both modes.',
   },
+  '0.3.3': {
+    date: '2026-03-25',
+    summary: 'AI quality overhaul — rewrote HTML converter to fix overlapping, support all element types via data-boardier-* attributes, and eliminated emoji icons.',
+  },
+  '0.4.0': {
+    date: '2026-03-25',
+    summary: 'Multi-format export/import — PNG, SVG, HTML, Boardier (.boardier), and JSON export with file download and clipboard copy. Import from Boardier/JSON. Context menu export for selected items with group support.',
+  },
+  '0.4.1': {
+    date: '2026-03-25',
+    summary: 'Export fixes — context menu Export submenu now visible, SVG preserves hand-drawn roughness, HTML exports as real positioned divs, export dropdown in PropertyPanel.',
+  },
 };
 
 // ─── Main ─────────────────────────────────────────────────────────────

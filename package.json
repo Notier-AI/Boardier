@@ -1,6 +1,6 @@
 {
   "name": "boardier",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "A free, open source, AI-focused whiteboard engine built as a React component. Themeable, extensible, 100% client-side.",
   "type": "module",
   "main": "./index.ts",

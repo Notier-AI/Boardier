@@ -1,5 +1,194 @@
 [
   {
+    "version": "0.4.1",
+    "date": "2026-03-25",
+    "summary": "Export fixes — context menu Export submenu now visible, SVG preserves hand-drawn roughness, HTML exports as real positioned divs, export dropdown in PropertyPanel.",
+    "entries": [
+      {
+        "module": "ui/BoardierCanvas",
+        "category": "UI",
+        "description": "The top-level React component for embedding the Boardier whiteboard. Wraps the BoardierEngine with a canvas element and provides a complete UI including toolbar, property panel, zoom controls, export dialog, text editor overlays, context menu, minimap, page navigator, and presentation mode. All UI panels are draggable via the DraggablePanel system.",
+        "filePath": "ui/BoardierCanvas.tsx",
+        "lineCount": 1216,
+        "types": [],
+        "classes": [],
+        "functions": [],
+        "ai": "",
+        "kind": "changed",
+        "changeNote": "Wired export dropdown in PropertyPanel for per-element export"
+      },
+      {
+        "module": "ui/ContextMenu",
+        "category": "UI",
+        "description": "Right-click context menu for the canvas. Shows element operations (copy, paste, delete, duplicate, z-order, arrange submenu, send to AI, select all) positioned at the cursor.",
+        "filePath": "ui/ContextMenu.tsx",
+        "lineCount": 199,
+        "types": [],
+        "classes": [],
+        "functions": [],
+        "ai": "",
+        "kind": "changed",
+        "changeNote": "Fixed Export submenu not appearing in context menu"
+      },
+      {
+        "module": "ui/PropertyPanel",
+        "category": "UI",
+        "description": "Side panel that displays and edits properties of selected elements: stroke color, fill color/style, stroke width/style, opacity, roughness, font, text alignment, border radius, and element-specific fields.",
+        "filePath": "ui/PropertyPanel.tsx",
+        "lineCount": 588,
+        "types": [],
+        "classes": [],
+        "functions": [],
+        "ai": "",
+        "kind": "changed",
+        "changeNote": "Added export dropdown button for exporting selected elements in multiple formats"
+      },
+      {
+        "module": "utils/export",
+        "category": "Utilities",
+        "description": "Export functions for converting scene elements to PNG, SVG, HTML, JSON, and Boardier (.boardier) format. Import functions for loading Boardier and JSON files back. Supports both full-scene and selection-only export.",
+        "filePath": "utils/export.ts",
+        "lineCount": 379,
+        "types": [],
+        "classes": [],
+        "functions": [],
+        "ai": "",
+        "kind": "changed",
+        "changeNote": "SVG export now renders via canvas to preserve roughjs hand-drawn style; HTML export generates actual positioned HTML divs instead of SVG wrapper"
+      }
+    ],
+    "stats": {
+      "modules": 4,
+      "newModules": 0,
+      "changedModules": 4,
+      "types": 0,
+      "classes": 0,
+      "functions": 0,
+      "totalLines": 0,
+      "categories": [
+        "UI",
+        "Utilities"
+      ]
+    }
+  },
+  {
+    "version": "0.4.0",
+    "date": "2026-03-25",
+    "summary": "Multi-format export/import — PNG, SVG, HTML, Boardier (.boardier), and JSON export with file download and clipboard copy. Import from Boardier/JSON. Context menu export for selected items with group support.",
+    "entries": [
+      {
+        "module": "ui/BoardierCanvas",
+        "category": "UI",
+        "description": "The top-level React component for embedding the Boardier whiteboard. Wraps the BoardierEngine with a canvas element and provides a complete UI including toolbar, property panel, zoom controls, export dialog, text editor overlays, context menu, minimap, page navigator, and presentation mode. All UI panels are draggable via the DraggablePanel system.",
+        "filePath": "ui/BoardierCanvas.tsx",
+        "lineCount": 1216,
+        "types": [],
+        "classes": [],
+        "functions": [],
+        "ai": "",
+        "kind": "changed",
+        "changeNote": "Added context menu export actions with group-aware selection, wired import handler to ExportDialog"
+      },
+      {
+        "module": "ui/ContextMenu",
+        "category": "UI",
+        "description": "Right-click context menu for the canvas. Shows element operations (copy, paste, delete, duplicate, z-order, arrange submenu, send to AI, select all) positioned at the cursor.",
+        "filePath": "ui/ContextMenu.tsx",
+        "lineCount": 199,
+        "types": [],
+        "classes": [],
+        "functions": [],
+        "ai": "",
+        "kind": "changed",
+        "changeNote": "Added Export submenu with per-format download and clipboard copy for selected elements"
+      },
+      {
+        "module": "ui/ExportDialog",
+        "category": "UI",
+        "description": "Modal dialog for exporting and importing the scene. Supports PNG, SVG, HTML, Boardier (.boardier), and JSON formats with file download and clipboard copy. Also provides import from Boardier and JSON files.",
+        "filePath": "ui/ExportDialog.tsx",
+        "lineCount": 345,
+        "types": [],
+        "classes": [],
+        "functions": [],
+        "ai": "",
+        "kind": "changed",
+        "changeNote": "Full rehaul — tabbed format picker, HTML/SVG/Boardier export, import from Boardier/JSON, clipboard copy for all text formats"
+      },
+      {
+        "module": "utils/export",
+        "category": "Utilities",
+        "description": "Export functions for converting scene elements to PNG, SVG, HTML, JSON, and Boardier (.boardier) format. Import functions for loading Boardier and JSON files back. Supports both full-scene and selection-only export.",
+        "filePath": "utils/export.ts",
+        "lineCount": 379,
+        "types": [],
+        "classes": [],
+        "functions": [],
+        "ai": "",
+        "kind": "changed",
+        "changeNote": "Added HTML export, Boardier format export/import, JSON import, clipboard helpers, selection-aware export"
+      }
+    ],
+    "stats": {
+      "modules": 4,
+      "newModules": 0,
+      "changedModules": 4,
+      "types": 0,
+      "classes": 0,
+      "functions": 0,
+      "totalLines": 0,
+      "categories": [
+        "UI",
+        "Utilities"
+      ]
+    }
+  },
+  {
+    "version": "0.3.3",
+    "date": "2026-03-25",
+    "summary": "AI quality overhaul — rewrote HTML converter to fix overlapping, support all element types via data-boardier-* attributes, and eliminated emoji icons.",
+    "entries": [
+      {
+        "module": "ai/htmlConverter",
+        "category": "AI",
+        "description": "Converts HTML to Boardier elements using the browser's layout engine. The AI generates semantic HTML with inline styles and data-boardier- attributes; we render it offscreen, measure positions via getBoundingClientRect(), and convert each visible element into BoardierElements at the computed coordinates. Supports all element types via data-boardier-type attributes.",
+        "filePath": "ai/htmlConverter.ts",
+        "lineCount": 473,
+        "types": [],
+        "classes": [],
+        "functions": [],
+        "ai": "",
+        "kind": "changed",
+        "changeNote": "Rewrote converter to fix overlapping, support all element types via data attributes, remove emoji icons"
+      },
+      {
+        "module": "ai/schema",
+        "category": "AI",
+        "description": "Element schema definitions for LLM-based diagram generation. Provides structured JSON schemas that describe all BoardierElement types, their properties and valid ranges. LLM providers use these schemas to produce valid element arrays when generating diagrams from natural language.",
+        "filePath": "ai/schema.ts",
+        "lineCount": 241,
+        "types": [],
+        "classes": [],
+        "functions": [],
+        "ai": "",
+        "kind": "changed",
+        "changeNote": "Replaced emoji icons with bracketed text labels, added data-boardier-type hints for special elements, expanded example"
+      }
+    ],
+    "stats": {
+      "modules": 2,
+      "newModules": 0,
+      "changedModules": 2,
+      "types": 0,
+      "classes": 0,
+      "functions": 0,
+      "totalLines": 0,
+      "categories": [
+        "AI"
+      ]
+    }
+  },
+  {
     "version": "0.3.2",
     "date": "2026-03-24",
     "summary": "Dark mode — built-in light/dark toggle on the canvas with export support for both modes.",
@@ -36,7 +225,7 @@
         "category": "UI",
         "description": "The top-level React component for embedding the Boardier whiteboard. Wraps the BoardierEngine with a canvas element and provides a complete UI including toolbar, property panel, zoom controls, export dialog, text editor overlays, context menu, minimap, page navigator, and presentation mode. All UI panels are draggable via the DraggablePanel system.",
         "filePath": "ui/BoardierCanvas.tsx",
-        "lineCount": 1145,
+        "lineCount": 1216,
         "types": [],
         "classes": [],
         "functions": [],
@@ -47,9 +236,9 @@
       {
         "module": "ui/ExportDialog",
         "category": "UI",
-        "description": "Modal dialog for exporting the scene to PNG, SVG, or JSON. Provides format selection, scale/padding controls, and a download button.",
+        "description": "Modal dialog for exporting and importing the scene. Supports PNG, SVG, HTML, Boardier (.boardier), and JSON formats with file download and clipboard copy. Also provides import from Boardier and JSON files.",
         "filePath": "ui/ExportDialog.tsx",
-        "lineCount": 189,
+        "lineCount": 345,
         "types": [],
         "classes": [],
         "functions": [],
@@ -108,7 +297,7 @@
         "category": "UI",
         "description": "The top-level React component for embedding the Boardier whiteboard. Wraps the BoardierEngine with a canvas element and provides a complete UI including toolbar, property panel, zoom controls, export dialog, text editor overlays, context menu, minimap, page navigator, and presentation mode. All UI panels are draggable via the DraggablePanel system.",
         "filePath": "ui/BoardierCanvas.tsx",
-        "lineCount": 1145,
+        "lineCount": 1216,
         "types": [],
         "classes": [],
         "functions": [],
@@ -253,9 +442,9 @@
       {
         "module": "ai/htmlConverter",
         "category": "AI",
-        "description": "Converts HTML to Boardier elements using the browser's layout engine. The AI generates semantic HTML with inline styles; we render it offscreen, measure positions via getBoundingClientRect(), and convert each visible element into BoardierElements at the computed coordinates.",
+        "description": "Converts HTML to Boardier elements using the browser's layout engine. The AI generates semantic HTML with inline styles and data-boardier- attributes; we render it offscreen, measure positions via getBoundingClientRect(), and convert each visible element into BoardierElements at the computed coordinates. Supports all element types via data-boardier-type attributes.",
         "filePath": "ai/htmlConverter.ts",
-        "lineCount": 343,
+        "lineCount": 473,
         "types": [],
         "classes": [],
         "functions": [],
@@ -307,7 +496,7 @@
         "category": "AI",
         "description": "Element schema definitions for LLM-based diagram generation. Provides structured JSON schemas that describe all BoardierElement types, their properties and valid ranges. LLM providers use these schemas to produce valid element arrays when generating diagrams from natural language.",
         "filePath": "ai/schema.ts",
-        "lineCount": 233,
+        "lineCount": 241,
         "types": [],
         "classes": [],
         "functions": [],
@@ -333,7 +522,7 @@
         "category": "Build",
         "description": "Generates changelog data from boardier-since and boardier-changed annotations. Groups new modules by the version they were introduced, and changed modules by the version they were modified. Outputs `website/src/data/changelog.json` consumed by the /changelog page.  Usage: npx tsx scripts/generateChangelog.ts",
         "filePath": "scripts/generateChangelog.ts",
-        "lineCount": 193,
+        "lineCount": 205,
         "types": [],
         "classes": [],
         "functions": [],
@@ -373,7 +562,7 @@
         "category": "UI",
         "description": "Side panel that displays and edits properties of selected elements: stroke color, fill color/style, stroke width/style, opacity, roughness, font, text alignment, border radius, and element-specific fields.",
         "filePath": "ui/PropertyPanel.tsx",
-        "lineCount": 518,
+        "lineCount": 588,
         "types": [],
         "classes": [],
         "functions": [],
@@ -402,7 +591,7 @@
       "types": 0,
       "classes": 0,
       "functions": 0,
-      "totalLines": 2314,
+      "totalLines": 2464,
       "categories": [
         "AI",
         "Build",
@@ -981,7 +1170,7 @@
         "category": "UI",
         "description": "The top-level React component for embedding the Boardier whiteboard. Wraps the BoardierEngine with a canvas element and provides a complete UI including toolbar, property panel, zoom controls, export dialog, text editor overlays, context menu, minimap, page navigator, and presentation mode. All UI panels are draggable via the DraggablePanel system.",
         "filePath": "ui/BoardierCanvas.tsx",
-        "lineCount": 1145,
+        "lineCount": 1216,
         "types": [],
         "classes": [],
         "functions": [],
@@ -994,7 +1183,7 @@
         "category": "UI",
         "description": "Right-click context menu for the canvas. Shows element operations (copy, paste, delete, duplicate, z-order, arrange submenu, send to AI, select all) positioned at the cursor.",
         "filePath": "ui/ContextMenu.tsx",
-        "lineCount": 182,
+        "lineCount": 199,
         "types": [],
         "classes": [],
         "functions": [],
@@ -1018,9 +1207,9 @@
       {
         "module": "ui/ExportDialog",
         "category": "UI",
-        "description": "Modal dialog for exporting the scene to PNG, SVG, or JSON. Provides format selection, scale/padding controls, and a download button.",
+        "description": "Modal dialog for exporting and importing the scene. Supports PNG, SVG, HTML, Boardier (.boardier), and JSON formats with file download and clipboard copy. Also provides import from Boardier and JSON files.",
         "filePath": "ui/ExportDialog.tsx",
-        "lineCount": 189,
+        "lineCount": 345,
         "types": [],
         "classes": [],
         "functions": [],
@@ -1085,7 +1274,7 @@
         "category": "UI",
         "description": "Side panel that displays and edits properties of selected elements: stroke color, fill color/style, stroke width/style, opacity, roughness, font, text alignment, border radius, and element-specific fields.",
         "filePath": "ui/PropertyPanel.tsx",
-        "lineCount": 518,
+        "lineCount": 588,
         "types": [],
         "classes": [],
         "functions": [],
@@ -1174,9 +1363,9 @@
       {
         "module": "utils/export",
         "category": "Utilities",
-        "description": "Export functions for converting scene elements to PNG (as Blob), JSON (as string), and SVG (as string). PNG export renders to an offscreen canvas at configurable scale and padding. SVG export generates self-contained markup.",
+        "description": "Export functions for converting scene elements to PNG, SVG, HTML, JSON, and Boardier (.boardier) format. Import functions for loading Boardier and JSON files back. Supports both full-scene and selection-only export.",
         "filePath": "utils/export.ts",
-        "lineCount": 193,
+        "lineCount": 379,
         "types": [],
         "classes": [],
         "functions": [],
@@ -1257,7 +1446,7 @@
       "types": 14,
       "classes": 4,
       "functions": 1,
-      "totalLines": 11672,
+      "totalLines": 12172,
       "categories": [
         "Build",
         "Core",

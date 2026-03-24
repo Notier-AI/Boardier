@@ -2,53 +2,44 @@
  * @boardier-module ai/htmlConverter
  * @boardier-category AI
  * @boardier-description Converts HTML to Boardier elements using the browser's layout engine.
- * The AI generates semantic HTML with inline styles; we render it offscreen, measure
- * positions via getBoundingClientRect(), and convert each visible element into
- * BoardierElements at the computed coordinates.
+ * The AI generates semantic HTML with inline styles and data-boardier-* attributes;
+ * we render it offscreen, measure positions via getBoundingClientRect(), and convert
+ * each visible element into BoardierElements at the computed coordinates.
+ * Supports all element types via data-boardier-type attributes.
  * @boardier-since 0.2.0
+ * @boardier-changed 0.3.3 Rewrote converter to fix overlapping, support all element types via data attributes, remove emoji icons
  */
 
 import type { BoardierElement } from '../core/types';
 import {
   createRectangle,
   createEllipse,
+  createDiamond,
   createText,
   createArrow,
+  createLine,
   createFrame,
   createImage,
+  createTable,
+  createCheckbox,
   createElement,
 } from '../elements/base';
 
 // ─── Configuration ────────────────────────────────────────────────
 
 const CONTAINER_WIDTH = 1200;
-const MIN_SIZE = 4; // Skip elements smaller than this
+const MIN_SIZE = 4;
 
-// Tags that are definitely containers
 const CONTAINER_TAGS = new Set(['div', 'section', 'nav', 'header', 'footer', 'aside', 'main', 'article', 'form', 'fieldset', 'ul', 'ol', 'table', 'thead', 'tbody', 'tr']);
-
-// Tags that are inline and should not create separate elements
 const INLINE_TAGS = new Set(['span', 'strong', 'em', 'b', 'i', 'u', 'small', 'code', 'mark', 'sub', 'sup', 'br', 'wbr']);
-
-// Tags to skip entirely
 const SKIP_TAGS = new Set(['style', 'script', 'link', 'meta', 'head', 'title', 'noscript']);
 
 // ─── Main converter ───────────────────────────────────────────────
 
-/**
- * Convert an HTML string into positioned Boardier elements.
- * Uses the browser's layout engine for positioning by rendering the HTML offscreen.
- *
- * @param html The HTML string (body content only, no <html>/<body> wrappers needed)
- * @param containerWidth The width of the virtual container. Default: 1200px.
- * @returns Array of BoardierElements with computed positions.
- */
 export function htmlToBoardier(html: string, containerWidth = CONTAINER_WIDTH): BoardierElement[] {
-  // 1. Create offscreen container
   const host = document.createElement('div');
-  host.style.cssText = `position:fixed;left:-30000px;top:0;width:${containerWidth}px;overflow:hidden;visibility:hidden;pointer-events:none;`;
+  host.style.cssText = `position:fixed;left:-30000px;top:0;width:${containerWidth}px;overflow:hidden;opacity:0;pointer-events:none;`;
 
-  // Apply CSS reset so layouts are predictable
   const resetCSS = `<style>
     *{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,-apple-system,sans-serif;}
     img{display:block;max-width:100%;}
@@ -65,11 +56,9 @@ export function htmlToBoardier(html: string, containerWidth = CONTAINER_WIDTH): 
   const ox = hostRect.x;
   const oy = hostRect.y;
 
-  // 2. Walk the DOM and convert elements
   try {
     walkNode(host, elements, ox, oy, 0);
   } finally {
-    // 3. Clean up
     document.body.removeChild(host);
   }
 
@@ -89,7 +78,6 @@ function walkNode(
     const child = node.children[i] as HTMLElement;
     const tag = child.tagName.toLowerCase();
 
-    // Skip invisible and non-content tags
     if (SKIP_TAGS.has(tag)) continue;
     if (INLINE_TAGS.has(tag)) continue;
 
@@ -104,7 +92,81 @@ function walkNode(
     const w = rect.width;
     const h = rect.height;
 
-    // Determine what kind of Boardier element to create
+    // ── data-boardier-type overrides ──────────────────
+    const boardierType = child.getAttribute('data-boardier-type');
+
+    if (boardierType === 'ellipse') {
+      elements.push(createEllipse({
+        x, y, width: w, height: h,
+        label: getDirectTextContent(child) || '',
+        backgroundColor: parseColor(style.backgroundColor) || 'transparent',
+        fillStyle: parseColor(style.backgroundColor) ? 'solid' : 'none',
+        strokeColor: parseBorderColor(style) || '#1e1e1e',
+        borderRadius: 0,
+      } as any));
+      continue;
+    }
+
+    if (boardierType === 'diamond') {
+      elements.push(createDiamond({
+        x, y, width: w, height: h,
+        label: getDirectTextContent(child) || '',
+        backgroundColor: parseColor(style.backgroundColor) || 'transparent',
+        fillStyle: parseColor(style.backgroundColor) ? 'solid' : 'none',
+        strokeColor: parseBorderColor(style) || '#1e1e1e',
+      } as any));
+      continue;
+    }
+
+    if (boardierType === 'checkbox') {
+      elements.push(createCheckbox({
+        x, y, width: w, height: h,
+        label: getDirectTextContent(child) || '',
+        checked: child.getAttribute('data-checked') === 'true',
+        checkColor: parseColor(style.color) || '#2f9e44',
+      } as any));
+      continue;
+    }
+
+    if (boardierType === 'table') {
+      const tableEl = parseTableFromDom(child, x, y, w, h, style);
+      if (tableEl) { elements.push(tableEl); continue; }
+    }
+
+    if (boardierType === 'frame') {
+      elements.push(createFrame({
+        x, y, width: w, height: h,
+        label: child.getAttribute('data-label') || getDirectTextContent(child) || 'Frame',
+        frameBackground: parseColor(style.backgroundColor) || '#f8f9fa',
+        strokeColor: parseBorderColor(style) || '#dee2e6',
+      } as any));
+      // Frames: recurse into children — they render inside the frame
+      walkNode(child, elements, ox, oy, depth + 1);
+      continue;
+    }
+
+    if (boardierType === 'arrow' || boardierType === 'line') {
+      const pts = [{ x: 0, y: 0 }, { x: w, y: 0 }];
+      if (boardierType === 'arrow') {
+        elements.push(createArrow({
+          x, y: y + h / 2, width: w, height: 0,
+          points: pts,
+          strokeColor: parseBorderColor(style) || '#1e1e1e',
+          arrowheadEnd: true,
+          arrowheadStart: false,
+        } as any));
+      } else {
+        elements.push(createLine({
+          x, y: y + h / 2, width: w, height: 0,
+          points: pts,
+          strokeColor: parseBorderColor(style) || '#dee2e6',
+        } as any));
+      }
+      continue;
+    }
+
+    // ── Standard tag-based conversion ─────────────────
+
     if (tag === 'img') {
       elements.push(createRectangle({
         x, y, width: w, height: h,
@@ -113,6 +175,7 @@ function walkNode(
         strokeColor: '#dee2e6',
         label: child.getAttribute('alt') || '[Image]',
         borderRadius: parseRadius(style),
+        roughness: 0,
       }));
       continue;
     }
@@ -125,94 +188,159 @@ function walkNode(
         strokeColor: '#ced4da',
         label: `[${tag.toUpperCase()}]`,
         borderRadius: parseRadius(style),
+        roughness: 0,
       }));
       continue;
     }
 
     if (tag === 'hr') {
-      elements.push(createElement('line', {
-        x, y: y + h / 2, width: 0, height: 0,
+      elements.push(createLine({
+        x, y: y + h / 2, width: w, height: 0,
         points: [{ x: 0, y: 0 }, { x: w, y: 0 }],
-        strokeColor: parseColor(style.borderTopColor) || '#dee2e6',
+        strokeColor: parseBorderColor(style) || '#dee2e6',
       } as any));
       continue;
     }
 
-    // Check if this is a leaf text element
+    // ── Leaf detection ────────────────────────────────
     const textContent = getDirectTextContent(child);
     const hasBlockChildren = hasBlockLevelChildren(child);
     const isLeaf = !hasBlockChildren || child.children.length === 0;
 
-    // Extract visual properties
     const bgColor = parseColor(style.backgroundColor);
-    const hasBg = bgColor !== null && bgColor !== 'transparent';
+    const hasBg = bgColor !== null;
     const borderWidth = parseFloat(style.borderTopWidth) || 0;
     const hasBorder = borderWidth > 0;
     const radius = parseRadius(style);
     const hasVisualPresence = hasBg || hasBorder;
 
-    // Heading / text elements
-    if (isTextTag(tag) || (isLeaf && textContent && !hasVisualPresence)) {
-      const fontSize = parseFontSize(style, tag);
-      const textEl = createText({
-        x, y, width: w, height: h,
-        text: textContent || '',
-        fontSize,
-        fontFamily: parseFontFamily(style),
-        textAlign: parseTextAlign(style.textAlign),
-        strokeColor: parseColor(style.color) || '#1e1e1e',
-      } as any);
-      elements.push(textEl);
+    // ── Pure text elements (headings, paragraphs, list items) ──
+    if (isTextTag(tag) && !hasVisualPresence) {
+      if (textContent) {
+        elements.push(createText({
+          x, y, width: w, height: h,
+          text: textContent,
+          fontSize: parseFontSize(style, tag),
+          fontFamily: parseFontFamily(style),
+          textAlign: parseTextAlign(style.textAlign),
+          strokeColor: parseColor(style.color) || '#1e1e1e',
+        } as any));
+      }
       continue;
     }
 
-    // Button-like elements
+    // ── Button-like elements → rectangle with label ──
     if (isButtonLike(child, tag, style)) {
+      const textColor = parseColor(style.color) || '#ffffff';
       elements.push(createRectangle({
         x, y, width: w, height: h,
         backgroundColor: bgColor || '#1971c2',
         fillStyle: 'solid',
-        strokeColor: hasBorder ? (parseColor(style.borderTopColor) || '#1e1e1e') : (bgColor || '#1971c2'),
-        strokeWidth: hasBorder ? Math.min(borderWidth, 4) : 1,
+        strokeColor: hasBorder ? (parseBorderColor(style) || '#1e1e1e') : textColor,
+        strokeWidth: hasBorder ? Math.min(borderWidth, 4) : 0,
         borderRadius: Math.min(radius, 50),
         label: textContent || '',
+        roughness: 0,
       }));
       continue;
     }
 
-    // Container with visual presence → rectangle + recurse
+    // ── Leaf element with text + visual presence → rectangle with label ──
+    if (isLeaf && textContent && hasVisualPresence) {
+      const textColor = parseColor(style.color) || '#1e1e1e';
+      elements.push(createRectangle({
+        x, y, width: w, height: h,
+        backgroundColor: bgColor || 'transparent',
+        fillStyle: hasBg ? 'solid' : 'none',
+        strokeColor: hasBorder ? (parseBorderColor(style) || '#1e1e1e') : textColor,
+        strokeWidth: hasBorder ? Math.min(borderWidth, 4) : 0,
+        borderRadius: Math.min(radius, 50),
+        label: textContent,
+        opacity: parseFloat(style.opacity) || 1,
+        roughness: 0,
+      }));
+      continue;
+    }
+
+    // ── Leaf text without visual presence ──
+    if (isLeaf && textContent && !hasVisualPresence) {
+      elements.push(createText({
+        x, y, width: w, height: h,
+        text: textContent,
+        fontSize: parseFontSize(style, tag),
+        fontFamily: parseFontFamily(style),
+        textAlign: parseTextAlign(style.textAlign),
+        strokeColor: parseColor(style.color) || '#1e1e1e',
+      } as any));
+      continue;
+    }
+
+    // ── Container with visual presence → rectangle + recurse into children ──
     if (hasVisualPresence) {
       elements.push(createRectangle({
         x, y, width: w, height: h,
         backgroundColor: bgColor || 'transparent',
         fillStyle: hasBg ? 'solid' : 'none',
-        strokeColor: hasBorder ? (parseColor(style.borderTopColor) || '#1e1e1e') : '#1e1e1e',
-        strokeWidth: hasBorder ? Math.min(borderWidth, 4) : (hasBg ? 0 : 0),
+        strokeColor: hasBorder ? (parseBorderColor(style) || '#1e1e1e') : 'transparent',
+        strokeWidth: hasBorder ? Math.min(borderWidth, 4) : 0,
         borderRadius: Math.min(radius, 50),
         opacity: parseFloat(style.opacity) || 1,
         roughness: 0,
       }));
+      walkNode(child, elements, ox, oy, depth + 1);
+      continue;
     }
 
-    // Leaf container with text but no block children → text on top of rect
-    if (isLeaf && textContent && hasVisualPresence) {
-      const fontSize = parseFontSize(style, tag);
-      elements.push(createText({
-        x: x + 4, y: y + 4, width: w - 8, height: h - 8,
-        text: textContent,
-        fontSize,
-        fontFamily: parseFontFamily(style),
-        textAlign: parseTextAlign(style.textAlign),
-        strokeColor: parseColor(style.color) || '#1e1e1e',
-      } as any));
-      continue; // Don't recurse into leaf
-    }
-
-    // Recurse into children
-    if (hasBlockChildren || child.children.length > 0) {
+    // ── Pure container (no visual) → recurse ──
+    if (child.children.length > 0) {
       walkNode(child, elements, ox, oy, depth + 1);
     }
   }
+}
+
+// ─── Table parser ─────────────────────────────────────────────────
+
+function parseTableFromDom(el: HTMLElement, x: number, y: number, w: number, h: number, style: CSSStyleDeclaration): BoardierElement | null {
+  const rows: string[][] = [];
+  const rowEls = el.querySelectorAll('tr, [data-boardier-row]');
+  if (rowEls.length === 0) {
+    // Try parsing divs with data-boardier-row
+    const rowDivs = el.querySelectorAll('[data-boardier-row]');
+    rowDivs.forEach(row => {
+      const cells: string[] = [];
+      row.querySelectorAll('[data-boardier-cell]').forEach(cell => {
+        cells.push((cell.textContent || '').trim());
+      });
+      if (cells.length > 0) rows.push(cells);
+    });
+  } else {
+    rowEls.forEach(row => {
+      const cells: string[] = [];
+      row.querySelectorAll('td, th, [data-boardier-cell]').forEach(cell => {
+        cells.push((cell.textContent || '').trim());
+      });
+      if (cells.length > 0) rows.push(cells);
+    });
+  }
+
+  if (rows.length === 0) return null;
+  const cols = Math.max(...rows.map(r => r.length));
+  // Pad rows to equal column count
+  const cells = rows.map(r => {
+    while (r.length < cols) r.push('');
+    return r;
+  });
+
+  return createTable({
+    x, y, width: w, height: h,
+    cols,
+    rows: rows.length,
+    cells,
+    colWidths: Array(cols).fill(1),
+    rowHeights: Array(rows.length).fill(1),
+    showHeader: el.querySelector('thead, th') !== null || el.getAttribute('data-header') === 'true',
+    strokeColor: parseBorderColor(style) || '#dee2e6',
+  } as any);
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────
@@ -220,19 +348,21 @@ function walkNode(
 function parseColor(cssColor: string | null): string | null {
   if (!cssColor) return null;
   if (cssColor === 'rgba(0, 0, 0, 0)' || cssColor === 'transparent') return null;
-  // Convert rgb/rgba to hex
   const rgbMatch = cssColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
   if (rgbMatch) {
     const r = parseInt(rgbMatch[1]);
     const g = parseInt(rgbMatch[2]);
     const b = parseInt(rgbMatch[3]);
-    // Check if it's near-transparent
     const alphaMatch = cssColor.match(/,\s*([\d.]+)\)/);
     if (alphaMatch && parseFloat(alphaMatch[1]) < 0.05) return null;
     return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
   }
   if (cssColor.startsWith('#')) return cssColor;
   return null;
+}
+
+function parseBorderColor(style: CSSStyleDeclaration): string | null {
+  return parseColor(style.borderTopColor) || parseColor(style.borderLeftColor) || null;
 }
 
 function parseRadius(style: CSSStyleDeclaration): number {
@@ -243,7 +373,6 @@ function parseRadius(style: CSSStyleDeclaration): number {
 function parseFontSize(style: CSSStyleDeclaration, tag: string): number {
   const px = parseFloat(style.fontSize);
   if (!isNaN(px) && px > 0) return Math.max(10, Math.min(px, 64));
-  // Defaults by tag
   const defaults: Record<string, number> = { h1: 36, h2: 28, h3: 22, h4: 18, h5: 16, h6: 14 };
   return defaults[tag] || 16;
 }
@@ -269,6 +398,7 @@ function isButtonLike(el: HTMLElement, tag: string, style: CSSStyleDeclaration):
   if (tag === 'button' || tag === 'input') return true;
   if (tag === 'a' && (parseColor(style.backgroundColor) !== null || parseFloat(style.borderWidth) > 0)) return true;
   if (el.getAttribute('role') === 'button') return true;
+  if (el.getAttribute('data-boardier-type') === 'button') return true;
   return false;
 }
 

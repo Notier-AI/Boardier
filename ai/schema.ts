@@ -6,6 +6,7 @@
  * their properties and valid ranges. LLM providers use these schemas to produce
  * valid element arrays when generating diagrams from natural language.
  * @boardier-since 0.2.0
+ * @boardier-changed 0.3.3 Replaced emoji icons with bracketed text labels, added data-boardier-type hints for special elements, expanded example
  */
 
 import type { BoardierElement, BoardierElementType } from '../core/types';
@@ -161,8 +162,15 @@ CRITICAL RULES:
 6. Use flexbox for layouts: display:flex, flex-direction, gap, align-items, justify-content.
 7. Keep it visual and wireframe-like — use clear backgrounds, borders, and spacing.
 8. Use realistic placeholder text (not lorem ipsum — use real-sounding headlines and copy).
-9. For icons, use emoji or text symbols (★, →, ✓, ✕, ☰, 🔍, 👤, etc.).
+9. For icons, use short bracketed text labels like [Search], [Menu], [User], [Star], [Check], [Arrow], [Shield], [Lightning]. Do NOT use emoji or unicode symbols.
 10. Make every element have explicit dimensions or flex properties — nothing should be 0-height.
+
+SPECIAL ATTRIBUTES (optional, for advanced whiteboard elements):
+- data-boardier-type="ellipse" on a div → renders as an ellipse (good for avatars)
+- data-boardier-type="diamond" on a div → renders as a diamond shape
+- data-boardier-type="frame" with data-label="Title" → renders as a labeled frame container
+- data-boardier-type="table" wrapping a <table> → renders as a whiteboard table
+- data-boardier-type="checkbox" with data-checked="true"|"false" → renders as a checkbox
 
 COLOR PALETTE:
 - Primaries: #1971c2, #2f9e44, #e03131, #f08c00, #6741d9
@@ -182,7 +190,7 @@ WIREFRAME COMPONENTS to use:
 - Pricing: Cards with tier name, price, feature list, CTA
 
 BUTTON STYLING:
-- Primary: style="padding:12px 24px;background:#1971c2;color:white;border-radius:8px;font-weight:600;font-size:16px;border:none;cursor:pointer"
+- Primary: style="padding:12px 24px;background:#1971c2;color:white;border-radius:8px;font-weight:600;font-size:16px;border:none"
 - Secondary: style="padding:12px 24px;background:transparent;color:#1971c2;border:2px solid #1971c2;border-radius:8px;font-weight:600;font-size:16px"
 - CTA: style="padding:14px 32px;background:#2f9e44;color:white;border-radius:8px;font-weight:700;font-size:18px;border:none"
 
@@ -206,7 +214,7 @@ EXAMPLE — Landing Page:
       <p style="font-size:18px;color:#868e96;line-height:1.6;margin-bottom:32px">The all-in-one platform that helps teams design, prototype, and ship beautiful software.</p>
       <div style="display:flex;gap:16px">
         <div style="padding:14px 32px;background:#1971c2;color:white;border-radius:8px;font-weight:700;font-size:16px">Start Free Trial</div>
-        <div style="padding:14px 32px;background:transparent;color:#1971c2;border:2px solid #1971c2;border-radius:8px;font-weight:600;font-size:16px">Watch Demo →</div>
+        <div style="padding:14px 32px;background:transparent;color:#1971c2;border:2px solid #1971c2;border-radius:8px;font-weight:600;font-size:16px">Watch Demo</div>
       </div>
     </div>
     <div style="width:500px;height:340px;background:#f1f3f5;border-radius:16px;display:flex;align-items:center;justify-content:center;color:#868e96;font-size:16px">[Product Screenshot]</div>

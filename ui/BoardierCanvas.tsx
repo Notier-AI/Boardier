@@ -5,6 +5,8 @@
  * @boardier-since 0.1.0
  * @boardier-changed 0.3.1 Moved zoom controls into Minimap footer, removed standalone ZoomControls panel
  * @boardier-changed 0.3.2 Added built-in light/dark mode toggle button with showDarkModeToggle config option
+ * @boardier-changed 0.4.0 Added context menu export actions with group-aware selection, wired import handler to ExportDialog
+ * @boardier-changed 0.4.1 Wired export dropdown in PropertyPanel for per-element export
  * @boardier-usage `<BoardierCanvas config={{ showGrid: true }} theme={defaultTheme} onChange={handleChange} />`
  * @boardier-props BoardierCanvasProps
  * @boardier-ref BoardierCanvasRef (via React.forwardRef) — exposes getEngine(), getSceneData(), loadScene(), exportToPNG(), exportToSVG(), exportToJSON()
@@ -46,6 +48,17 @@ import { getElementBounds } from '../elements/base';
 import { mermaidToBoardier } from '../utils/mermaidParser';
 import { measureText } from '../elements/text';
 import { describeElements } from '../ai/htmlConverter';
+import {
+  exportToPNG as exportToPNGFn,
+  exportToSVG,
+  exportToHTML,
+  exportToBoardier,
+  exportToJSON,
+  copyToClipboard,
+  copyImageToClipboard,
+  downloadString,
+  downloadBlob,
+} from '../utils/export';
 
 /* ──────────────── public types ──────────────── */
 
@@ -427,6 +440,25 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
 
     // ── Context menu ─────────────────────────────────
 
+    /** Get selected elements including all group members for export. */
+    const getSelectionWithGroups = (engine: BoardierEngine): BoardierElement[] => {
+      const selected = engine.scene.getSelectedElements();
+      if (selected.length === 0) return [];
+      const groupIds = new Set<string>();
+      for (const el of selected) {
+        for (const gid of el.groupIds) groupIds.add(gid);
+      }
+      if (groupIds.size === 0) return selected;
+      const all = engine.scene.getElements();
+      const ids = new Set(selected.map(e => e.id));
+      for (const el of all) {
+        if (!ids.has(el.id) && el.groupIds.some(g => groupIds.has(g))) {
+          ids.add(el.id);
+        }
+      }
+      return all.filter(e => ids.has(e.id));
+    };
+
     const handleContextAction = useCallback((action: string) => {
       const engine = engineRef.current;
       if (!engine) return;
@@ -519,6 +551,32 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
           if (selected.length > 0 && onSendToAI) {
             onSendToAI(describeElements(selected));
           }
+          break;
+        }
+        // ── Export selected items ──
+        case 'exportPNG': case 'exportSVG': case 'exportHTML':
+        case 'exportBoardier': case 'exportJSON':
+        case 'copyPNG': case 'copySVG': case 'copyJSON': {
+          const sel = getSelectionWithGroups(engine);
+          if (sel.length === 0) break;
+          const bg = engine.getTheme().canvasBackground;
+          const vs = engine.getViewState();
+          (async () => {
+            switch (action) {
+              case 'exportPNG': {
+                const blob = await exportToPNGFn(sel, bg, 40, 2);
+                downloadBlob(blob, 'boardier-selection.png');
+                break;
+              }
+              case 'exportSVG': downloadString(exportToSVG(sel, bg, 40), 'boardier-selection.svg', 'image/svg+xml'); break;
+              case 'exportHTML': downloadString(exportToHTML(sel, bg, 40), 'boardier-selection.html', 'text/html'); break;
+              case 'exportBoardier': downloadString(exportToBoardier(sel, vs), 'boardier-selection.boardier', 'application/json'); break;
+              case 'exportJSON': downloadString(exportToJSON(sel, vs), 'boardier-selection.json', 'application/json'); break;
+              case 'copyPNG': { const b = await exportToPNGFn(sel, bg, 40, 2); await copyImageToClipboard(b); break; }
+              case 'copySVG': await copyToClipboard(exportToSVG(sel, bg, 40)); break;
+              case 'copyJSON': await copyToClipboard(exportToJSON(sel, vs)); break;
+            }
+          })();
           break;
         }
       }
@@ -619,6 +677,10 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
             onCopy={() => handleContextAction('copy')}
             onDuplicate={() => handleContextAction('duplicate')}
             onClose={() => engineRef.current?.scene.setSelection([])}
+            onExport={(format) => {
+              const actionMap: Record<string, string> = { png: 'exportPNG', svg: 'exportSVG', html: 'exportHTML', boardier: 'exportBoardier', json: 'exportJSON' };
+              handleContextAction(actionMap[format] || `export${format.toUpperCase()}`);
+            }}
             theme={resolvedTheme}
           />
         )}
@@ -774,6 +836,15 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
             isDark={isDark}
             theme={resolvedTheme}
             onClose={() => setShowExport(false)}
+            onImport={(els, vs) => {
+              const engine = engineRef.current;
+              if (!engine) return;
+              engine.history.push(engine.scene.getElements());
+              engine.scene.addElements(els);
+              engine.history.push(engine.scene.getElements());
+              engine.render();
+              setTimeout(() => engine.zoomToFit(), 100);
+            }}
           />
         )}
 

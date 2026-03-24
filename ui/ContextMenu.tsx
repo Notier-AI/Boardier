@@ -3,6 +3,8 @@
  * @boardier-category UI
  * @boardier-description Right-click context menu for the canvas. Shows element operations (copy, paste, delete, duplicate, z-order, arrange submenu, send to AI, select all) positioned at the cursor.
  * @boardier-since 0.1.0
+ * @boardier-changed 0.4.0 Added Export submenu with per-format download and clipboard copy for selected elements
+ * @boardier-changed 0.4.1 Fixed Export submenu not appearing in context menu
  */
 import React, { useState } from 'react';
 import type { BoardierTheme } from '../themes/types';
@@ -42,6 +44,7 @@ const Icons: Record<string, React.ReactNode> = {
   distributeV: <svg width={ICON_SIZE} height={ICON_SIZE} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="2" y1="3" x2="22" y2="3"/><line x1="2" y1="21" x2="22" y2="21"/><rect x="6" y="8" width="12" height="8" rx="1"/></svg>,
   autoArrange: <svg width={ICON_SIZE} height={ICON_SIZE} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>,
   sendToAI: <svg width={ICON_SIZE} height={ICON_SIZE} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .962 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.582a.5.5 0 0 1 0 .962L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.962 0z"/></svg>,
+  exportItem: <svg width={ICON_SIZE} height={ICON_SIZE} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>,
 };
 
 interface MenuItem {
@@ -69,6 +72,18 @@ const ARRANGE_ITEMS: MenuItem[] = [
   { action: 'autoArrange', label: 'Auto-arrange', shortcut: '', needsSelection: false, icon: Icons.autoArrange },
 ];
 
+const EXPORT_ITEMS: MenuItem[] = [
+  { action: 'exportPNG', label: 'PNG image', shortcut: '', needsSelection: true },
+  { action: 'exportSVG', label: 'SVG vector', shortcut: '', needsSelection: true },
+  { action: 'exportHTML', label: 'HTML page', shortcut: '', needsSelection: true },
+  { action: 'exportBoardier', label: 'Boardier (.boardier)', shortcut: '', needsSelection: true },
+  { action: 'exportJSON', label: 'JSON data', shortcut: '', needsSelection: true },
+  { action: 'separator-exp1', label: '', shortcut: '', needsSelection: false },
+  { action: 'copyPNG', label: 'Copy as PNG', shortcut: '', needsSelection: true },
+  { action: 'copySVG', label: 'Copy as SVG', shortcut: '', needsSelection: true },
+  { action: 'copyJSON', label: 'Copy as JSON', shortcut: '', needsSelection: true },
+];
+
 const ITEMS: MenuItem[] = [
   { action: 'copy', label: 'Copy', shortcut: 'Ctrl+C', needsSelection: true, icon: Icons.copy },
   { action: 'paste', label: 'Paste', shortcut: 'Ctrl+V', needsSelection: false, icon: Icons.paste },
@@ -82,6 +97,8 @@ const ITEMS: MenuItem[] = [
   { action: 'sendToAI', label: 'Send to AI', shortcut: '', needsSelection: true, icon: Icons.sendToAI },
   { action: 'separator2c', label: '', shortcut: '', needsSelection: false },
   { action: 'addComment', label: 'Add comment', shortcut: '', needsSelection: true, icon: Icons.comment },
+  { action: 'exportMenu', label: 'Export', shortcut: '', needsSelection: true, icon: Icons.exportItem, children: EXPORT_ITEMS },
+  { action: 'separator2d', label: '', shortcut: '', needsSelection: false },
   { action: 'group', label: 'Group', shortcut: 'Ctrl+G', needsSelection: true, icon: Icons.group },
   { action: 'ungroup', label: 'Ungroup', shortcut: 'Ctrl+Shift+G', needsSelection: true, icon: Icons.ungroup },
   { action: 'separator3', label: '', shortcut: '', needsSelection: false },
