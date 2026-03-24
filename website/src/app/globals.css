@@ -217,3 +217,30 @@ body {
   width: 100%;
 }
 
+/* ─── Mobile responsive adjustments ─────────────────────────── */
+
+@media (max-width: 640px) {
+  .sketch-button {
+    padding: 6px 10px;
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .sketch-card {
+    margin-left: 4px;
+    margin-right: 4px;
+  }
+
+  /* Larger touch targets for interactive elements */
+  button, a, input[type="range"] {
+    min-height: 36px;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Disable hover-lift on touch devices to prevent sticky hover */
+  .hover-lift:hover {
+    transform: none;
+    box-shadow: 4px 4px 0px rgba(0,0,0,var(--shadow-alpha));
+  }
+}

@@ -3,6 +3,7 @@
  * @boardier-category UI
  * @boardier-description Right-click context menu for the canvas. Shows element operations (copy, paste, delete, duplicate, z-order, arrange submenu, send to AI, select all) positioned at the cursor.
  * @boardier-since 0.1.0
+ * @boardier-changed 0.4.2 Increased touch target sizes for context menu items
  * @boardier-changed 0.4.0 Added Export submenu with per-format download and clipboard copy for selected elements
  * @boardier-changed 0.4.1 Fixed Export submenu not appearing in context menu
  */
@@ -133,12 +134,13 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({ position, onAction, on
             alignItems: 'center',
             gap: 8,
             width: '100%',
-            padding: '6px 12px',
+            padding: '8px 14px',
             border: 'none',
             background: submenuOpen ? theme.panelHover : 'transparent',
             cursor: disabled ? 'default' : 'pointer',
-            fontSize: 12,
+            fontSize: 13,
             fontWeight: 500,
+            minHeight: 36,
             color: disabled ? theme.panelTextSecondary : (item.action === 'delete' ? '#e03131' : theme.panelText),
             opacity: disabled ? 0.5 : 1,
             fontFamily: 'inherit',

@@ -88,6 +88,10 @@ const VERSION_META: Record<string, { date: string; summary: string }> = {
     date: '2026-03-25',
     summary: 'Export fixes — context menu Export submenu now visible, SVG preserves hand-drawn roughness, HTML exports as real positioned divs, export dropdown in PropertyPanel.',
   },
+  '0.4.2': {
+    date: '2026-03-25',
+    summary: 'Mobile responsive — viewport meta, mobile-friendly toolbar with larger touch targets, responsive PropertyPanel bottom sheet, canvas-rendered HTML export preserving roughness, and touch-friendly UI across all panels.',
+  },
 };
 
 // ─── Main ─────────────────────────────────────────────────────────────

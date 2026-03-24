@@ -7,6 +7,7 @@
  * @boardier-changed 0.3.2 Added built-in light/dark mode toggle button with showDarkModeToggle config option
  * @boardier-changed 0.4.0 Added context menu export actions with group-aware selection, wired import handler to ExportDialog
  * @boardier-changed 0.4.1 Wired export dropdown in PropertyPanel for per-element export
+ * @boardier-changed 0.4.2 Mobile-responsive — larger touch targets for buttons, minimap hidden on mobile, viewport-aware sizing
  * @boardier-usage `<BoardierCanvas config={{ showGrid: true }} theme={defaultTheme} onChange={handleChange} />`
  * @boardier-props BoardierCanvasProps
  * @boardier-ref BoardierCanvasRef (via React.forwardRef) — exposes getEngine(), getSceneData(), loadScene(), exportToPNG(), exportToSVG(), exportToJSON()
@@ -117,6 +118,16 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
     const [editingTableCellId, setEditingTableCellId] = useState<string | null>(null);
     const [editingTableCell, setEditingTableCell] = useState<{ row: number; col: number } | null>(null);
     const [isDark, setIsDark] = useState(darkMode);
+    const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
+
+    // Detect mobile viewport
+    useEffect(() => {
+      const mq = window.matchMedia('(max-width: 767px)');
+      const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+      setIsMobile(mq.matches);
+      mq.addEventListener('change', handler);
+      return () => mq.removeEventListener('change', handler);
+    }, []);
 
     // Track whether viewport has drifted from content
     const isViewportDrifted = React.useMemo(() => {
@@ -864,8 +875,8 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
               onClick={() => setShowExport(true)}
               title="Export"
               style={{
-                width: 34,
-                height: 34,
+                width: isMobile ? 44 : 34,
+                height: isMobile ? 44 : 34,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -877,7 +888,7 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
                 color: resolvedTheme.panelText,
               }}
             >
-              <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><path d="M7 10l5 5 5-5" /><path d="M12 15V3" /></svg>
+              <svg width={isMobile ? 20 : 16} height={isMobile ? 20 : 16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><path d="M7 10l5 5 5-5" /><path d="M12 15V3" /></svg>
             </button>
           </DraggablePanel>
         )}
@@ -888,7 +899,7 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
             style={{
               position: 'absolute',
               bottom: 12,
-              left: readOnly ? 12 : 54,
+              left: readOnly ? 12 : (isMobile ? 64 : 54),
               zIndex: 10,
             }}
           >
@@ -896,8 +907,8 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
               onClick={() => setIsDark(d => !d)}
               title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
               style={{
-                width: 34,
-                height: 34,
+                width: isMobile ? 44 : 34,
+                height: isMobile ? 44 : 34,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -911,9 +922,9 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
               }}
             >
               {isDark ? (
-                <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5" /><line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" /><line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" /><line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" /><line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" /></svg>
+                <svg width={isMobile ? 20 : 16} height={isMobile ? 20 : 16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5" /><line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" /><line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" /><line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" /><line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" /></svg>
               ) : (
-                <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></svg>
+                <svg width={isMobile ? 20 : 16} height={isMobile ? 20 : 16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></svg>
               )}
             </button>
           </div>
@@ -928,8 +939,8 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
           />
         )}
 
-        {/* Minimap */}
-        {showMinimap && !showPresentation && (
+        {/* Minimap — hidden on mobile to save space */}
+        {showMinimap && !showPresentation && !isMobile && (
           <Minimap
             elements={engineRef.current?.scene.getElements() ?? []}
             viewState={viewState}

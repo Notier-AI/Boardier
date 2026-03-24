@@ -3,6 +3,7 @@
  * @boardier-category UI
  * @boardier-description Modal dialog for exporting and importing the scene. Supports PNG, SVG, HTML, Boardier (.boardier), and JSON formats with file download and clipboard copy. Also provides import from Boardier and JSON files.
  * @boardier-since 0.1.0
+ * @boardier-changed 0.4.2 Mobile-responsive dialog sizing with fluid width
  * @boardier-changed 0.3.2 Added light/dark mode export option with current, light, and dark background modes
  * @boardier-changed 0.4.0 Full rehaul — tabbed format picker, HTML/SVG/Boardier export, import from Boardier/JSON, clipboard copy for all text formats
  */
@@ -215,8 +216,9 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({ elements, viewState,
           boxShadow: theme.uiStyle.panelShadow,
           zIndex: 101,
           fontFamily: theme.uiFontFamily,
-          minWidth: 380,
+          minWidth: 320,
           maxWidth: 440,
+          width: '95vw',
           overflow: 'hidden',
         }}
       >

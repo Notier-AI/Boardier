@@ -137,14 +137,14 @@ export default function Home() {
             <div className="p-8 flex items-center justify-center bg-card-bg aspect-video relative overflow-hidden">
               <div className="absolute inset-0 opacity-10" style={{ backgroundImage: `radial-gradient(circle, var(--dot-grid-color) 1px, transparent 1px)`, backgroundSize: "20px 20px" }}></div>
               
-              <div className="relative w-64 h-48 sketch-box border-brand-blue flex items-center justify-center rotate-[-3deg] bg-card-bg shadow-[4px_4px_0px_#2979ff] hover:rotate-0 transition-transform duration-500 group/box cursor-default">
-                <span className="text-2xl font-caveat text-brand-blue group-hover/box:scale-105 transition-transform">Interactive Canvas</span>
+              <div className="relative w-48 h-36 sm:w-64 sm:h-48 sketch-box border-brand-blue flex items-center justify-center rotate-[-3deg] bg-card-bg shadow-[4px_4px_0px_#2979ff] hover:rotate-0 transition-transform duration-500 group/box cursor-default">
+                <span className="text-lg sm:text-2xl font-caveat text-brand-blue group-hover/box:scale-105 transition-transform">Interactive Canvas</span>
               </div>
-              <div className="absolute w-48 h-32 sketch-box border-brand-red flex items-center justify-center rotate-[5deg] bg-card-bg shadow-[4px_4px_0px_#ff3b3b] ml-48 mt-32 hover:rotate-0 transition-transform duration-500 cursor-default animate-float" style={{ animationDelay: "0.5s" }}>
-                <span className="text-xl font-caveat text-brand-red">Your ideas here!</span>
+              <div className="absolute w-32 h-24 sm:w-48 sm:h-32 sketch-box border-brand-red flex items-center justify-center rotate-[5deg] bg-card-bg shadow-[4px_4px_0px_#ff3b3b] ml-24 mt-20 sm:ml-48 sm:mt-32 hover:rotate-0 transition-transform duration-500 cursor-default animate-float" style={{ animationDelay: "0.5s" }}>
+                <span className="text-base sm:text-xl font-caveat text-brand-red">Your ideas here!</span>
               </div>
-              <div className="absolute w-32 h-32 rounded-full border-2 border-brand-green border-dashed flex items-center justify-center -rotate-[15deg] bg-brand-green/5 -ml-64 -mt-16 hover:rotate-0 transition-transform duration-500 cursor-default animate-float" style={{ animationDelay: "1s" }}>
-                <span className="text-xl font-caveat text-brand-green">Auto-layout</span>
+              <div className="absolute w-24 h-24 sm:w-32 sm:h-32 rounded-full border-2 border-brand-green border-dashed flex items-center justify-center -rotate-[15deg] bg-brand-green/5 -ml-40 -mt-12 sm:-ml-64 sm:-mt-16 hover:rotate-0 transition-transform duration-500 cursor-default animate-float" style={{ animationDelay: "1s" }}>
+                <span className="text-base sm:text-xl font-caveat text-brand-green">Auto-layout</span>
               </div>
             </div>
           </div>

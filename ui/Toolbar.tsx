@@ -3,6 +3,7 @@
  * @boardier-category UI
  * @boardier-description Main tool-selection toolbar. Renders tool buttons for all element types plus select, pan, and eraser. Supports keyboard shortcuts and active-tool highlighting.
  * @boardier-since 0.1.0
+ * @boardier-changed 0.4.2 Mobile-responsive toolbar with larger touch targets (44px), scrollable overflow on narrow viewports, scaled icons
  */
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import type { BoardierToolType } from '../core/types';
@@ -104,9 +105,26 @@ function saveOverflow(overflow: BoardierToolType[]): void {
 
 const TOOL_MAP = new Map(DEFAULT_TOOLS.map(t => [t.type, t]));
 const ITEM_SIZE = 34;
+const ITEM_SIZE_MOBILE = 44;
 const GAP = 2;
 
+/** Hook to detect narrow (mobile) viewports. */
+function useIsMobile(breakpoint = 768): boolean {
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < breakpoint);
+  useEffect(() => {
+    const mq = window.matchMedia(`(max-width: ${breakpoint - 1}px)`);
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    setIsMobile(mq.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, [breakpoint]);
+  return isMobile;
+}
+
 export const Toolbar: React.FC<ToolbarProps> = React.memo(({ activeTool, onToolChange, theme, onMermaidConvert }) => {
+  const isMobile = useIsMobile();
+  const itemSize = isMobile ? ITEM_SIZE_MOBILE : ITEM_SIZE;
+  const iconSize = isMobile ? 20 : 16;
   const [order, setOrder] = useState<BoardierToolType[]>(loadOrder);
   const [overflow, setOverflow] = useState<BoardierToolType[]>(loadOverflow);
   const [showMore, setShowMore] = useState(false);
@@ -178,7 +196,7 @@ export const Toolbar: React.FC<ToolbarProps> = React.memo(({ activeTool, onToolC
       if (moved && containerRef.current) {
         const rect = containerRef.current.getBoundingClientRect();
         const relY = ev.clientY - rect.top - 6; // 6 = padding
-        const hoverIdx = Math.max(0, Math.min(visibleTypes.length - 1, Math.floor(relY / (ITEM_SIZE + GAP))));
+        const hoverIdx = Math.max(0, Math.min(visibleTypes.length - 1, Math.floor(relY / (itemSize + GAP))));
         setOverIdx(hoverIdx);
       }
     };
@@ -215,11 +233,11 @@ export const Toolbar: React.FC<ToolbarProps> = React.memo(({ activeTool, onToolC
 
     window.addEventListener('pointermove', onMove);
     window.addEventListener('pointerup', onUp);
-  }, [order, overflow, onToolChange]);
+  }, [order, overflow, onToolChange, itemSize]);
 
   const btnStyle = useCallback((active: boolean, isDragging: boolean, isDropTarget: boolean): React.CSSProperties => ({
-    width: ITEM_SIZE,
-    height: ITEM_SIZE,
+    width: itemSize,
+    height: itemSize,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -239,7 +257,7 @@ export const Toolbar: React.FC<ToolbarProps> = React.memo(({ activeTool, onToolC
     borderTop: isDropTarget ? `2px solid ${theme.selectionColor}` : '2px solid transparent',
     touchAction: 'none',
     userSelect: 'none',
-  }), [theme]);
+  }), [theme, itemSize]);
 
   return (
     <div
@@ -255,6 +273,7 @@ export const Toolbar: React.FC<ToolbarProps> = React.memo(({ activeTool, onToolC
         boxShadow: theme.uiStyle.panelShadow,
         fontFamily: theme.uiFontFamily,
         touchAction: 'none',
+        ...(isMobile ? { maxWidth: 'calc(100vw - 24px)', overflowX: 'auto', overflowY: 'hidden' } : {}),
       }}
     >
       {tools.map((t, i) => {
@@ -269,14 +288,14 @@ export const Toolbar: React.FC<ToolbarProps> = React.memo(({ activeTool, onToolC
               onMouseEnter={e => { if (activeTool !== t.type && dragIdx === null) (e.currentTarget as HTMLElement).style.background = theme.panelHover; }}
               onMouseLeave={e => { if (activeTool !== t.type && dragIdx === null) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
             >
-              {t.icon}
+              <span style={isMobile ? { display: 'flex', transform: 'scale(1.35)' } : undefined}>{t.icon}</span>
             </button>
           </Tooltip>
         );
       })}
 
       {/* Separator + More button */}
-      <div style={{ width: 1, height: ITEM_SIZE, background: theme.panelBorder, margin: '0 2px' }} />
+      <div style={{ width: 1, height: itemSize, background: theme.panelBorder, margin: '0 2px' }} />
       <button
         title="More tools..."
         onClick={() => setShowMore(v => !v)}

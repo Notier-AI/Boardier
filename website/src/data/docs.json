@@ -161,7 +161,7 @@
     "classes": [],
     "functions": [],
     "filePath": "scripts/generateChangelog.ts",
-    "lineCount": 205
+    "lineCount": 209
   },
   {
     "module": "scripts/parseDocsFromSource",
@@ -1086,6 +1086,10 @@
       {
         "version": "0.4.1",
         "note": "Wired export dropdown in PropertyPanel for per-element export"
+      },
+      {
+        "version": "0.4.2",
+        "note": "Mobile-responsive — larger touch targets for buttons, minimap hidden on mobile, viewport-aware sizing"
       }
     ],
     "usage": "`<BoardierCanvas config={{ showGrid: true }} theme={defaultTheme} onChange={handleChange} />`",
@@ -1098,7 +1102,7 @@
     "classes": [],
     "functions": [],
     "filePath": "ui/BoardierCanvas.tsx",
-    "lineCount": 1216
+    "lineCount": 1227
   },
   {
     "module": "ui/ContextMenu",
@@ -1106,6 +1110,10 @@
     "description": "Right-click context menu for the canvas. Shows element operations (copy, paste, delete, duplicate, z-order, arrange submenu, send to AI, select all) positioned at the cursor.",
     "since": "0.1.0",
     "changed": [
+      {
+        "version": "0.4.2",
+        "note": "Increased touch target sizes for context menu items"
+      },
       {
         "version": "0.4.0",
         "note": "Added Export submenu with per-format download and clipboard copy for selected elements"
@@ -1125,7 +1133,7 @@
     "classes": [],
     "functions": [],
     "filePath": "ui/ContextMenu.tsx",
-    "lineCount": 199
+    "lineCount": 201
   },
   {
     "module": "ui/DraggablePanel",
@@ -1152,6 +1160,10 @@
     "since": "0.1.0",
     "changed": [
       {
+        "version": "0.4.2",
+        "note": "Mobile-responsive dialog sizing with fluid width"
+      },
+      {
         "version": "0.3.2",
         "note": "Added light/dark mode export option with current, light, and dark background modes"
       },
@@ -1170,7 +1182,7 @@
     "classes": [],
     "functions": [],
     "filePath": "ui/ExportDialog.tsx",
-    "lineCount": 345
+    "lineCount": 347
   },
   {
     "module": "ui/IconPicker",
@@ -1262,6 +1274,10 @@
       {
         "version": "0.4.1",
         "note": "Added export dropdown button for exporting selected elements in multiple formats"
+      },
+      {
+        "version": "0.4.2",
+        "note": "Mobile-responsive layout — panel repositions to bottom sheet on narrow viewports"
       }
     ],
     "usage": "",
@@ -1274,7 +1290,7 @@
     "classes": [],
     "functions": [],
     "filePath": "ui/PropertyPanel.tsx",
-    "lineCount": 588
+    "lineCount": 601
   },
   {
     "module": "ui/ShapeLabelEditor",
@@ -1317,7 +1333,12 @@
     "category": "UI",
     "description": "Main tool-selection toolbar. Renders tool buttons for all element types plus select, pan, and eraser. Supports keyboard shortcuts and active-tool highlighting.",
     "since": "0.1.0",
-    "changed": [],
+    "changed": [
+      {
+        "version": "0.4.2",
+        "note": "Mobile-responsive toolbar with larger touch targets (44px), scrollable overflow on narrow viewports, scaled icons"
+      }
+    ],
     "usage": "",
     "see": "",
     "ai": "",
@@ -1328,7 +1349,7 @@
     "classes": [],
     "functions": [],
     "filePath": "ui/Toolbar.tsx",
-    "lineCount": 416
+    "lineCount": 435
   },
   {
     "module": "ui/Tooltip",
@@ -1397,6 +1418,10 @@
       {
         "version": "0.4.1",
         "note": "SVG export now renders via canvas to preserve roughjs hand-drawn style; HTML export generates actual positioned HTML divs instead of SVG wrapper"
+      },
+      {
+        "version": "0.4.2",
+        "note": "HTML export now renders via canvas to preserve roughjs hand-drawn style, z-order, and fill patterns"
       }
     ],
     "usage": "`const blob = await exportToPNG(elements, '#fff', 40, 2);`",
@@ -1409,7 +1434,7 @@
     "classes": [],
     "functions": [],
     "filePath": "utils/export.ts",
-    "lineCount": 379
+    "lineCount": 301
   },
   {
     "module": "utils/id",

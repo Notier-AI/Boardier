@@ -5,8 +5,9 @@
  * @boardier-since 0.1.0
  * @boardier-changed 0.2.0 Added zigzag and zigzag-line fill style options to the property panel
  * @boardier-changed 0.4.1 Added export dropdown button for exporting selected elements in multiple formats
+ * @boardier-changed 0.4.2 Mobile-responsive layout — panel repositions to bottom sheet on narrow viewports
  */
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import type { BoardierElement, FillStyle, StrokeStyle } from '../core/types';
 import type { BoardierTheme, BoardierUIStyle } from '../themes/types';
 import { STROKE_COLORS, FILL_COLORS, FONT_SIZES, FONT_FAMILIES, HANDWRITTEN_FONT } from '../utils/colors';
@@ -160,6 +161,15 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
   const strokePickerRef = useRef<HTMLInputElement>(null);
   const fillPickerRef = useRef<HTMLInputElement>(null);
   const [perCorner, setPerCorner] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)');
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    setIsMobile(mq.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
 
   const first = elements[0];
   const hasText = elements.some(e => e.type === 'text');
@@ -261,17 +271,22 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
   const borderRadii = (first as any).borderRadii as [number, number, number, number] | undefined;
   const br = (first as any).borderRadius ?? 0;
 
+  const panelPositionStyle: React.CSSProperties = isMobile
+    ? { bottom: 0, left: 0, right: 0, transform: 'none', width: '100%', maxHeight: '45vh', borderRadius: `${ui.panelBorderRadius}px ${ui.panelBorderRadius}px 0 0` }
+    : { top: '50%', left: 12, transform: 'translateY(-50%)', width: 224, maxHeight: 'calc(100vh - 80px)', borderRadius: ui.panelBorderRadius };
+
   return (
     <>
       <style>{getSliderCSS(ui)}</style>
       <div style={{
-        position: 'absolute', top: '50%', left: 12, transform: 'translateY(-50%)',
+        position: 'absolute',
+        ...panelPositionStyle,
         display: 'flex', flexDirection: 'column', gap: 6, padding: 8,
         background: theme.panelBackground, border: `${ui.panelBorderWidth}px ${ui.panelBorderStyle} ${theme.panelBorder}`,
-        borderRadius: ui.panelBorderRadius, boxShadow: ui.panelShadow, zIndex: 10,
-        width: 224, fontFamily: theme.uiFontFamily,
+        boxShadow: ui.panelShadow, zIndex: 10,
+        fontFamily: theme.uiFontFamily,
         '--bdier-accent': theme.selectionColor,
-        maxHeight: 'calc(100vh - 80px)', overflowY: 'auto',
+        overflowY: 'auto',
       } as React.CSSProperties}>
 
         {/* ── Stroke ── */}
