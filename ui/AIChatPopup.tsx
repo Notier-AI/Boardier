@@ -6,6 +6,7 @@
  * Integrates with Boardier's AI capabilities including element generation and HTML-based smart layouts.
  * @boardier-since 0.3.0
  * @boardier-changed 0.3.1 Restyled toggle button to match theme uiStyle; added markdown rendering for AI responses
+ * @boardier-changed 0.4.4 Dark mode support for panel and button; moved button higher; panel right-aligns so close button matches toggle position
  * @boardier-usage `<AIChatPopup engine={engine} config={{ defaultProvider: 'openai' }} theme={theme} />`
  */
 
@@ -287,10 +288,13 @@ export const AIChatPopup: React.FC<AIChatPopupProps> = ({
   const positionStyles: React.CSSProperties = {
     position: 'fixed',
     zIndex: 1000,
-    ...(position === 'bottom-right' && { bottom: 140, right: 20 }),
-    ...(position === 'bottom-left' && { bottom: 140, left: 20 }),
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'flex-end',
+    ...(position === 'bottom-right' && { bottom: 160, right: 20 }),
+    ...(position === 'bottom-left' && { bottom: 160, left: 20, alignItems: 'flex-start' }),
     ...(position === 'top-right' && { top: 20, right: 20 }),
-    ...(position === 'top-left' && { top: 20, left: 20 }),
+    ...(position === 'top-left' && { top: 20, left: 20, alignItems: 'flex-start' }),
   };
 
   const handleToggle = () => {
@@ -454,7 +458,7 @@ export const AIChatPopup: React.FC<AIChatPopupProps> = ({
             backgroundColor: panelBg,
             border: `1px solid ${border}`,
             borderRadius: theme.borderRadius,
-            boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
+            boxShadow: `0 8px 32px ${theme.panelText}22`,
             display: 'flex',
             flexDirection: 'column',
             marginBottom: 12,
@@ -489,7 +493,7 @@ export const AIChatPopup: React.FC<AIChatPopupProps> = ({
                   color: fg,
                   cursor: 'pointer',
                   appearance: 'none',
-                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='${encodeURIComponent(textMuted)}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
                   backgroundRepeat: 'no-repeat',
                   backgroundPosition: 'right 6px center',
                   outline: 'none',
@@ -523,12 +527,16 @@ export const AIChatPopup: React.FC<AIChatPopupProps> = ({
               style={{
                 background: 'none',
                 border: 'none',
-                padding: 4,
+                padding: 6,
                 cursor: 'pointer',
-                color: textMuted,
+                color: fg,
                 display: 'flex',
                 alignItems: 'center',
+                borderRadius: 6,
+                transition: 'background 0.1s',
               }}
+              onMouseEnter={e => { e.currentTarget.style.background = hoverBg; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'none'; }}
             >
               <IconClose />
             </button>
@@ -773,36 +781,38 @@ export const AIChatPopup: React.FC<AIChatPopupProps> = ({
         </div>
       )}
 
-      {/* Toggle Button */}
-      <button
-        onClick={handleToggle}
-        title={isOpen ? 'Close AI Chat' : 'Open AI Chat'}
-        style={{
-          width: 44,
-          height: 44,
-          borderRadius: theme.uiStyle.buttonBorderRadius,
-          border: `${theme.uiStyle.buttonBorderWidth}px ${theme.uiStyle.panelBorderStyle} ${theme.panelBorder}`,
-          backgroundColor: theme.panelBackground,
-          color: theme.panelText,
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: theme.uiStyle.buttonShadow,
-          transition: 'transform 0.15s, box-shadow 0.15s',
-          fontFamily: theme.uiFontFamily,
-        }}
-        onMouseEnter={e => {
-          e.currentTarget.style.transform = 'scale(1.05)';
-          e.currentTarget.style.boxShadow = theme.uiStyle.buttonHoverShadow;
-        }}
-        onMouseLeave={e => {
-          e.currentTarget.style.transform = 'scale(1)';
-          e.currentTarget.style.boxShadow = theme.uiStyle.buttonShadow;
-        }}
-      >
-        {isOpen ? <IconClose /> : <IconChat />}
-      </button>
+      {/* Toggle Button — hidden when panel is open (panel has its own close button in the header) */}
+      {!isOpen && (
+        <button
+          onClick={handleToggle}
+          title="Open AI Chat"
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: theme.uiStyle.buttonBorderRadius,
+            border: `${theme.uiStyle.buttonBorderWidth}px ${theme.uiStyle.panelBorderStyle} ${theme.panelBorder}`,
+            backgroundColor: theme.panelBackground,
+            color: theme.panelText,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: theme.uiStyle.buttonShadow,
+            transition: 'transform 0.15s, box-shadow 0.15s',
+            fontFamily: theme.uiFontFamily,
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.transform = 'scale(1.05)';
+            e.currentTarget.style.boxShadow = theme.uiStyle.buttonHoverShadow;
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.transform = 'scale(1)';
+            e.currentTarget.style.boxShadow = theme.uiStyle.buttonShadow;
+          }}
+        >
+          <IconChat />
+        </button>
+      )}
 
       {/* Inline styles for animations */}
       <style>{`

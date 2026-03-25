@@ -1,8 +1,9 @@
 /**
  * @boardier-module ui/TextEditor
  * @boardier-category UI
- * @boardier-description Floating textarea overlay for editing text elements in-place. Auto-resizes to fit content and supports multi-line editing.
+ * @boardier-description Floating textarea overlay for editing text elements in-place. Auto-resizes to fit content. Supports multi-line editing when the element's multiLine property is true, otherwise acts as a single-line input.
  * @boardier-since 0.1.0
+ * @boardier-changed 0.4.3 Respects multiLine property — Enter commits when multiLine is false, Shift+Enter always inserts newline when multiLine is true
  */
 import React, { useRef, useEffect, useCallback } from 'react';
 import type { TextElement, ViewState } from '../core/types';
@@ -52,13 +53,22 @@ export const TextEditor: React.FC<TextEditorProps> = ({ element, viewState, them
       e.preventDefault();
       onCancel(element.id);
     }
-    // Shift+Enter = newline; Enter alone = commit
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleBlur();
+    // When multiLine is true: Shift+Enter = commit, Enter = newline
+    // When multiLine is false: Enter = commit (no newlines allowed)
+    const isMultiLine = element.multiLine !== false;
+    if (isMultiLine) {
+      if (e.key === 'Enter' && e.shiftKey) {
+        e.preventDefault();
+        handleBlur();
+      }
+    } else {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleBlur();
+      }
     }
     e.stopPropagation(); // Don't let tool shortcuts fire
-  }, [element.id, onCancel, handleBlur]);
+  }, [element.id, element.multiLine, onCancel, handleBlur]);
 
   return (
     <div style={{ position: 'absolute', left: screenX, top: screenY, zIndex: 20 }}>

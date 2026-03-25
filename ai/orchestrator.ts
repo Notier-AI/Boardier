@@ -6,6 +6,7 @@
  * (OpenAI, Gemini, Anthropic, local models, etc.). Routes requests between local
  * handlers (mermaid, simple commands) and the remote AI provider (complex generation).
  * @boardier-since 0.2.0
+ * @boardier-changed 0.4.3 AI HTML generation now detects and applies style presets, defaults to rough hand-drawn style
  */
 
 import type { BoardierElement, BoardierElementType } from '../core/types';
@@ -24,6 +25,7 @@ import {
   HTML_GENERATION_PROMPT,
 } from './schema';
 import { htmlToBoardier } from './htmlConverter';
+import { detectStylePreset, applyPreset } from './styles';
 
 // ─── Types ────────────────────────────────────────────────────────
 
@@ -343,7 +345,10 @@ export async function processAIRequest(
     // ── HTML generation mode ──
     // For complex layouts (landing pages, dashboards, wireframes etc.)
     // we ask the AI to generate HTML, then convert it to Boardier elements.
-    const htmlSystemPrompt = (config.systemPromptPrefix ? config.systemPromptPrefix + '\n\n' : '') + HTML_GENERATION_PROMPT;
+    // Detect style from prompt, default to rough
+    const detectedStyle = detectStylePreset(prompt) || 'rough';
+    const styleHint = `\nIMPORTANT: Add data-boardier-style="${detectedStyle}" to the root container div so the whiteboard renders in the "${detectedStyle}" visual style.\n`;
+    const htmlSystemPrompt = (config.systemPromptPrefix ? config.systemPromptPrefix + '\n\n' : '') + HTML_GENERATION_PROMPT + styleHint;
     try {
       const result = await config.provider(htmlSystemPrompt, prompt, {
         temperature: 0.4,
@@ -380,6 +385,7 @@ export async function processAIRequest(
   }
 
   // ── JSON element generation mode ──
+  const detectedJsonStyle = detectStylePreset(prompt);
   const systemPrompt = buildSystemPrompt(engine, prompt, config);
   try {
     const result = await config.provider(systemPrompt, prompt, {
@@ -398,14 +404,16 @@ export async function processAIRequest(
         case 'zoom_to_fit': engine.zoomToFit(); break;
         case 'replace_all':
           if (result.elements) {
-            const created = materializeElements(result.elements);
+            let created = materializeElements(result.elements);
+            if (detectedJsonStyle) { created = applyPreset(created, detectedJsonStyle) ?? created; }
             engine.deleteAll();
             engine.addElements(created);
           }
           break;
         case 'add_elements':
           if (result.elements) {
-            const created = materializeElements(result.elements);
+            let created = materializeElements(result.elements);
+            if (detectedJsonStyle) { created = applyPreset(created, detectedJsonStyle) ?? created; }
             engine.addElements(created);
           }
           break;
@@ -416,7 +424,8 @@ export async function processAIRequest(
 
     // Default: add elements
     if (result.elements && result.elements.length > 0) {
-      const created = materializeElements(result.elements);
+      let created = materializeElements(result.elements);
+      if (detectedJsonStyle) { created = applyPreset(created, detectedJsonStyle) ?? created; }
       engine.addElements(created);
       if (result.zoomToFit !== false) {
         setTimeout(() => engine.zoomToFit(), 100);

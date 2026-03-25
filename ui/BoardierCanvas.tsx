@@ -8,6 +8,7 @@
  * @boardier-changed 0.4.0 Added context menu export actions with group-aware selection, wired import handler to ExportDialog
  * @boardier-changed 0.4.1 Wired export dropdown in PropertyPanel for per-element export
  * @boardier-changed 0.4.2 Mobile-responsive — larger touch targets for buttons, minimap hidden on mobile, viewport-aware sizing
+ * @boardier-changed 0.4.4 Text commit now word-wraps within element width instead of expanding unboundedly
  * @boardier-usage `<BoardierCanvas config={{ showGrid: true }} theme={defaultTheme} onChange={handleChange} />`
  * @boardier-props BoardierCanvasProps
  * @boardier-ref BoardierCanvasRef (via React.forwardRef) — exposes getEngine(), getSceneData(), loadScene(), exportToPNG(), exportToSVG(), exportToJSON()
@@ -339,8 +340,17 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
       if (!engine) return;
       const el = engine.scene.getElementById(id) as TextElement | undefined;
       if (el) {
-        const size = measureText(text, el.fontSize, el.fontFamily, el.lineHeight);
-        engine.scene.updateElement(id, { text, width: size.width, height: size.height });
+        // First measure without constraint to see natural width
+        const natural = measureText(text, el.fontSize, el.fontFamily, el.lineHeight);
+        // If text fits in current width, use natural size; otherwise word-wrap within current width
+        const fitsWidth = natural.width <= Math.max(el.width, 10);
+        const maxW = fitsWidth ? undefined : Math.max(el.width, 60);
+        const size = fitsWidth ? natural : measureText(text, el.fontSize, el.fontFamily, el.lineHeight, maxW);
+        engine.scene.updateElement(id, {
+          text,
+          width: fitsWidth ? size.width : Math.max(el.width, size.width),
+          height: size.height,
+        });
       }
       setEditingTextId(null);
       engine.render();

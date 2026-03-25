@@ -6,6 +6,7 @@
  * @boardier-changed 0.2.0 Added zigzag and zigzag-line to the FillStyle union type
  * @boardier-changed 0.3.0 Added AIChatProvider, AIChatMessage, and AIChatConfig types for the AI chat popup component
  * @boardier-changed 0.3.2 Added showDarkModeToggle option to BoardierConfig
+ * @boardier-changed 0.4.3 Added multiLine, scrollbar, scrollbarSize, scrollbarColor, scrollbarTrackColor, scrollbarRadius properties to TextElement
  */
 
 // ─── Boardier Core Types ─────────────────────────────────────────────
@@ -156,6 +157,18 @@ export interface TextElement extends BoardierElementBase {
   lineHeight: number;
   /** Map of icon placeholder key → SVG markup for inline icons. e.g. { "FiSearch": "<svg...>" } */
   inlineIcons?: Record<string, string>;
+  /** Whether the text box supports multiple lines. Default true. */
+  multiLine: boolean;
+  /** Whether to show a scrollbar when content overflows. Default true. */
+  scrollbar: boolean;
+  /** Scrollbar track width in pixels. Default 6. */
+  scrollbarSize: number;
+  /** Scrollbar thumb color. Default '#adb5bd'. */
+  scrollbarColor: string;
+  /** Scrollbar track color. Default 'transparent'. */
+  scrollbarTrackColor: string;
+  /** Scrollbar thumb border radius. Default 3. */
+  scrollbarRadius: number;
 }
 
 export interface IconElement extends BoardierElementBase {

@@ -25,12 +25,20 @@
   {
     "module": "ai/htmlConverter",
     "category": "AI",
-    "description": "Converts HTML to Boardier elements using the browser's layout engine. The AI generates semantic HTML with inline styles and data-boardier- attributes; we render it offscreen, measure positions via getBoundingClientRect(), and convert each visible element into BoardierElements at the computed coordinates. Supports all element types via data-boardier-type attributes.",
+    "description": "Converts HTML to Boardier elements using the browser's layout engine. The AI generates semantic HTML with inline styles and data-boardier- attributes; we render it offscreen, measure positions via getBoundingClientRect(), and convert each visible element into BoardierElements at the computed coordinates. Supports all element types via data-boardier-type attributes. When a data-boardier-style attribute is present on the root container (or defaults to \"rough\"), the corresponding style preset is applied to all generated elements.",
     "since": "0.2.0",
     "changed": [
       {
         "version": "0.3.3",
         "note": "Rewrote converter to fix overlapping, support all element types via data attributes, remove emoji icons"
+      },
+      {
+        "version": "0.4.3",
+        "note": "Added style preset awareness — reads data-boardier-style from root container, defaults to rough hand-drawn style"
+      },
+      {
+        "version": "0.4.4",
+        "note": "Flex containers with inline children (navs, headers) now create separate positioned text elements instead of merging into one"
       }
     ],
     "usage": "",
@@ -43,7 +51,7 @@
     "classes": [],
     "functions": [],
     "filePath": "ai/htmlConverter.ts",
-    "lineCount": 473
+    "lineCount": 572
   },
   {
     "module": "ai/index",
@@ -91,7 +99,12 @@
     "category": "AI",
     "description": "Provider-agnostic AI orchestrator for the Boardier whiteboard engine. Accepts a pluggable AI provider function so the host app can use any LLM backend (OpenAI, Gemini, Anthropic, local models, etc.). Routes requests between local handlers (mermaid, simple commands) and the remote AI provider (complex generation).",
     "since": "0.2.0",
-    "changed": [],
+    "changed": [
+      {
+        "version": "0.4.3",
+        "note": "AI HTML generation now detects and applies style presets, defaults to rough hand-drawn style"
+      }
+    ],
     "usage": "",
     "see": "",
     "ai": "",
@@ -102,7 +115,7 @@
     "classes": [],
     "functions": [],
     "filePath": "ai/orchestrator.ts",
-    "lineCount": 591
+    "lineCount": 600
   },
   {
     "module": "ai/schema",
@@ -113,6 +126,10 @@
       {
         "version": "0.3.3",
         "note": "Replaced emoji icons with bracketed text labels, added data-boardier-type hints for special elements, expanded example"
+      },
+      {
+        "version": "0.4.3",
+        "note": "Added style awareness to HTML generation prompt with data-boardier-style attribute for hand-drawn/rough rendering"
       }
     ],
     "usage": "",
@@ -125,14 +142,19 @@
     "classes": [],
     "functions": [],
     "filePath": "ai/schema.ts",
-    "lineCount": 241
+    "lineCount": 252
   },
   {
     "module": "ai/styles",
     "category": "AI",
     "description": "Style presets and style transfer utilities for Boardier elements. Provides named preset themes (e.g. \"professional\", \"playful\", \"blueprint\") that can be applied to all elements on the canvas in a single call. Also provides style transfer — copy the visual style of one element to selected elements.",
     "since": "0.2.0",
-    "changed": [],
+    "changed": [
+      {
+        "version": "0.4.3",
+        "note": "Added 'rough' style preset as default hand-drawn style for AI-generated HTML content"
+      }
+    ],
     "usage": "",
     "see": "",
     "ai": "",
@@ -143,7 +165,7 @@
     "classes": [],
     "functions": [],
     "filePath": "ai/styles.ts",
-    "lineCount": 252
+    "lineCount": 273
   },
   {
     "module": "scripts/generateChangelog",
@@ -161,7 +183,7 @@
     "classes": [],
     "functions": [],
     "filePath": "scripts/generateChangelog.ts",
-    "lineCount": 209
+    "lineCount": 217
   },
   {
     "module": "scripts/parseDocsFromSource",
@@ -316,6 +338,10 @@
       {
         "version": "0.3.2",
         "note": "Added showDarkModeToggle option to BoardierConfig"
+      },
+      {
+        "version": "0.4.3",
+        "note": "Added multiLine, scrollbar, scrollbarSize, scrollbarColor, scrollbarTrackColor, scrollbarRadius properties to TextElement"
       }
     ],
     "usage": "",
@@ -394,7 +420,7 @@
     "classes": [],
     "functions": [],
     "filePath": "core/types.ts",
-    "lineCount": 468
+    "lineCount": 481
   },
   {
     "module": "elements/arrow",
@@ -710,9 +736,18 @@
   {
     "module": "elements/text",
     "category": "Elements",
-    "description": "Renderer, hit-tester, bounds-getter, and measureText() utility for multi-line text elements. Supports font family/size selection, text alignment, line-height, and optional inline icon placeholders.",
+    "description": "Renderer, hit-tester, bounds-getter, and measureText() utility for multi-line text elements. Supports font family/size selection, text alignment, line-height, optional inline icon placeholders, multiLine toggle, word-wrap within element bounds, and scrollbar rendering when content overflows.",
     "since": "0.1.0",
-    "changed": [],
+    "changed": [
+      {
+        "version": "0.4.3",
+        "note": "Added multiLine support with scrollbar rendering when content overflows the element bounds"
+      },
+      {
+        "version": "0.4.4",
+        "note": "Text now word-wraps within element width so it never exceeds its hitbox; bracket icon labels like [Check] render as styled inline labels"
+      }
+    ],
     "usage": "",
     "see": "",
     "ai": "",
@@ -723,7 +758,7 @@
     "classes": [],
     "functions": [],
     "filePath": "elements/text.ts",
-    "lineCount": 126
+    "lineCount": 282
   },
   {
     "module": "index",
@@ -1051,6 +1086,10 @@
       {
         "version": "0.3.1",
         "note": "Restyled toggle button to match theme uiStyle; added markdown rendering for AI responses"
+      },
+      {
+        "version": "0.4.4",
+        "note": "Dark mode support for panel and button; moved button higher; panel right-aligns so close button matches toggle position"
       }
     ],
     "usage": "`<AIChatPopup engine={engine} config={{ defaultProvider: 'openai' }} theme={theme} />`",
@@ -1063,7 +1102,7 @@
     "classes": [],
     "functions": [],
     "filePath": "ui/AIChatPopup.tsx",
-    "lineCount": 819
+    "lineCount": 829
   },
   {
     "module": "ui/BoardierCanvas",
@@ -1090,6 +1129,10 @@
       {
         "version": "0.4.2",
         "note": "Mobile-responsive — larger touch targets for buttons, minimap hidden on mobile, viewport-aware sizing"
+      },
+      {
+        "version": "0.4.4",
+        "note": "Text commit now word-wraps within element width instead of expanding unboundedly"
       }
     ],
     "usage": "`<BoardierCanvas config={{ showGrid: true }} theme={defaultTheme} onChange={handleChange} />`",
@@ -1102,7 +1145,7 @@
     "classes": [],
     "functions": [],
     "filePath": "ui/BoardierCanvas.tsx",
-    "lineCount": 1232
+    "lineCount": 1242
   },
   {
     "module": "ui/ContextMenu",
@@ -1278,6 +1321,10 @@
       {
         "version": "0.4.2",
         "note": "Mobile layout rewritten — horizontal icon bar at bottom with popup property editors and overflow menu"
+      },
+      {
+        "version": "0.4.3",
+        "note": "Added multi-line toggle and scrollbar customization controls for text elements"
       }
     ],
     "usage": "",
@@ -1290,7 +1337,7 @@
     "classes": [],
     "functions": [],
     "filePath": "ui/PropertyPanel.tsx",
-    "lineCount": 928
+    "lineCount": 952
   },
   {
     "module": "ui/ShapeLabelEditor",
@@ -1313,9 +1360,14 @@
   {
     "module": "ui/TextEditor",
     "category": "UI",
-    "description": "Floating textarea overlay for editing text elements in-place. Auto-resizes to fit content and supports multi-line editing.",
+    "description": "Floating textarea overlay for editing text elements in-place. Auto-resizes to fit content. Supports multi-line editing when the element's multiLine property is true, otherwise acts as a single-line input.",
     "since": "0.1.0",
-    "changed": [],
+    "changed": [
+      {
+        "version": "0.4.3",
+        "note": "Respects multiLine property — Enter commits when multiLine is false, Shift+Enter always inserts newline when multiLine is true"
+      }
+    ],
     "usage": "",
     "see": "",
     "ai": "",
@@ -1326,7 +1378,7 @@
     "classes": [],
     "functions": [],
     "filePath": "ui/TextEditor.tsx",
-    "lineCount": 119
+    "lineCount": 129
   },
   {
     "module": "ui/Toolbar",

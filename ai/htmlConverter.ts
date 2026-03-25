@@ -6,11 +6,16 @@
  * we render it offscreen, measure positions via getBoundingClientRect(), and convert
  * each visible element into BoardierElements at the computed coordinates.
  * Supports all element types via data-boardier-type attributes.
+ * When a data-boardier-style attribute is present on the root container (or defaults
+ * to "rough"), the corresponding style preset is applied to all generated elements.
  * @boardier-since 0.2.0
  * @boardier-changed 0.3.3 Rewrote converter to fix overlapping, support all element types via data attributes, remove emoji icons
+ * @boardier-changed 0.4.3 Added style preset awareness — reads data-boardier-style from root container, defaults to rough hand-drawn style
+ * @boardier-changed 0.4.4 Flex containers with inline children (navs, headers) now create separate positioned text elements instead of merging into one
  */
 
 import type { BoardierElement } from '../core/types';
+import { applyPreset } from './styles';
 import {
   createRectangle,
   createEllipse,
@@ -56,13 +61,19 @@ export function htmlToBoardier(html: string, containerWidth = CONTAINER_WIDTH): 
   const ox = hostRect.x;
   const oy = hostRect.y;
 
+  // Detect style from data-boardier-style on the root container, default to "rough"
+  const rootContainer = host.querySelector('[data-boardier-style]');
+  const styleName = rootContainer?.getAttribute('data-boardier-style') || 'rough';
+
   try {
     walkNode(host, elements, ox, oy, 0);
   } finally {
     document.body.removeChild(host);
   }
 
-  return elements;
+  // Apply the detected style preset (or "rough" by default for hand-drawn look)
+  const styled = applyPreset(elements, styleName);
+  return styled ?? elements;
 }
 
 // ─── DOM walker ───────────────────────────────────────────────────
@@ -203,6 +214,80 @@ function walkNode(
     }
 
     // ── Leaf detection ────────────────────────────────
+    // Handle flex/grid containers with inline children (e.g. nav with <span> items)
+    // Each inline child gets its own text element at its measured position
+    const isFlex = style.display === 'flex' || style.display === 'inline-flex' || style.display === 'grid';
+    if (isFlex && hasInlineTextChildren(child)) {
+      // Create background/border for the container itself if needed
+      const bgColor = parseColor(style.backgroundColor);
+      const hasBg = bgColor !== null;
+      const borderWidth = parseFloat(style.borderTopWidth) || 0;
+      const hasBorder = borderWidth > 0;
+      if (hasBg || hasBorder) {
+        elements.push(createRectangle({
+          x, y, width: w, height: h,
+          backgroundColor: bgColor || 'transparent',
+          fillStyle: hasBg ? 'solid' : 'none',
+          strokeColor: hasBorder ? (parseBorderColor(style) || '#1e1e1e') : 'transparent',
+          strokeWidth: hasBorder ? Math.min(borderWidth, 4) : 0,
+          borderRadius: Math.min(parseRadius(style), 50),
+          opacity: parseFloat(style.opacity) || 1,
+          roughness: 0,
+        }));
+      }
+      // Now walk ALL children (including inline ones) as separate positioned elements
+      for (let j = 0; j < child.children.length; j++) {
+        const inlineChild = child.children[j] as HTMLElement;
+        const inlineRect = inlineChild.getBoundingClientRect();
+        if (inlineRect.width < MIN_SIZE || inlineRect.height < MIN_SIZE) continue;
+        const inlineStyle = getComputedStyle(inlineChild);
+        const ix = inlineRect.x - ox;
+        const iy = inlineRect.y - oy;
+        const iw = inlineRect.width;
+        const ih = inlineRect.height;
+        const inlineText = (inlineChild.textContent || '').trim();
+        const inlineBg = parseColor(inlineStyle.backgroundColor);
+        const inlineBorderW = parseFloat(inlineStyle.borderTopWidth) || 0;
+        if (isButtonLike(inlineChild, inlineChild.tagName.toLowerCase(), inlineStyle)) {
+          elements.push(createRectangle({
+            x: ix, y: iy, width: iw, height: ih,
+            backgroundColor: inlineBg || '#1971c2',
+            fillStyle: 'solid',
+            strokeColor: inlineBorderW > 0 ? (parseBorderColor(inlineStyle) || '#1e1e1e') : (parseColor(inlineStyle.color) || '#ffffff'),
+            strokeWidth: inlineBorderW > 0 ? Math.min(inlineBorderW, 4) : 0,
+            borderRadius: Math.min(parseRadius(inlineStyle), 50),
+            label: inlineText || '',
+            roughness: 0,
+          }));
+        } else if (inlineBg || inlineBorderW > 0) {
+          elements.push(createRectangle({
+            x: ix, y: iy, width: iw, height: ih,
+            backgroundColor: inlineBg || 'transparent',
+            fillStyle: inlineBg ? 'solid' : 'none',
+            strokeColor: inlineBorderW > 0 ? (parseBorderColor(inlineStyle) || '#1e1e1e') : 'transparent',
+            strokeWidth: inlineBorderW > 0 ? Math.min(inlineBorderW, 4) : 0,
+            borderRadius: Math.min(parseRadius(inlineStyle), 50),
+            label: inlineText || '',
+            roughness: 0,
+          }));
+        } else if (inlineText) {
+          elements.push(createText({
+            x: ix, y: iy, width: iw, height: ih,
+            text: inlineText,
+            fontSize: parseFontSize(inlineStyle, inlineChild.tagName.toLowerCase()),
+            fontFamily: parseFontFamily(inlineStyle),
+            textAlign: parseTextAlign(inlineStyle.textAlign),
+            strokeColor: parseColor(inlineStyle.color) || '#1e1e1e',
+          } as any));
+        }
+        // If this child itself has block children, recurse
+        if (hasBlockLevelChildren(inlineChild)) {
+          walkNode(inlineChild, elements, ox, oy, depth + 1);
+        }
+      }
+      continue;
+    }
+
     const textContent = getDirectTextContent(child);
     const hasBlockChildren = hasBlockLevelChildren(child);
     const isLeaf = !hasBlockChildren || child.children.length === 0;
@@ -408,6 +493,20 @@ function hasBlockLevelChildren(el: Element): boolean {
     if (!INLINE_TAGS.has(tag)) return true;
   }
   return false;
+}
+
+/** Check if a container has multiple inline/text children that should each be a separate element. */
+function hasInlineTextChildren(el: Element): boolean {
+  let textChildCount = 0;
+  for (let i = 0; i < el.children.length; i++) {
+    const child = el.children[i] as HTMLElement;
+    const tag = child.tagName.toLowerCase();
+    const text = (child.textContent || '').trim();
+    if (text && (INLINE_TAGS.has(tag) || tag === 'a' || tag === 'div' || tag === 'button')) {
+      textChildCount++;
+    }
+  }
+  return textChildCount >= 2;
 }
 
 function getDirectTextContent(el: Element): string {

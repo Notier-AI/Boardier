@@ -6,6 +6,7 @@
  * @boardier-changed 0.2.0 Added zigzag and zigzag-line fill style options to the property panel
  * @boardier-changed 0.4.1 Added export dropdown button for exporting selected elements in multiple formats
  * @boardier-changed 0.4.2 Mobile layout rewritten — horizontal icon bar at bottom with popup property editors and overflow menu
+ * @boardier-changed 0.4.3 Added multi-line toggle and scrollbar customization controls for text elements
  */
 import React, { useRef, useState, useEffect } from 'react';
 import type { BoardierElement, FillStyle, StrokeStyle } from '../core/types';
@@ -423,6 +424,29 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
           <div style={{ borderLeft: `1px solid ${theme.panelBorder}`, height: 18, flexShrink: 0 }} />
           {numInput((first as any).fontSize ?? 18, 8, 200, 1, v => onUpdate({ fontSize: v } as any), 'px')}
         </div>
+      </>)}
+      {hasText && (<>
+        <span style={{ ...sectionTitle, marginTop: 4 }}>Text Box</span>
+        <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+          {pill(
+            (first as any).multiLine !== false,
+            () => onUpdate({ multiLine: !(first as any).multiLine !== false ? true : false } as any),
+            <span style={{ fontSize: 11, fontWeight: 700 }}>Multi-line</span>, 'Toggle multi-line', 'multiLine',
+          )}
+          {pill(
+            (first as any).scrollbar !== false,
+            () => onUpdate({ scrollbar: !(first as any).scrollbar !== false ? true : false } as any),
+            <span style={{ fontSize: 11, fontWeight: 700 }}>Scrollbar</span>, 'Toggle scrollbar on overflow', 'scrollbar',
+          )}
+        </div>
+        {(first as any).scrollbar !== false && (
+          <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 10, color: theme.panelTextSecondary, width: 34 }}>Size</span>
+            {numInput((first as any).scrollbarSize ?? 6, 2, 20, 1, v => onUpdate({ scrollbarSize: v } as any), 'px')}
+            <span style={{ fontSize: 10, color: theme.panelTextSecondary, width: 34 }}>Radius</span>
+            {numInput((first as any).scrollbarRadius ?? 3, 0, 20, 1, v => onUpdate({ scrollbarRadius: v } as any), 'px')}
+          </div>
+        )}
       </>)}
     </> });
 

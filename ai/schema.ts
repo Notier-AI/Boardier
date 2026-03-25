@@ -7,6 +7,7 @@
  * valid element arrays when generating diagrams from natural language.
  * @boardier-since 0.2.0
  * @boardier-changed 0.3.3 Replaced emoji icons with bracketed text labels, added data-boardier-type hints for special elements, expanded example
+ * @boardier-changed 0.4.3 Added style awareness to HTML generation prompt with data-boardier-style attribute for hand-drawn/rough rendering
  */
 
 import type { BoardierElement, BoardierElementType } from '../core/types';
@@ -171,6 +172,16 @@ SPECIAL ATTRIBUTES (optional, for advanced whiteboard elements):
 - data-boardier-type="frame" with data-label="Title" → renders as a labeled frame container
 - data-boardier-type="table" wrapping a <table> → renders as a whiteboard table
 - data-boardier-type="checkbox" with data-checked="true"|"false" → renders as a checkbox
+- data-boardier-style="<name>" on the root container → applies a visual style preset to all generated elements:
+  "rough" (default, hand-drawn sketchy look, roughness 1.5, hachure fills)
+  "professional" (clean lines, solid fills, subtle shadows)
+  "blueprint" (white on dark blue)
+  "minimal" (thin black strokes, no fill)
+  "neon" (bright glow effects)
+  "pastel" (soft fills, light strokes)
+  "whiteboard" (thick rough strokes, no fill)
+  "dark" (gray strokes, deep fills)
+  If no style is specified, "rough" is used by default for a hand-drawn aesthetic.
 
 COLOR PALETTE:
 - Primaries: #1971c2, #2f9e44, #e03131, #f08c00, #6741d9

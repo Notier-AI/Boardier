@@ -92,6 +92,14 @@ const VERSION_META: Record<string, { date: string; summary: string }> = {
     date: '2026-03-25',
     summary: 'Mobile responsive — viewport meta, responsive website header, mobile toolbar with shape/line grouping popups and larger touch targets, Excalidraw-style collapsible PropertyPanel bottom sheet, canvas-rendered HTML export preserving roughness, and touch-friendly UI across all panels.',
   },
+  '0.4.3': {
+    date: '2026-03-25',
+    summary: 'Style-aware AI generation — HTML generation detects and applies style presets (defaults to hand-drawn rough style). Multi-line text boxes by default with optional scrollbar rendering and full customization in the property panel.',
+  },
+  '0.4.4': {
+    date: '2026-03-25',
+    summary: 'Text word-wrap — text never exceeds its hitbox, wrapping into multiple lines automatically. Bracket icon labels like [Check] render as styled inline badges. AI nav/header items now create separate positioned elements. Chat popup dark mode support, repositioned button, and consistent close behavior.',
+  },
 };
 
 // ─── Main ─────────────────────────────────────────────────────────────

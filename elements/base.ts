@@ -115,7 +115,7 @@ export function createFreehand(o: Partial<FreehandElement> = {}): FreehandElemen
 }
 
 export function createText(o: Partial<TextElement> = {}): TextElement {
-  return { ...BASE_DEFAULTS, seed: newSeed(), id: generateId(), type: 'text', x: 0, y: 0, width: 10, height: 24, text: '', fontSize: 18, fontFamily: 'system-ui, sans-serif', textAlign: 'left', lineHeight: 1.4, ...o };
+  return { ...BASE_DEFAULTS, seed: newSeed(), id: generateId(), type: 'text', x: 0, y: 0, width: 10, height: 24, text: '', fontSize: 18, fontFamily: 'system-ui, sans-serif', textAlign: 'left', lineHeight: 1.4, multiLine: true, scrollbar: true, scrollbarSize: 6, scrollbarColor: '#adb5bd', scrollbarTrackColor: 'transparent', scrollbarRadius: 3, ...o };
 }
 
 export function createIcon(o: Partial<IconElement> = {}): IconElement {

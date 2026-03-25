@@ -6,6 +6,7 @@
  * applied to all elements on the canvas in a single call. Also provides style transfer —
  * copy the visual style of one element to selected elements.
  * @boardier-since 0.2.0
+ * @boardier-changed 0.4.3 Added 'rough' style preset as default hand-drawn style for AI-generated HTML content
  */
 
 import type { BoardierElement, FillStyle, StrokeStyle } from '../core/types';
@@ -206,6 +207,25 @@ export const STYLE_PRESETS: StylePreset[] = [
       shadow: '2 2 8 rgba(0,0,0,0.4)',
     }),
   },
+  {
+    name: 'rough',
+    description: 'Default hand-drawn aesthetic with sketchy strokes and hachure fills. The signature Boardier look.',
+    apply: (el) => {
+      const strokes = ['#1e1e1e', '#495057'];
+      const fills = ['#a5d8ff', '#b2f2bb', '#ffc9c9', '#d0bfff', '#ffe8cc', '#fcc2d7', '#99e9f2'];
+      const hash = el.id.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+      const isShape = el.type === 'rectangle' || el.type === 'ellipse' || el.type === 'diamond';
+      return {
+        strokeColor: strokes[hash % strokes.length],
+        backgroundColor: isShape ? fills[hash % fills.length] : el.backgroundColor,
+        fillStyle: isShape ? 'hachure' as any : el.fillStyle,
+        strokeWidth: 2,
+        roughness: 1.5,
+        opacity: 1,
+        shadow: '',
+      };
+    },
+  },
 ];
 
 /** Get a preset by name. Case-insensitive. */
@@ -236,7 +256,8 @@ export function detectStylePreset(prompt: string): string | null {
   const lower = prompt.toLowerCase();
   const patterns: [string, RegExp][] = [
     ['professional', /\b(professional|corporate|business|formal|clean)\b/],
-    ['playful', /\b(playful|fun|sketchy|hand.?drawn|casual|creative)\b/],
+    ['playful', /\b(playful|fun|sketchy|casual|creative)\b/],
+    ['rough', /\b(rough|hand.?drawn|hand.?sketched|doodle)\b/],
     ['blueprint', /\b(blueprint|technical|engineering|schematic)\b/],
     ['minimal', /\b(minimal|minimalist|simple|bare|stripped)\b/],
     ['neon', /\b(neon|glow|electric|cyber|futuristic)\b/],
