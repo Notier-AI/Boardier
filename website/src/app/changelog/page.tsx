@@ -1,6 +1,9 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowLeft, GitBranch, Clock, Layers, Code2, Box, Sparkles, Tag, Plus, RefreshCw } from "lucide-react";
+import { ArrowLeft, GitBranch, Clock, Layers, Code2, Box, Sparkles, Tag, Plus, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
 import changelogData from "@/data/changelog.json";
 import ThemeToggle from "../components/ThemeToggle";
 
@@ -36,6 +39,8 @@ interface VersionBlock {
 }
 
 const changelog: VersionBlock[] = changelogData as VersionBlock[];
+
+const VERSIONS_PER_PAGE = 3;
 
 const categoryColors: Record<string, string> = {
   Core: "border-brand-red bg-brand-red/10 text-brand-red",
@@ -118,6 +123,12 @@ function EntryCard({ entry }: { entry: ChangelogEntry }) {
 }
 
 export default function ChangelogPage() {
+  const [currentPage, setCurrentPage] = useState(1);
+  const totalPages = Math.ceil(changelog.length / VERSIONS_PER_PAGE);
+  const pagedChangelog = changelog.slice(
+    (currentPage - 1) * VERSIONS_PER_PAGE,
+    currentPage * VERSIONS_PER_PAGE
+  );
   const totalModules = changelog.reduce((sum, v) => sum + v.stats.modules, 0);
 
   return (
@@ -136,6 +147,7 @@ export default function ChangelogPage() {
               <h1 className="text-2xl font-bold font-caveat leading-none">Changelog</h1>
               <span className="text-[10px] text-root-fg/50">
                 {changelog.length} release{changelog.length !== 1 ? "s" : ""} &middot; {totalModules} modules
+                {totalPages > 1 && <> &middot; page {currentPage}/{totalPages}</>}
               </span>
             </div>
           </div>
@@ -158,13 +170,13 @@ export default function ChangelogPage() {
           {/* Vertical timeline line */}
           <div className="absolute left-[19px] top-0 bottom-0 w-0.5 bg-root-fg/15 hidden md:block" />
 
-          {changelog.map((version, vi) => (
+          {pagedChangelog.map((version, vi) => (
             <section key={version.version} id={`v${version.version}`} className="mb-16 scroll-mt-24 relative">
               {/* Version header */}
               <div className="flex items-start gap-4 mb-6">
                 {/* Timeline dot */}
                 <div className="hidden md:flex w-10 h-10 shrink-0 sketch-border bg-card-bg items-center justify-center z-10 relative">
-                  <Tag size={18} className={vi === 0 ? "text-brand-green" : "text-root-fg/50"} />
+                  <Tag size={18} className={vi === 0 && currentPage === 1 ? "text-brand-green" : "text-root-fg/50"} />
                 </div>
 
                 <div className="flex-1">
@@ -173,7 +185,7 @@ export default function ChangelogPage() {
                     <span className="text-sm text-root-fg/50 flex items-center gap-1">
                       <Clock size={14} /> {formatDate(version.date)}
                     </span>
-                    {vi === 0 && (
+                    {vi === 0 && currentPage === 1 && (
                       <span className="sketch-border px-2 py-0.5 bg-brand-green/15 text-brand-green text-[10px] font-bold uppercase tracking-wider">
                         Latest
                       </span>
@@ -296,6 +308,51 @@ export default function ChangelogPage() {
             </section>
           ))}
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center gap-3 mt-8 mb-4">
+            {currentPage > 1 ? (
+              <button
+                onClick={() => { setCurrentPage(p => p - 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                className="sketch-button px-3 py-2 flex items-center gap-1 text-sm hover:bg-brand-blue hover:text-white"
+              >
+                <ChevronLeft size={16} /> Newer
+              </button>
+            ) : (
+              <span className="sketch-button px-3 py-2 flex items-center gap-1 text-sm opacity-30 cursor-not-allowed">
+                <ChevronLeft size={16} /> Newer
+              </span>
+            )}
+
+            <div className="flex gap-1.5">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => { setCurrentPage(page); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                  className={`sketch-button w-9 h-9 flex items-center justify-center text-sm font-bold font-caveat ${
+                    page === currentPage ? "bg-brand-green text-white" : "hover:bg-card-bg"
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+            </div>
+
+            {currentPage < totalPages ? (
+              <button
+                onClick={() => { setCurrentPage(p => p + 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                className="sketch-button px-3 py-2 flex items-center gap-1 text-sm hover:bg-brand-blue hover:text-white"
+              >
+                Older <ChevronRight size={16} />
+              </button>
+            ) : (
+              <span className="sketch-button px-3 py-2 flex items-center gap-1 text-sm opacity-30 cursor-not-allowed">
+                Older <ChevronRight size={16} />
+              </span>
+            )}
+          </div>
+        )}
       </main>
 
       {/* Footer */}
