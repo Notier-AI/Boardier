@@ -35,6 +35,7 @@ import { CommentTool } from '../tools/CommentTool';
 import { clamp } from '../utils/math';
 import { getElementBounds, createElement } from '../elements/base';
 import { setIconImageLoadCallback } from '../elements/icon';
+import { setIconResolveCallback, preloadIconSets } from '../utils/iconResolver';
 import { generateId } from '../utils/id';
 import { layoutGrid, layoutTree, layoutRadial, layoutForce, type LayoutOptions, type ForceLayoutOptions } from '../ai/layout';
 import { applyPreset, applyStyle, extractStyle, type ElementStyle } from '../ai/styles';
@@ -113,6 +114,10 @@ export class BoardierEngine {
 
     // Re-render when icon images finish loading (fixes color change causing invisible icons)
     setIconImageLoadCallback(() => this.render());
+    setIconResolveCallback(() => this.render());
+
+    // Pre-load common icon sets so bracket icons resolve quickly in AI-generated content
+    preloadIconSets();
   }
 
   // ─── Tool context (passed to tools) ──────────────────────────────

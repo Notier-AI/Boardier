@@ -7,6 +7,7 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import type { BoardierTheme } from '../themes/types';
+import { feedIconModule } from '../utils/iconResolver';
 
 interface IconPickerProps {
   theme: BoardierTheme;
@@ -116,6 +117,7 @@ export const IconPicker: React.FC<IconPickerProps> = ({ theme, onPick, onClose }
               }
             }
             allIconsCache.set(setDef.id, entries);
+            feedIconModule(setDef.id, mod as any);
             return entries;
           }).catch(() => [] as IconEntry[])
         )
@@ -152,6 +154,7 @@ export const IconPicker: React.FC<IconPickerProps> = ({ theme, onPick, onClose }
         }
       }
       allIconsCache.set(activeSet, entries);
+      feedIconModule(activeSet, mod as any);
       setIcons(entries);
       setLoading(false);
     }).catch(() => {

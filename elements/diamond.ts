@@ -9,7 +9,7 @@ import { registerElement } from './base';
 import { rotatePoint } from '../utils/math';
 import { roughDiamond, mulberry32, roughLineTo } from '../utils/roughDraw';
 import { HANDWRITTEN_FONT } from '../utils/colors';
-import { applyStrokeStyle, drawPatternFill } from '../utils/renderHelpers';
+import { applyStrokeStyle, drawPatternFill, renderLabelWithIcons } from '../utils/renderHelpers';
 
 function render(ctx: CanvasRenderingContext2D, el: DiamondElement): void {
   ctx.save();
@@ -83,9 +83,7 @@ function render(ctx: CanvasRenderingContext2D, el: DiamondElement): void {
     const labelFont = el.roughness > 0 ? HANDWRITTEN_FONT : 'system-ui, sans-serif';
     ctx.font = `${Math.min(el.width * 0.5, 18)}px ${labelFont}`;
     ctx.fillStyle = el.strokeColor;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(el.label, 0, 0, el.width * 0.5);
+    renderLabelWithIcons(ctx, el.label, 0, 0, el.width * 0.5, el.strokeColor);
   }
   ctx.restore();
 }

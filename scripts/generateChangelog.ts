@@ -100,6 +100,10 @@ const VERSION_META: Record<string, { date: string; summary: string }> = {
     date: '2026-03-25',
     summary: 'Text word-wrap — text never exceeds its hitbox, wrapping into multiple lines automatically. Bracket icon labels like [Check] render as styled inline badges. AI nav/header items now create separate positioned elements. Chat popup dark mode support, repositioned button, and consistent close behavior.',
   },
+  '0.4.5': {
+    date: '2026-03-27',
+    summary: 'React-icons integration — bracket icon labels [LuCheck], [FiStar], etc. now resolve dynamically from react-icons with fuzzy matching in all shape labels and text elements. Removed forced AI style presets so the AI can freely design with user instructions. Professional style preset uses varied corporate colors.',
+  },
 };
 
 // ─── Main ─────────────────────────────────────────────────────────────

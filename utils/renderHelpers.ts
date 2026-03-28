@@ -1,11 +1,14 @@
 /**
  * @boardier-module utils/renderHelpers
  * @boardier-category Utilities
- * @boardier-description Shared Canvas 2D rendering helpers: applyStrokeStyle() for dash patterns and drawPatternFill() for hachure/cross-hatch/dot/zigzag fill patterns used by shape renderers.
+ * @boardier-description Shared Canvas 2D rendering helpers: applyStrokeStyle() for dash patterns, drawPatternFill() for hachure/cross-hatch/dot/zigzag fill patterns, and renderLabelWithIcons() for bracket icon resolution in shape labels.
  * @boardier-since 0.1.0
  * @boardier-changed 0.2.0 Added zigzag and zigzag-line fill pattern rendering
+ * @boardier-changed 0.4.5 Added renderLabelWithIcons() for resolving bracket icon names in shape labels
  */
 import type { FillStyle, StrokeStyle } from '../core/types';
+import { resolveIconSvg } from './iconResolver';
+import { getIconImage } from '../elements/icon';
 
 /**
  * Apply stroke dash pattern based on StrokeStyle.
@@ -128,4 +131,64 @@ export function drawPatternFill(
   }
 
   ctx.restore();
+}
+
+const BRACKET_ICON_RE = /\[([A-Z][A-Za-z0-9]*)\]/g;
+
+/**
+ * Render a label string that may contain bracket icon tokens like [LuUsers].
+ * Icons are resolved from react-icons and drawn inline with the text.
+ * If no bracket icons are found, acts like a plain ctx.fillText.
+ * Assumes ctx.font, ctx.fillStyle, ctx.textBaseline are already set.
+ * Renders centered at (cx, cy) within maxWidth.
+ */
+export function renderLabelWithIcons(
+  ctx: CanvasRenderingContext2D,
+  label: string,
+  cx: number,
+  cy: number,
+  maxWidth: number,
+  color: string,
+): void {
+  if (!BRACKET_ICON_RE.test(label)) {
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(label, cx, cy, maxWidth);
+    return;
+  }
+  BRACKET_ICON_RE.lastIndex = 0;
+
+  const fontSize = parseFloat(ctx.font) || 14;
+  const iconSize = fontSize;
+  const segments: { type: 'text' | 'icon'; value: string }[] = [];
+  let lastIdx = 0;
+  let match: RegExpExecArray | null;
+  while ((match = BRACKET_ICON_RE.exec(label)) !== null) {
+    if (match.index > lastIdx) segments.push({ type: 'text', value: label.slice(lastIdx, match.index) });
+    segments.push({ type: 'icon', value: match[1] });
+    lastIdx = match.index + match[0].length;
+  }
+  if (lastIdx < label.length) segments.push({ type: 'text', value: label.slice(lastIdx) });
+
+  let totalW = 0;
+  for (const seg of segments) {
+    totalW += seg.type === 'text' ? ctx.measureText(seg.value).width : iconSize + 2;
+  }
+
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  let drawX = cx - totalW / 2;
+  for (const seg of segments) {
+    if (seg.type === 'text') {
+      ctx.fillText(seg.value, drawX, cy);
+      drawX += ctx.measureText(seg.value).width;
+    } else {
+      const svg = resolveIconSvg(seg.value);
+      if (svg) {
+        const img = getIconImage(svg, color);
+        if (img) ctx.drawImage(img, drawX, cy - iconSize / 2, iconSize, iconSize);
+      }
+      drawX += iconSize + 2;
+    }
+  }
 }

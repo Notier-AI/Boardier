@@ -9,7 +9,7 @@ import { registerElement } from './base';
 import { rotatePoint } from '../utils/math';
 import { roughRect, roughFillRect } from '../utils/roughDraw';
 import { HANDWRITTEN_FONT } from '../utils/colors';
-import { applyStrokeStyle, drawPatternFill } from '../utils/renderHelpers';
+import { applyStrokeStyle, drawPatternFill, renderLabelWithIcons } from '../utils/renderHelpers';
 
 function render(ctx: CanvasRenderingContext2D, el: RectangleElement): void {
   ctx.save();
@@ -122,9 +122,7 @@ function render(ctx: CanvasRenderingContext2D, el: RectangleElement): void {
     const labelFont = el.roughness > 0 ? HANDWRITTEN_FONT : 'system-ui, sans-serif';
     ctx.font = `${Math.min(el.width * 0.8, 18)}px ${labelFont}`;
     ctx.fillStyle = el.strokeColor;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(el.label, 0, 0, el.width * 0.9);
+    renderLabelWithIcons(ctx, el.label, 0, 0, el.width * 0.9, el.strokeColor);
   }
   ctx.restore();
 }

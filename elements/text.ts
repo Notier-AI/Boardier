@@ -1,18 +1,20 @@
 /**
  * @boardier-module elements/text
  * @boardier-category Elements
- * @boardier-description Renderer, hit-tester, bounds-getter, and measureText() utility for multi-line text elements. Supports font family/size selection, text alignment, line-height, optional inline icon placeholders, multiLine toggle, word-wrap within element bounds, and scrollbar rendering when content overflows.
+ * @boardier-description Renderer, hit-tester, bounds-getter, and measureText() utility for multi-line text elements. Supports font family/size selection, text alignment, line-height, optional inline icon placeholders, multiLine toggle, word-wrap within element bounds, bracket icon labels resolved from react-icons, and scrollbar rendering when content overflows.
  * @boardier-since 0.1.0
  * @boardier-changed 0.4.3 Added multiLine support with scrollbar rendering when content overflows the element bounds
  * @boardier-changed 0.4.4 Text now word-wraps within element width so it never exceeds its hitbox; bracket icon labels like [Check] render as styled inline labels
+ * @boardier-changed 0.4.5 Bracket icon labels now resolve from react-icons dynamically with fuzzy matching — use names like [FiCheck], [LuStar], or plain [Check]
  */
 import type { TextElement, Vec2, Bounds } from '../core/types';
 import { registerElement } from './base';
 import { rotatePoint } from '../utils/math';
 import { getIconImage } from './icon';
+import { resolveIconSvg } from '../utils/iconResolver';
 
 const ICON_MARKER_RE = /\{\{([^}]+)\}\}/g;
-const BRACKET_LABEL_RE = /\[([A-Z][A-Za-z]*)\]/g;
+const BRACKET_LABEL_RE = /\[([A-Z][A-Za-z0-9]*)\]/g;
 
 /** Word-wrap a single line of text to fit within maxWidth. */
 function wrapLine(ctx: CanvasRenderingContext2D, line: string, maxWidth: number): string[] {
@@ -115,7 +117,7 @@ function render(ctx: CanvasRenderingContext2D, el: TextElement): void {
         }
       }
     } else if (BRACKET_LABEL_RE.test(lines[i])) {
-      // Render [Icon]-style bracket labels as styled inline labels
+      // Render [Icon]-style bracket labels as react-icons
       BRACKET_LABEL_RE.lastIndex = 0;
       const segments: { type: 'text' | 'label'; value: string }[] = [];
       let lastIdx = 0;
@@ -127,19 +129,10 @@ function render(ctx: CanvasRenderingContext2D, el: TextElement): void {
       }
       if (lastIdx < lines[i].length) segments.push({ type: 'text', value: lines[i].slice(lastIdx) });
 
-      const labelFontSize = Math.round(el.fontSize * 0.75);
-      const labelPadX = 4;
-      const labelH = labelFontSize + 4;
-
       let totalW = 0;
       for (const seg of segments) {
         if (seg.type === 'text') { totalW += ctx.measureText(seg.value).width; }
-        else {
-          ctx.save();
-          ctx.font = `${labelFontSize}px ${el.fontFamily}`;
-          totalW += ctx.measureText(seg.value).width + labelPadX * 2 + 4;
-          ctx.restore();
-        }
+        else { totalW += iconSize + 2; }
       }
 
       let drawX: number;
@@ -149,33 +142,15 @@ function render(ctx: CanvasRenderingContext2D, el: TextElement): void {
 
       for (const seg of segments) {
         if (seg.type === 'text') {
-          ctx.font = `${el.fontSize}px ${el.fontFamily}`;
-          ctx.fillStyle = el.strokeColor;
           ctx.fillText(seg.value, drawX, lineY);
           drawX += ctx.measureText(seg.value).width;
         } else {
-          ctx.save();
-          ctx.font = `bold ${labelFontSize}px ${el.fontFamily}`;
-          const tw = ctx.measureText(seg.value).width;
-          const boxW = tw + labelPadX * 2;
-          const boxY = lineY + (lineH - labelH) / 2;
-          // Draw label background
-          ctx.fillStyle = el.strokeColor + '18';
-          roundRect(ctx, drawX, boxY, boxW, labelH, 3);
-          ctx.fill();
-          // Draw label border
-          ctx.strokeStyle = el.strokeColor + '40';
-          ctx.lineWidth = 1;
-          ctx.stroke();
-          // Draw label text
-          ctx.fillStyle = el.strokeColor;
-          ctx.textBaseline = 'top';
-          ctx.fillText(seg.value, drawX + labelPadX, boxY + 2);
-          ctx.restore();
-          ctx.font = `${el.fontSize}px ${el.fontFamily}`;
-          ctx.fillStyle = el.strokeColor;
-          ctx.textBaseline = 'top';
-          drawX += boxW + 4;
+          const svg = resolveIconSvg(seg.value);
+          if (svg) {
+            const img = getIconImage(svg, el.strokeColor);
+            if (img) ctx.drawImage(img, drawX, lineY, iconSize, iconSize);
+          }
+          drawX += iconSize + 2;
         }
       }
     } else {

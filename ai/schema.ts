@@ -8,6 +8,7 @@
  * @boardier-since 0.2.0
  * @boardier-changed 0.3.3 Replaced emoji icons with bracketed text labels, added data-boardier-type hints for special elements, expanded example
  * @boardier-changed 0.4.3 Added style awareness to HTML generation prompt with data-boardier-style attribute for hand-drawn/rough rendering
+ * @boardier-changed 0.4.5 Updated icon guidance to use react-icons prefixed names; removed forced style presets so AI can freely design with user instructions
  */
 
 import type { BoardierElement, BoardierElementType } from '../core/types';
@@ -163,7 +164,7 @@ CRITICAL RULES:
 6. Use flexbox for layouts: display:flex, flex-direction, gap, align-items, justify-content.
 7. Keep it visual and wireframe-like — use clear backgrounds, borders, and spacing.
 8. Use realistic placeholder text (not lorem ipsum — use real-sounding headlines and copy).
-9. For icons, use short bracketed text labels like [Search], [Menu], [User], [Star], [Check], [Arrow], [Shield], [Lightning]. Do NOT use emoji or unicode symbols.
+9. For icons, use bracketed react-icons names. Prefer Lucide (Lu) or Feather (Fi) prefixes: [LuSearch], [LuMenu], [LuUser], [LuStar], [LuCheck], [LuArrowRight], [LuShield], [LuZap], [FiHome], [FiSettings], [FiMail], [FiPhone], [FiBell], [FiHeart], [FiEye], [FiLock]. You may also use Tabler (Tb), Material (Md), or Remix (Ri) prefixes. Plain names like [Search] or [Star] also work as fallback. Do NOT use emoji or unicode symbols.
 10. Make every element have explicit dimensions or flex properties — nothing should be 0-height.
 
 SPECIAL ATTRIBUTES (optional, for advanced whiteboard elements):
@@ -172,16 +173,6 @@ SPECIAL ATTRIBUTES (optional, for advanced whiteboard elements):
 - data-boardier-type="frame" with data-label="Title" → renders as a labeled frame container
 - data-boardier-type="table" wrapping a <table> → renders as a whiteboard table
 - data-boardier-type="checkbox" with data-checked="true"|"false" → renders as a checkbox
-- data-boardier-style="<name>" on the root container → applies a visual style preset to all generated elements:
-  "rough" (default, hand-drawn sketchy look, roughness 1.5, hachure fills)
-  "professional" (clean lines, solid fills, subtle shadows)
-  "blueprint" (white on dark blue)
-  "minimal" (thin black strokes, no fill)
-  "neon" (bright glow effects)
-  "pastel" (soft fills, light strokes)
-  "whiteboard" (thick rough strokes, no fill)
-  "dark" (gray strokes, deep fills)
-  If no style is specified, "rough" is used by default for a hand-drawn aesthetic.
 
 COLOR PALETTE:
 - Primaries: #1971c2, #2f9e44, #e03131, #f08c00, #6741d9

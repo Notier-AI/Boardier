@@ -6,16 +6,14 @@
  * we render it offscreen, measure positions via getBoundingClientRect(), and convert
  * each visible element into BoardierElements at the computed coordinates.
  * Supports all element types via data-boardier-type attributes.
- * When a data-boardier-style attribute is present on the root container (or defaults
- * to "rough"), the corresponding style preset is applied to all generated elements.
  * @boardier-since 0.2.0
  * @boardier-changed 0.3.3 Rewrote converter to fix overlapping, support all element types via data attributes, remove emoji icons
  * @boardier-changed 0.4.3 Added style preset awareness — reads data-boardier-style from root container, defaults to rough hand-drawn style
  * @boardier-changed 0.4.4 Flex containers with inline children (navs, headers) now create separate positioned text elements instead of merging into one
+ * @boardier-changed 0.4.5 Removed forced applyPreset — AI-generated CSS colors now pass through directly
  */
 
 import type { BoardierElement } from '../core/types';
-import { applyPreset } from './styles';
 import {
   createRectangle,
   createEllipse,
@@ -61,19 +59,13 @@ export function htmlToBoardier(html: string, containerWidth = CONTAINER_WIDTH): 
   const ox = hostRect.x;
   const oy = hostRect.y;
 
-  // Detect style from data-boardier-style on the root container, default to "rough"
-  const rootContainer = host.querySelector('[data-boardier-style]');
-  const styleName = rootContainer?.getAttribute('data-boardier-style') || 'rough';
-
   try {
     walkNode(host, elements, ox, oy, 0);
   } finally {
     document.body.removeChild(host);
   }
 
-  // Apply the detected style preset (or "rough" by default for hand-drawn look)
-  const styled = applyPreset(elements, styleName);
-  return styled ?? elements;
+  return elements;
 }
 
 // ─── DOM walker ───────────────────────────────────────────────────

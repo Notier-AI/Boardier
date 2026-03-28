@@ -7,6 +7,7 @@
  * copy the visual style of one element to selected elements.
  * @boardier-since 0.2.0
  * @boardier-changed 0.4.3 Added 'rough' style preset as default hand-drawn style for AI-generated HTML content
+ * @boardier-changed 0.4.5 Professional preset now uses varied corporate colors instead of monotone blue
  */
 
 import type { BoardierElement, FillStyle, StrokeStyle } from '../core/types';
@@ -75,19 +76,24 @@ export function applyStyle(elements: BoardierElement[], style: ElementStyle): Bo
 export const STYLE_PRESETS: StylePreset[] = [
   {
     name: 'professional',
-    description: 'Clean, solid lines with subtle shadows. Blue and gray palette.',
-    apply: (el) => ({
-      strokeColor: el.type === 'arrow' || el.type === 'line' ? '#495057' : '#1971c2',
-      backgroundColor: (el.type === 'rectangle' || el.type === 'ellipse' || el.type === 'diamond')
-        ? '#e7f5ff' : el.backgroundColor,
-      fillStyle: (el.type === 'rectangle' || el.type === 'ellipse' || el.type === 'diamond')
-        ? 'solid' as any : el.fillStyle,
-      strokeWidth: 2,
-      roughness: 0,
-      opacity: 1,
-      strokeStyle: 'solid',
-      shadow: '2 2 6 rgba(0,0,0,0.12)',
-    }),
+    description: 'Clean, solid lines with subtle shadows. Varied corporate color palette.',
+    apply: (el) => {
+      const strokes = ['#1971c2', '#0c8599', '#2f9e44', '#6741d9', '#495057', '#e8590c'];
+      const fills   = ['#e7f5ff', '#e3fafc', '#ebfbee', '#f3f0ff', '#f1f3f5', '#fff4e6'];
+      const hash = el.id.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+      const idx = hash % strokes.length;
+      const isShape = el.type === 'rectangle' || el.type === 'ellipse' || el.type === 'diamond';
+      return {
+        strokeColor: el.type === 'arrow' || el.type === 'line' ? '#495057' : strokes[idx],
+        backgroundColor: isShape ? fills[idx] : el.backgroundColor,
+        fillStyle: isShape ? 'solid' as any : el.fillStyle,
+        strokeWidth: 2,
+        roughness: 0,
+        opacity: 1,
+        strokeStyle: 'solid',
+        shadow: '2 2 6 rgba(0,0,0,0.12)',
+      };
+    },
   },
   {
     name: 'playful',
