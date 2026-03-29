@@ -4,6 +4,7 @@
  * @boardier-description Main entry point for the Boardier library. Re-exports all public components, types, themes, element factories, engine, utilities, and rendering helpers. Import from this module for the cleanest consumer experience.
  * @boardier-since 0.1.0
  * @boardier-changed 0.3.0 Added AIChatPopup component and AI chat client exports for client-side multi-provider AI integration
+ * @boardier-changed 0.5.0 Added CollaborationProvider, CollabOverlay, RemoteCursors, and collaboration types for real-time multiplayer
  * @boardier-usage `import { BoardierCanvas, defaultTheme, createElement } from 'boardier';`
  */
 
@@ -63,6 +64,10 @@ export type {
   SceneChangeHandler,
   SelectionChangeHandler,
   ViewChangeHandler,
+  CollaborationConfig,
+  CollaborationUser,
+  JoinRequest,
+  CollabEvent,
 } from './core/types';
 
 // Theme types & presets
@@ -72,6 +77,11 @@ export { createNotierTheme } from './themes/notierTheme';
 
 // Engine (for advanced usage)
 export { BoardierEngine } from './core/Engine';
+
+// Collaboration (multiplayer)
+export { CollaborationProvider } from './core/Collaboration';
+export { CollabOverlay } from './ui/CollabOverlay';
+export { RemoteCursors } from './ui/RemoteCursors';
 
 // Element factories
 export {

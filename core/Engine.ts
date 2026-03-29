@@ -4,6 +4,7 @@
  * @boardier-description The central orchestrator of the Boardier whiteboard. `BoardierEngine` owns the scene graph, undo/redo history, renderer, clipboard, and the active tool. It exposes a public API for tool switching, element manipulation, multi-page support, viewport control, theming, and an AI-facing interface for LLM integration.
  * @boardier-since 0.1.0
  * @boardier-see Scene, Renderer, History, Clipboard, BaseTool
+ * @boardier-changed 0.5.0 Added CollaborationProvider integration — collab-aware undo/redo via Y.js UndoManager, cursor/selection forwarding, and getCollaboration() accessor
  */
 import type {
   BoardierElement,
@@ -34,6 +35,7 @@ import { ImageTool } from '../tools/ImageTool';
 import { CommentTool } from '../tools/CommentTool';
 import { clamp } from '../utils/math';
 import { getElementBounds, createElement } from '../elements/base';
+import { CollaborationProvider } from './Collaboration';
 import { setIconImageLoadCallback } from '../elements/icon';
 import { setIconResolveCallback, preloadIconSets } from '../utils/iconResolver';
 import { generateId } from '../utils/id';
@@ -67,6 +69,9 @@ export class BoardierEngine {
 
   // RAF render batching
   private _rafId = 0;
+
+  // Collaboration
+  private collab: CollaborationProvider | null = null;
 
   // Callbacks
   private _onChange?: (elements: BoardierElement[]) => void;
@@ -110,7 +115,10 @@ export class BoardierEngine {
 
     // Wire scene events → external callbacks
     this.scene.onChange(els => { this._onChange?.(els); });
-    this.scene.onSelectionChange(ids => { this._onSelection?.(ids); });
+    this.scene.onSelectionChange(ids => {
+      this._onSelection?.(ids);
+      this.collab?.updateSelection(ids);
+    });
 
     // Re-render when icon images finish loading (fixes color change causing invisible icons)
     setIconImageLoadCallback(() => this.render());
@@ -118,6 +126,12 @@ export class BoardierEngine {
 
     // Pre-load common icon sets so bracket icons resolve quickly in AI-generated content
     preloadIconSets();
+
+    // Initialize collaboration if configured
+    if (config.collaboration) {
+      this.collab = new CollaborationProvider(this.scene, config.collaboration);
+      this.collab.connect();
+    }
   }
 
   // ─── Tool context (passed to tools) ──────────────────────────────
@@ -165,6 +179,11 @@ export class BoardierEngine {
   getTool(): BoardierToolType { return this.activeToolType; }
 
   undo(): void {
+    if (this.collab) {
+      this.collab.undo();
+      this.render();
+      return;
+    }
     const snapshot = this.history.undo();
     if (snapshot) {
       this.scene.setElements(snapshot);
@@ -174,6 +193,11 @@ export class BoardierEngine {
   }
 
   redo(): void {
+    if (this.collab) {
+      this.collab.redo();
+      this.render();
+      return;
+    }
     const snapshot = this.history.redo();
     if (snapshot) {
       this.scene.setElements(snapshot);
@@ -380,6 +404,9 @@ export class BoardierEngine {
 
   getTheme(): BoardierTheme { return this.theme; }
 
+  /** Get the collaboration provider, or null if multiplayer is not enabled. */
+  getCollaboration(): CollaborationProvider | null { return this.collab; }
+
   // ─── Event handling (called by React component) ──────────────────
 
   handlePointerDown(e: PointerEvent): void {
@@ -395,6 +422,7 @@ export class BoardierEngine {
     const screen: Vec2 = { x: e.clientX - rect.left, y: e.clientY - rect.top };
     const world = this.renderer.screenToWorld(screen, this.viewState);
     this.activeTool.onPointerMove(this.toolCtx, world, e);
+    this.collab?.updateCursor(world);
   }
 
   handlePointerUp(e: PointerEvent): void {
@@ -680,6 +708,8 @@ export class BoardierEngine {
 
   dispose(): void {
     cancelAnimationFrame(this._rafId);
+    this.collab?.destroy();
+    this.collab = null;
     this._onChange = undefined;
     this._onSelection = undefined;
     this._onView = undefined;

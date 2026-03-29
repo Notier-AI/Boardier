@@ -1,5 +1,139 @@
 [
   {
+    "version": "0.5.0",
+    "date": "2026-03-29",
+    "summary": "Real-time multiplayer collaboration via Y.js CRDT and WebSocket relay. Host/guest model with password-protected rooms and join approval flow. Remote cursor and selection presence. Cloudflare Durable Object signaling server.",
+    "entries": [
+      {
+        "module": "core/Collaboration",
+        "category": "Core",
+        "description": "Real-time multiplayer collaboration provider using Y.js CRDT and a WebSocket relay server. Supports host/guest roles, password-protected rooms, join approval flow, and cursor/selection awareness. The host's browser is the authoritative peer.",
+        "filePath": "core/Collaboration.ts",
+        "lineCount": 409,
+        "types": [],
+        "classes": [
+          "CollaborationProvider"
+        ],
+        "functions": [],
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
+      },
+      {
+        "module": "ui/CollabOverlay",
+        "category": "UI",
+        "description": "Collaboration UI overlay with Share dialog (host link + password), Join dialog (username + password), join-request approval popup, and connected users badges. Uses inline styles with theme tokens.",
+        "filePath": "ui/CollabOverlay.tsx",
+        "lineCount": 282,
+        "types": [],
+        "classes": [],
+        "functions": [],
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
+      },
+      {
+        "module": "ui/RemoteCursors",
+        "category": "UI",
+        "description": "Canvas overlay that renders colored cursors and name badges for remote users in a collaborative session. Each cursor is positioned in world coordinates and transformed to screen space.",
+        "filePath": "ui/RemoteCursors.tsx",
+        "lineCount": 62,
+        "types": [],
+        "classes": [],
+        "functions": [],
+        "ai": "",
+        "kind": "new",
+        "changeNote": ""
+      },
+      {
+        "module": "core/Engine",
+        "category": "Core",
+        "description": "The central orchestrator of the Boardier whiteboard. `BoardierEngine` owns the scene graph, undo/redo history, renderer, clipboard, and the active tool. It exposes a public API for tool switching, element manipulation, multi-page support, viewport control, theming, and an AI-facing interface for LLM integration.",
+        "filePath": "core/Engine.ts",
+        "lineCount": 1108,
+        "types": [],
+        "classes": [
+          "BoardierEngine"
+        ],
+        "functions": [],
+        "ai": "",
+        "kind": "changed",
+        "changeNote": "Added CollaborationProvider integration — collab-aware undo/redo via Y.js UndoManager, cursor/selection forwarding, and getCollaboration() accessor"
+      },
+      {
+        "module": "core/types",
+        "category": "Core",
+        "description": "All type definitions for the Boardier whiteboard engine. This module contains zero runtime code — it is purely TypeScript type declarations used across every other module. Import only what you need for tree-shaking.",
+        "filePath": "core/types.ts",
+        "lineCount": 554,
+        "types": [
+          "Vec2",
+          "Bounds",
+          "BoardierElementType",
+          "FillStyle",
+          "BoardierElementBase",
+          "BoardierElement",
+          "ViewState",
+          "BoardierSceneData",
+          "BoardierConfig",
+          "BoardierAIConfig",
+          "AIChatProvider",
+          "AIChatMessage",
+          "AIChatConfig",
+          "CollaborationConfig",
+          "CollaborationUser",
+          "JoinRequest",
+          "CollabEvent"
+        ],
+        "classes": [],
+        "functions": [],
+        "ai": "",
+        "kind": "changed",
+        "changeNote": "Added CollaborationConfig, CollaborationUser, JoinRequest, CollabEvent types for real-time multiplayer collaboration"
+      },
+      {
+        "module": "index",
+        "category": "Public API",
+        "description": "Main entry point for the Boardier library. Re-exports all public components, types, themes, element factories, engine, utilities, and rendering helpers. Import from this module for the cleanest consumer experience.",
+        "filePath": "index.ts",
+        "lineCount": 162,
+        "types": [],
+        "classes": [],
+        "functions": [],
+        "ai": "",
+        "kind": "changed",
+        "changeNote": "Added CollaborationProvider, CollabOverlay, RemoteCursors, and collaboration types for real-time multiplayer"
+      },
+      {
+        "module": "ui/BoardierCanvas",
+        "category": "UI",
+        "description": "The top-level React component for embedding the Boardier whiteboard. Wraps the BoardierEngine with a canvas element and provides a complete UI including toolbar, property panel, zoom controls, export dialog, text editor overlays, context menu, minimap, page navigator, and presentation mode. All UI panels are draggable via the DraggablePanel system.",
+        "filePath": "ui/BoardierCanvas.tsx",
+        "lineCount": 1259,
+        "types": [],
+        "classes": [],
+        "functions": [],
+        "ai": "",
+        "kind": "changed",
+        "changeNote": "Added CollabOverlay and RemoteCursors rendering when collaboration config is present"
+      }
+    ],
+    "stats": {
+      "modules": 7,
+      "newModules": 3,
+      "changedModules": 4,
+      "types": 0,
+      "classes": 1,
+      "functions": 0,
+      "totalLines": 753,
+      "categories": [
+        "Core",
+        "Public API",
+        "UI"
+      ]
+    }
+  },
+  {
     "version": "0.4.7",
     "date": "2026-03-29",
     "summary": "Text elements now scroll interactively via mouse wheel. HTML whitespace collapsed in AI-generated text. Shape labels support word-wrap and height clipping. Added labelColor property to rectangle, ellipse, and diamond for independent foreground color. AI converter now sets labelColor from CSS color.",
@@ -22,7 +156,7 @@
         "category": "Core",
         "description": "All type definitions for the Boardier whiteboard engine. This module contains zero runtime code — it is purely TypeScript type declarations used across every other module. Import only what you need for tree-shaking.",
         "filePath": "core/types.ts",
-        "lineCount": 490,
+        "lineCount": 554,
         "types": [
           "Vec2",
           "Bounds",
@@ -36,7 +170,11 @@
           "BoardierAIConfig",
           "AIChatProvider",
           "AIChatMessage",
-          "AIChatConfig"
+          "AIChatConfig",
+          "CollaborationConfig",
+          "CollaborationUser",
+          "JoinRequest",
+          "CollabEvent"
         ],
         "classes": [],
         "functions": [],
@@ -280,7 +418,7 @@
         "category": "UI",
         "description": "The top-level React component for embedding the Boardier whiteboard. Wraps the BoardierEngine with a canvas element and provides a complete UI including toolbar, property panel, zoom controls, export dialog, text editor overlays, context menu, minimap, page navigator, and presentation mode. All UI panels are draggable via the DraggablePanel system.",
         "filePath": "ui/BoardierCanvas.tsx",
-        "lineCount": 1242,
+        "lineCount": 1259,
         "types": [],
         "classes": [],
         "functions": [],
@@ -366,7 +504,7 @@
         "category": "Core",
         "description": "All type definitions for the Boardier whiteboard engine. This module contains zero runtime code — it is purely TypeScript type declarations used across every other module. Import only what you need for tree-shaking.",
         "filePath": "core/types.ts",
-        "lineCount": 490,
+        "lineCount": 554,
         "types": [
           "Vec2",
           "Bounds",
@@ -380,7 +518,11 @@
           "BoardierAIConfig",
           "AIChatProvider",
           "AIChatMessage",
-          "AIChatConfig"
+          "AIChatConfig",
+          "CollaborationConfig",
+          "CollaborationUser",
+          "JoinRequest",
+          "CollabEvent"
         ],
         "classes": [],
         "functions": [],
@@ -454,7 +596,7 @@
         "category": "UI",
         "description": "The top-level React component for embedding the Boardier whiteboard. Wraps the BoardierEngine with a canvas element and provides a complete UI including toolbar, property panel, zoom controls, export dialog, text editor overlays, context menu, minimap, page navigator, and presentation mode. All UI panels are draggable via the DraggablePanel system.",
         "filePath": "ui/BoardierCanvas.tsx",
-        "lineCount": 1242,
+        "lineCount": 1259,
         "types": [],
         "classes": [],
         "functions": [],
@@ -552,7 +694,7 @@
         "category": "UI",
         "description": "The top-level React component for embedding the Boardier whiteboard. Wraps the BoardierEngine with a canvas element and provides a complete UI including toolbar, property panel, zoom controls, export dialog, text editor overlays, context menu, minimap, page navigator, and presentation mode. All UI panels are draggable via the DraggablePanel system.",
         "filePath": "ui/BoardierCanvas.tsx",
-        "lineCount": 1242,
+        "lineCount": 1259,
         "types": [],
         "classes": [],
         "functions": [],
@@ -624,7 +766,7 @@
         "category": "UI",
         "description": "The top-level React component for embedding the Boardier whiteboard. Wraps the BoardierEngine with a canvas element and provides a complete UI including toolbar, property panel, zoom controls, export dialog, text editor overlays, context menu, minimap, page navigator, and presentation mode. All UI panels are draggable via the DraggablePanel system.",
         "filePath": "ui/BoardierCanvas.tsx",
-        "lineCount": 1242,
+        "lineCount": 1259,
         "types": [],
         "classes": [],
         "functions": [],
@@ -741,7 +883,7 @@
         "category": "Core",
         "description": "All type definitions for the Boardier whiteboard engine. This module contains zero runtime code — it is purely TypeScript type declarations used across every other module. Import only what you need for tree-shaking.",
         "filePath": "core/types.ts",
-        "lineCount": 490,
+        "lineCount": 554,
         "types": [
           "Vec2",
           "Bounds",
@@ -755,7 +897,11 @@
           "BoardierAIConfig",
           "AIChatProvider",
           "AIChatMessage",
-          "AIChatConfig"
+          "AIChatConfig",
+          "CollaborationConfig",
+          "CollaborationUser",
+          "JoinRequest",
+          "CollabEvent"
         ],
         "classes": [],
         "functions": [],
@@ -768,7 +914,7 @@
         "category": "UI",
         "description": "The top-level React component for embedding the Boardier whiteboard. Wraps the BoardierEngine with a canvas element and provides a complete UI including toolbar, property panel, zoom controls, export dialog, text editor overlays, context menu, minimap, page navigator, and presentation mode. All UI panels are draggable via the DraggablePanel system.",
         "filePath": "ui/BoardierCanvas.tsx",
-        "lineCount": 1242,
+        "lineCount": 1259,
         "types": [],
         "classes": [],
         "functions": [],
@@ -840,7 +986,7 @@
         "category": "UI",
         "description": "The top-level React component for embedding the Boardier whiteboard. Wraps the BoardierEngine with a canvas element and provides a complete UI including toolbar, property panel, zoom controls, export dialog, text editor overlays, context menu, minimap, page navigator, and presentation mode. All UI panels are draggable via the DraggablePanel system.",
         "filePath": "ui/BoardierCanvas.tsx",
-        "lineCount": 1242,
+        "lineCount": 1259,
         "types": [],
         "classes": [],
         "functions": [],
@@ -925,7 +1071,7 @@
         "category": "Core",
         "description": "All type definitions for the Boardier whiteboard engine. This module contains zero runtime code — it is purely TypeScript type declarations used across every other module. Import only what you need for tree-shaking.",
         "filePath": "core/types.ts",
-        "lineCount": 490,
+        "lineCount": 554,
         "types": [
           "Vec2",
           "Bounds",
@@ -939,7 +1085,11 @@
           "BoardierAIConfig",
           "AIChatProvider",
           "AIChatMessage",
-          "AIChatConfig"
+          "AIChatConfig",
+          "CollaborationConfig",
+          "CollaborationUser",
+          "JoinRequest",
+          "CollabEvent"
         ],
         "classes": [],
         "functions": [],
@@ -952,7 +1102,7 @@
         "category": "Public API",
         "description": "Main entry point for the Boardier library. Re-exports all public components, types, themes, element factories, engine, utilities, and rendering helpers. Import from this module for the cleanest consumer experience.",
         "filePath": "index.ts",
-        "lineCount": 152,
+        "lineCount": 162,
         "types": [],
         "classes": [],
         "functions": [],
@@ -1065,7 +1215,7 @@
         "category": "Build",
         "description": "Generates changelog data from boardier-since and boardier-changed annotations. Groups new modules by the version they were introduced, and changed modules by the version they were modified. Outputs `website/src/data/changelog.json` consumed by the /changelog page.  Usage: npx tsx scripts/generateChangelog.ts",
         "filePath": "scripts/generateChangelog.ts",
-        "lineCount": 229,
+        "lineCount": 233,
         "types": [],
         "classes": [],
         "functions": [],
@@ -1078,7 +1228,7 @@
         "category": "Core",
         "description": "All type definitions for the Boardier whiteboard engine. This module contains zero runtime code — it is purely TypeScript type declarations used across every other module. Import only what you need for tree-shaking.",
         "filePath": "core/types.ts",
-        "lineCount": 490,
+        "lineCount": 554,
         "types": [
           "Vec2",
           "Bounds",
@@ -1092,7 +1242,11 @@
           "BoardierAIConfig",
           "AIChatProvider",
           "AIChatMessage",
-          "AIChatConfig"
+          "AIChatConfig",
+          "CollaborationConfig",
+          "CollaborationUser",
+          "JoinRequest",
+          "CollabEvent"
         ],
         "classes": [],
         "functions": [],
@@ -1134,7 +1288,7 @@
       "types": 0,
       "classes": 0,
       "functions": 0,
-      "totalLines": 2646,
+      "totalLines": 2650,
       "categories": [
         "AI",
         "Build",
@@ -1182,7 +1336,7 @@
         "category": "Core",
         "description": "The central orchestrator of the Boardier whiteboard. `BoardierEngine` owns the scene graph, undo/redo history, renderer, clipboard, and the active tool. It exposes a public API for tool switching, element manipulation, multi-page support, viewport control, theming, and an AI-facing interface for LLM integration.",
         "filePath": "core/Engine.ts",
-        "lineCount": 1058,
+        "lineCount": 1108,
         "types": [],
         "classes": [
           "BoardierEngine"
@@ -1240,7 +1394,7 @@
         "category": "Core",
         "description": "All type definitions for the Boardier whiteboard engine. This module contains zero runtime code — it is purely TypeScript type declarations used across every other module. Import only what you need for tree-shaking.",
         "filePath": "core/types.ts",
-        "lineCount": 490,
+        "lineCount": 554,
         "types": [
           "Vec2",
           "Bounds",
@@ -1254,7 +1408,11 @@
           "BoardierAIConfig",
           "AIChatProvider",
           "AIChatMessage",
-          "AIChatConfig"
+          "AIChatConfig",
+          "CollaborationConfig",
+          "CollaborationUser",
+          "JoinRequest",
+          "CollabEvent"
         ],
         "classes": [],
         "functions": [],
@@ -1490,7 +1648,7 @@
         "category": "Public API",
         "description": "Main entry point for the Boardier library. Re-exports all public components, types, themes, element factories, engine, utilities, and rendering helpers. Import from this module for the cleanest consumer experience.",
         "filePath": "index.ts",
-        "lineCount": 152,
+        "lineCount": 162,
         "types": [],
         "classes": [],
         "functions": [],
@@ -1713,7 +1871,7 @@
         "category": "UI",
         "description": "The top-level React component for embedding the Boardier whiteboard. Wraps the BoardierEngine with a canvas element and provides a complete UI including toolbar, property panel, zoom controls, export dialog, text editor overlays, context menu, minimap, page navigator, and presentation mode. All UI panels are draggable via the DraggablePanel system.",
         "filePath": "ui/BoardierCanvas.tsx",
-        "lineCount": 1242,
+        "lineCount": 1259,
         "types": [],
         "classes": [],
         "functions": [],
@@ -1986,10 +2144,10 @@
       "modules": 62,
       "newModules": 62,
       "changedModules": 0,
-      "types": 14,
+      "types": 18,
       "classes": 4,
       "functions": 1,
-      "totalLines": 13078,
+      "totalLines": 13219,
       "categories": [
         "Build",
         "Core",

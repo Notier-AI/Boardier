@@ -112,6 +112,10 @@ const VERSION_META: Record<string, { date: string; summary: string }> = {
     date: '2026-03-29',
     summary: 'Text elements now scroll interactively via mouse wheel. HTML whitespace collapsed in AI-generated text. Shape labels support word-wrap and height clipping. Added labelColor property to rectangle, ellipse, and diamond for independent foreground color. AI converter now sets labelColor from CSS color.',
   },
+  '0.5.0': {
+    date: '2026-03-29',
+    summary: 'Real-time multiplayer collaboration via Y.js CRDT and WebSocket relay. Host/guest model with password-protected rooms and join approval flow. Remote cursor and selection presence. Cloudflare Durable Object signaling server.',
+  },
 };
 
 // ─── Main ─────────────────────────────────────────────────────────────

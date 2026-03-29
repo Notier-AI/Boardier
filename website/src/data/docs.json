@@ -207,7 +207,7 @@
     "classes": [],
     "functions": [],
     "filePath": "scripts/generateChangelog.ts",
-    "lineCount": 229
+    "lineCount": 233
   },
   {
     "module": "scripts/parseDocsFromSource",
@@ -253,11 +253,41 @@
     "lineCount": 35
   },
   {
+    "module": "core/Collaboration",
+    "category": "Core",
+    "description": "Real-time multiplayer collaboration provider using Y.js CRDT and a WebSocket relay server. Supports host/guest roles, password-protected rooms, join approval flow, and cursor/selection awareness. The host's browser is the authoritative peer.",
+    "since": "0.5.0",
+    "changed": [],
+    "usage": "",
+    "see": "",
+    "ai": "",
+    "props": "",
+    "ref": "",
+    "params": [],
+    "types": [],
+    "classes": [
+      {
+        "name": "CollaborationProvider",
+        "description": "Manages the Y.js document, WebSocket connection to the signaling server, and bidirectional sync with the Scene. Emits CollabEvents for UI integration.",
+        "usage": "",
+        "ai": ""
+      }
+    ],
+    "functions": [],
+    "filePath": "core/Collaboration.ts",
+    "lineCount": 409
+  },
+  {
     "module": "core/Engine",
     "category": "Core",
     "description": "The central orchestrator of the Boardier whiteboard. `BoardierEngine` owns the scene graph, undo/redo history, renderer, clipboard, and the active tool. It exposes a public API for tool switching, element manipulation, multi-page support, viewport control, theming, and an AI-facing interface for LLM integration.",
     "since": "0.1.0",
-    "changed": [],
+    "changed": [
+      {
+        "version": "0.5.0",
+        "note": "Added CollaborationProvider integration — collab-aware undo/redo via Y.js UndoManager, cursor/selection forwarding, and getCollaboration() accessor"
+      }
+    ],
     "usage": "",
     "see": "Scene, Renderer, History, Clipboard, BaseTool",
     "ai": "",
@@ -275,7 +305,7 @@
     ],
     "functions": [],
     "filePath": "core/Engine.ts",
-    "lineCount": 1058
+    "lineCount": 1108
   },
   {
     "module": "core/History",
@@ -370,6 +400,10 @@
       {
         "version": "0.4.7",
         "note": "Added scrollTop to TextElement for interactive scrolling; added labelColor to RectangleElement, EllipseElement, DiamondElement"
+      },
+      {
+        "version": "0.5.0",
+        "note": "Added CollaborationConfig, CollaborationUser, JoinRequest, CollabEvent types for real-time multiplayer collaboration"
       }
     ],
     "usage": "",
@@ -443,12 +477,32 @@
         "name": "AIChatConfig",
         "description": "Configuration for the floating AI chat popup component.",
         "usage": "`<AIChatPopup config={{ defaultProvider: 'openai', allowHTMLMode: true }} />`"
+      },
+      {
+        "name": "CollaborationConfig",
+        "description": "Configuration for enabling real-time multiplayer collaboration via WebSocket + Y.js CRDT.",
+        "usage": ""
+      },
+      {
+        "name": "CollaborationUser",
+        "description": "Represents a remote user in a collaborative session with cursor and selection state.",
+        "usage": ""
+      },
+      {
+        "name": "JoinRequest",
+        "description": "A pending join request from a guest that the host must approve or deny.",
+        "usage": ""
+      },
+      {
+        "name": "CollabEvent",
+        "description": "Events emitted by the CollaborationProvider to notify the UI of state changes.",
+        "usage": ""
       }
     ],
     "classes": [],
     "functions": [],
     "filePath": "core/types.ts",
-    "lineCount": 490
+    "lineCount": 554
   },
   {
     "module": "elements/arrow",
@@ -805,6 +859,10 @@
       {
         "version": "0.3.0",
         "note": "Added AIChatPopup component and AI chat client exports for client-side multi-provider AI integration"
+      },
+      {
+        "version": "0.5.0",
+        "note": "Added CollaborationProvider, CollabOverlay, RemoteCursors, and collaboration types for real-time multiplayer"
       }
     ],
     "usage": "`import { BoardierCanvas, defaultTheme, createElement } from 'boardier';`",
@@ -817,7 +875,7 @@
     "classes": [],
     "functions": [],
     "filePath": "index.ts",
-    "lineCount": 152
+    "lineCount": 162
   },
   {
     "module": "themes/defaultTheme",
@@ -1169,6 +1227,10 @@
       {
         "version": "0.4.4",
         "note": "Text commit now word-wraps within element width instead of expanding unboundedly"
+      },
+      {
+        "version": "0.5.0",
+        "note": "Added CollabOverlay and RemoteCursors rendering when collaboration config is present"
       }
     ],
     "usage": "`<BoardierCanvas config={{ showGrid: true }} theme={defaultTheme} onChange={handleChange} />`",
@@ -1181,7 +1243,25 @@
     "classes": [],
     "functions": [],
     "filePath": "ui/BoardierCanvas.tsx",
-    "lineCount": 1242
+    "lineCount": 1259
+  },
+  {
+    "module": "ui/CollabOverlay",
+    "category": "UI",
+    "description": "Collaboration UI overlay with Share dialog (host link + password), Join dialog (username + password), join-request approval popup, and connected users badges. Uses inline styles with theme tokens.",
+    "since": "0.5.0",
+    "changed": [],
+    "usage": "",
+    "see": "",
+    "ai": "",
+    "props": "",
+    "ref": "",
+    "params": [],
+    "types": [],
+    "classes": [],
+    "functions": [],
+    "filePath": "ui/CollabOverlay.tsx",
+    "lineCount": 282
   },
   {
     "module": "ui/ContextMenu",
@@ -1378,6 +1458,24 @@
     "functions": [],
     "filePath": "ui/PropertyPanel.tsx",
     "lineCount": 971
+  },
+  {
+    "module": "ui/RemoteCursors",
+    "category": "UI",
+    "description": "Canvas overlay that renders colored cursors and name badges for remote users in a collaborative session. Each cursor is positioned in world coordinates and transformed to screen space.",
+    "since": "0.5.0",
+    "changed": [],
+    "usage": "",
+    "see": "",
+    "ai": "",
+    "props": "",
+    "ref": "",
+    "params": [],
+    "types": [],
+    "classes": [],
+    "functions": [],
+    "filePath": "ui/RemoteCursors.tsx",
+    "lineCount": 62
   },
   {
     "module": "ui/ShapeLabelEditor",

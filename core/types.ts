@@ -8,6 +8,7 @@
  * @boardier-changed 0.3.2 Added showDarkModeToggle option to BoardierConfig
  * @boardier-changed 0.4.3 Added multiLine, scrollbar, scrollbarSize, scrollbarColor, scrollbarTrackColor, scrollbarRadius properties to TextElement
  * @boardier-changed 0.4.7 Added scrollTop to TextElement for interactive scrolling; added labelColor to RectangleElement, EllipseElement, DiamondElement
+ * @boardier-changed 0.5.0 Added CollaborationConfig, CollaborationUser, JoinRequest, CollabEvent types for real-time multiplayer collaboration
  */
 
 // ─── Boardier Core Types ─────────────────────────────────────────────
@@ -392,6 +393,8 @@ export interface BoardierConfig {
   showDarkModeToggle?: boolean;
   /** Layout configuration for UI panels (toolbar, zoom, export) */
   layout?: BoardierLayoutConfig;
+  /** Real-time multiplayer collaboration configuration. */
+  collaboration?: CollaborationConfig;
 }
 
 /** Configuration for the draggable layout system */
@@ -487,3 +490,64 @@ export interface AIChatConfig {
 export type SceneChangeHandler = (elements: BoardierElement[]) => void;
 export type SelectionChangeHandler = (selectedIds: string[]) => void;
 export type ViewChangeHandler = (viewState: ViewState) => void;
+
+// ─── Collaboration Types ─────────────────────────────────────────────
+
+/**
+ * @boardier-type CollaborationConfig
+ * @boardier-description Configuration for enabling real-time multiplayer collaboration via WebSocket + Y.js CRDT.
+ * @boardier-since 0.5.0
+ */
+export interface CollaborationConfig {
+  /** WebSocket URL of the signaling/relay server. */
+  signalingUrl: string;
+  /** Room ID to join. If omitted, a new room is created (host mode). */
+  roomId?: string;
+  /** Display name for this user. */
+  userName?: string;
+  /** Cursor/selection color for this user. Auto-assigned if omitted. */
+  userColor?: string;
+  /** Room password (hashed client-side before sending). */
+  password?: string;
+}
+
+/**
+ * @boardier-type CollaborationUser
+ * @boardier-description Represents a remote user in a collaborative session with cursor and selection state.
+ * @boardier-since 0.5.0
+ */
+export interface CollaborationUser {
+  clientId: number;
+  name: string;
+  color: string;
+  cursor?: Vec2;
+  selectedIds: string[];
+}
+
+/**
+ * @boardier-type JoinRequest
+ * @boardier-description A pending join request from a guest that the host must approve or deny.
+ * @boardier-since 0.5.0
+ */
+export interface JoinRequest {
+  clientId: number;
+  userName: string;
+}
+
+/**
+ * @boardier-type CollabEvent
+ * @boardier-description Events emitted by the CollaborationProvider to notify the UI of state changes.
+ * @boardier-since 0.5.0
+ */
+export type CollabEvent =
+  | { type: 'room-created'; roomId: string }
+  | { type: 'connected'; clientId: number }
+  | { type: 'disconnected' }
+  | { type: 'join-request'; request: JoinRequest }
+  | { type: 'join-approved'; clientId: number }
+  | { type: 'join-denied'; reason?: string }
+  | { type: 'password-required' }
+  | { type: 'peer-joined'; user: CollaborationUser }
+  | { type: 'peer-left'; clientId: number }
+  | { type: 'users-changed'; users: CollaborationUser[] }
+  | { type: 'error'; message: string };

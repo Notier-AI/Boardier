@@ -9,6 +9,7 @@
  * @boardier-changed 0.4.1 Wired export dropdown in PropertyPanel for per-element export
  * @boardier-changed 0.4.2 Mobile-responsive — larger touch targets for buttons, minimap hidden on mobile, viewport-aware sizing
  * @boardier-changed 0.4.4 Text commit now word-wraps within element width instead of expanding unboundedly
+ * @boardier-changed 0.5.0 Added CollabOverlay and RemoteCursors rendering when collaboration config is present
  * @boardier-usage `<BoardierCanvas config={{ showGrid: true }} theme={defaultTheme} onChange={handleChange} />`
  * @boardier-props BoardierCanvasProps
  * @boardier-ref BoardierCanvasRef (via React.forwardRef) — exposes getEngine(), getSceneData(), loadScene(), exportToPNG(), exportToSVG(), exportToJSON()
@@ -50,6 +51,8 @@ import { getElementBounds } from '../elements/base';
 import { mermaidToBoardier } from '../utils/mermaidParser';
 import { measureText } from '../elements/text';
 import { describeElements } from '../ai/htmlConverter';
+import { CollabOverlay } from './CollabOverlay';
+import type { CollaborationProvider } from '../core/Collaboration';
 import {
   exportToPNG as exportToPNGFn,
   exportToSVG,
@@ -113,6 +116,7 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
     const [showMermaidDialog, setShowMermaidDialog] = useState(false);
     const [showMinimap, setShowMinimap] = useState(true);
     const [showPresentation, setShowPresentation] = useState(false);
+    const [collabProvider, setCollabProvider] = useState<CollaborationProvider | null>(null);
     const [pages, setPages] = useState<{ id: string; name: string; elements: BoardierElement[] }[]>([]);
     const [activePageId, setActivePageId] = useState('');
     const [editingEmbedId, setEditingEmbedId] = useState<string | null>(null);
@@ -211,6 +215,10 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
       // Set initial size
       const { width, height } = container.getBoundingClientRect();
       engine.resize(width, height);
+
+      // Expose collaboration provider if configured
+      const cp = engine.getCollaboration();
+      if (cp) setCollabProvider(cp);
 
       // Resize observer
       const ro = new ResizeObserver(entries => {
@@ -685,6 +693,15 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
             touchAction: 'none',
           }}
         />
+
+        {/* Collaboration Overlay */}
+        {collabProvider && (
+          <CollabOverlay
+            collab={collabProvider}
+            theme={resolvedTheme}
+            viewState={viewState}
+          />
+        )}
 
         {/* Toolbar */}
         {!readOnly && (
