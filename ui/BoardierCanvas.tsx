@@ -714,6 +714,10 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
             collab={collabProvider}
             theme={resolvedTheme}
             viewState={viewState}
+            getElementBounds={(id) => {
+              const el = engineRef.current?.scene.getElementById(id);
+              return el ? getElementBounds(el) : null;
+            }}
           />
         )}
 

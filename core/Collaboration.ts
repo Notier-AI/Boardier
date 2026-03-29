@@ -49,6 +49,9 @@ export class CollaborationProvider {
   private destroyed = false;
   private hasConnected = false;
 
+  /** Called after remote changes are applied so the canvas can repaint. */
+  requestRender: (() => void) | null = null;
+
   constructor(scene: Scene, config: CollaborationConfig) {
     this.scene = scene;
     this.config = config;
@@ -104,7 +107,7 @@ export class CollaborationProvider {
 
     this.ws.onopen = async () => {
       if (this.role === 'host') {
-        const msg: any = { type: 'create-room' };
+        const msg: any = { type: 'create-room', userName: this.config.userName || 'Host' };
         if (this.config.password) msg.password = await hashPassword(this.config.password);
         this.sendJSON(msg);
       } else {
@@ -194,11 +197,17 @@ export class CollaborationProvider {
         break;
 
       case 'awareness': {
-        const existing = this.users.get(msg.clientId);
-        if (existing) {
-          if (msg.state.cursor) existing.cursor = msg.state.cursor;
-          if (msg.state.selectedIds) existing.selectedIds = msg.state.selectedIds;
-          if (msg.state.name) existing.name = msg.state.name;
+        let user = this.users.get(msg.clientId);
+        // Auto-create user entry if we haven't seen them yet (e.g. host)
+        if (!user && msg.state.name) {
+          const color = USER_COLORS[msg.clientId % USER_COLORS.length];
+          user = { clientId: msg.clientId, name: msg.state.name, color, selectedIds: [] };
+          this.users.set(msg.clientId, user);
+        }
+        if (user) {
+          if (msg.state.cursor) user.cursor = msg.state.cursor;
+          if (msg.state.selectedIds) user.selectedIds = msg.state.selectedIds;
+          if (msg.state.name) user.name = msg.state.name;
           this.emit({ type: 'users-changed', users: this.getUsers() });
         }
         break;
@@ -343,6 +352,7 @@ export class CollaborationProvider {
     this.suppressSceneSync = true;
     this.scene.setElements(elements);
     this.suppressSceneSync = false;
+    this.requestRender?.();
   }
 
   /* ── WebSocket helpers ──────────────────────────── */

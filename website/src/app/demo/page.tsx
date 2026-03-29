@@ -6,8 +6,12 @@ import type { BoardierCanvasRef } from '../../../../ui/BoardierCanvas';
 import type { BoardierEngine } from '../../../../core/Engine';
 import type { CollaborationConfig } from '../../../../core/types';
 
-/** Replace with your deployed Cloudflare Worker URL */
-const SIGNALING_URL = process.env.NEXT_PUBLIC_SIGNALING_URL || 'wss://collab.boardier.dev';
+/**
+ * Signaling server URL for collaboration.
+ * Set NEXT_PUBLIC_SIGNALING_URL env variable to your own deployed signaling server.
+ * See signaling/ folder for the Cloudflare Worker source code.
+ */
+const SIGNALING_URL = process.env.NEXT_PUBLIC_SIGNALING_URL || '';
 
 export default function DemoPage() {
   const canvasRef = useRef<BoardierCanvasRef>(null);

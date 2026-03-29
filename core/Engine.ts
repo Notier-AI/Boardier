@@ -130,6 +130,7 @@ export class BoardierEngine {
     // Initialize collaboration if configured (don't auto-connect — CollabOverlay handles that)
     if (config.collaboration) {
       this.collab = new CollaborationProvider(this.scene, config.collaboration);
+      this.collab.requestRender = () => this.render();
     }
   }
 
@@ -412,6 +413,7 @@ export class BoardierEngine {
       this.collab.destroy();
     }
     this.collab = new CollaborationProvider(this.scene, config);
+    this.collab.requestRender = () => this.render();
     this.collab.connect();
     return this.collab;
   }

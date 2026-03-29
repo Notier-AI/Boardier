@@ -66,6 +66,7 @@ interface GuestInfo {
 export class Room {
   private host: WebSocket | null = null;
   private hostClientId = 0;
+  private hostUserName = 'Host';
   private guests = new Map<WebSocket, GuestInfo>();
   private passwordHash: string | null = null;
   private nextClientId = 1;
@@ -130,6 +131,7 @@ export class Room {
       case 'create-room': {
         this.host = ws;
         this.hostClientId = this.nextClientId++;
+        if (msg.userName) this.hostUserName = msg.userName;
         if (msg.password) this.passwordHash = msg.password;
         this.sendJSON(ws, { type: 'room-created', roomId: this.roomId, clientId: this.hostClientId });
         break;
@@ -169,7 +171,15 @@ export class Room {
         if (msg.approved) {
           guest.approved = true;
           this.sendJSON(targetWs, { type: 'join-approved', clientId: guest.clientId });
-          // Notify all approved peers
+          // Tell the new guest about the host
+          this.sendJSON(targetWs, { type: 'peer-joined', clientId: this.hostClientId, userName: this.hostUserName });
+          // Tell the new guest about all other approved guests
+          for (const [gws, ginfo] of this.guests) {
+            if (gws !== targetWs && ginfo.approved) {
+              this.sendJSON(targetWs, { type: 'peer-joined', clientId: ginfo.clientId, userName: ginfo.userName });
+            }
+          }
+          // Notify all existing approved peers about the new guest
           this.broadcastJSON({ type: 'peer-joined', clientId: guest.clientId, userName: guest.userName }, targetWs);
         } else {
           this.sendJSON(targetWs, { type: 'join-denied', reason: 'Host denied access' });

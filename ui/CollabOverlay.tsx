@@ -5,7 +5,7 @@
  * @boardier-since 0.5.0
  */
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import type { CollaborationUser, JoinRequest, CollabEvent, ViewState } from '../core/types';
+import type { CollaborationUser, JoinRequest, CollabEvent, ViewState, Bounds } from '../core/types';
 import type { CollaborationProvider } from '../core/Collaboration';
 import type { BoardierTheme } from '../themes/types';
 import { RemoteCursors } from './RemoteCursors';
@@ -15,11 +15,13 @@ interface CollabOverlayProps {
   theme: BoardierTheme;
   viewState: ViewState;
   roomId?: string;
+  /** Resolve element bounds by id for remote selection outlines. */
+  getElementBounds?: (id: string) => Bounds | null;
   /** Called when room is created (host mode) so parent can update URL. */
   onRoomCreated?: (roomId: string) => void;
 }
 
-export const CollabOverlay: React.FC<CollabOverlayProps> = ({ collab, theme, viewState, roomId, onRoomCreated }) => {
+export const CollabOverlay: React.FC<CollabOverlayProps> = ({ collab, theme, viewState, roomId, getElementBounds, onRoomCreated }) => {
   const [users, setUsers] = useState<CollaborationUser[]>([]);
   const [connected, setConnected] = useState(false);
   const [joinRequests, setJoinRequests] = useState<JoinRequest[]>([]);
@@ -145,7 +147,7 @@ export const CollabOverlay: React.FC<CollabOverlayProps> = ({ collab, theme, vie
   return (
     <>
       {/* Remote cursors */}
-      <RemoteCursors users={users} viewState={viewState} />
+      <RemoteCursors users={users} viewState={viewState} getElementBounds={getElementBounds} />
 
       {/* Connected users badges */}
       {connected && users.length > 0 && (
