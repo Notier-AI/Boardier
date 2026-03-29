@@ -66,9 +66,19 @@ export const CollabOverlay: React.FC<CollabOverlayProps> = ({ collab, theme, vie
           break;
         case 'password-required':
           setNeedsPassword(true);
+          // Re-show join form so guest can enter the password
+          setJoinStatus('idle');
+          setShowJoinForm(true);
           break;
         case 'users-changed':
           setUsers(e.users);
+          break;
+        case 'error':
+          // If guest hasn't been approved yet, show the error in the join form
+          if (!isHost && (joinStatus === 'waiting' || joinStatus === 'idle')) {
+            setJoinStatus('denied');
+            setDenyReason(e.message);
+          }
           break;
       }
     });
@@ -239,8 +249,9 @@ export const CollabOverlay: React.FC<CollabOverlayProps> = ({ collab, theme, vie
                 if (!joinUserName.trim()) return;
                 setShowJoinForm(false);
                 setJoinStatus('waiting');
-                // The parent (BoardierCanvas/demo) will read these via the collab config
-                // For now, trigger connect
+                collab.setUserName(joinUserName.trim());
+                if (joinPassword) collab.setPassword(joinPassword);
+                collab.disconnect();
                 collab.connect();
               }}
               disabled={!joinUserName.trim()}

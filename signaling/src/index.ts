@@ -40,9 +40,13 @@ export default {
     const id = env.ROOM.idFromName(roomId);
     const room = env.ROOM.get(id);
 
-    // Forward the request (must be a WebSocket upgrade)
+    // Forward the request to the Durable Object.
+    // IMPORTANT: WebSocket 101 responses carry a Cloudflare-specific `webSocket`
+    // property that would be lost if re-wrapped with `new Response()`.
     const res = await room.fetch(request);
-    // Add CORS headers
+    if (res.status === 101) return res;
+
+    // Non-WS responses: add CORS headers
     const response = new Response(res.body, res);
     response.headers.set('Access-Control-Allow-Origin', '*');
     return response;
@@ -60,7 +64,6 @@ interface GuestInfo {
 // ─── Durable Object: Room ───────────────────────────────
 
 export class Room {
-  private ctx: DurableObjectState;
   private host: WebSocket | null = null;
   private hostClientId = 0;
   private guests = new Map<WebSocket, GuestInfo>();
@@ -68,9 +71,7 @@ export class Room {
   private nextClientId = 1;
   private roomId = '';
 
-  constructor(ctx: DurableObjectState, _env: Env) {
-    this.ctx = ctx;
-  }
+  constructor(private ctx: DurableObjectState, _env: Env) {}
 
   async fetch(request: Request): Promise<Response> {
     if (request.headers.get('Upgrade') !== 'websocket') {
@@ -85,28 +86,32 @@ export class Room {
     const pair = new WebSocketPair();
     const [client, server] = Object.values(pair);
 
-    this.ctx.acceptWebSocket(server);
+    // Classic (non-hibernation) approach: handle events inline so the DO stays
+    // alive in memory as long as WebSockets are connected—preserving this.host,
+    // this.guests, etc.
+    server.accept();
+
+    server.addEventListener('message', (event) => {
+      const data = event.data;
+      if (typeof data === 'string') {
+        try {
+          this.handleControl(server, JSON.parse(data));
+        } catch {
+          this.sendJSON(server, { type: 'error', message: 'Invalid JSON' });
+        }
+      } else if (data instanceof ArrayBuffer) {
+        this.relayBinary(server, data);
+      }
+    });
+
+    server.addEventListener('close', () => this.handleClose(server));
+    server.addEventListener('error', () => this.handleClose(server));
 
     return new Response(null, { status: 101, webSocket: client });
   }
 
-  async webSocketMessage(ws: WebSocket, message: string | ArrayBuffer): Promise<void> {
-    if (typeof message === 'string') {
-      try {
-        const msg = JSON.parse(message);
-        this.handleControl(ws, msg);
-      } catch {
-        this.sendJSON(ws, { type: 'error', message: 'Invalid JSON' });
-      }
-    } else {
-      // Binary — Y.js sync data, relay to all other approved peers
-      this.relayBinary(ws, message);
-    }
-  }
-
-  async webSocketClose(ws: WebSocket): Promise<void> {
+  private handleClose(ws: WebSocket): void {
     if (ws === this.host) {
-      // Host left — notify all guests
       this.broadcastJSON({ type: 'error', message: 'Host disconnected' }, ws);
       this.host = null;
     } else {
@@ -116,10 +121,6 @@ export class Room {
         this.guests.delete(ws);
       }
     }
-  }
-
-  async webSocketError(ws: WebSocket): Promise<void> {
-    this.webSocketClose(ws);
   }
 
   // ─── Control message handler ─────────────────────

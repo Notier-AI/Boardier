@@ -47,6 +47,7 @@ export class CollaborationProvider {
   private eventListeners: ((e: CollabEvent) => void)[] = [];
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private destroyed = false;
+  private hasConnected = false;
 
   constructor(scene: Scene, config: CollaborationConfig) {
     this.scene = scene;
@@ -81,6 +82,16 @@ export class CollaborationProvider {
     });
   }
 
+  /** Update the user's display name (must be called before connect for guests). */
+  setUserName(name: string): void {
+    this.config = { ...this.config, userName: name };
+  }
+
+  /** Set the room password (must be called before connect for password-protected rooms). */
+  setPassword(password: string): void {
+    this.config = { ...this.config, password };
+  }
+
   /* ── Connection ─────────────────────────────────── */
 
   async connect(): Promise<void> {
@@ -113,7 +124,8 @@ export class CollaborationProvider {
 
     this.ws.onclose = () => {
       this.emit({ type: 'disconnected' });
-      if (!this.destroyed) {
+      // Only auto-reconnect if we had a previously successful session
+      if (!this.destroyed && this.hasConnected) {
         this.reconnectTimer = setTimeout(() => this.connect(), 3000);
       }
     };
@@ -136,6 +148,7 @@ export class CollaborationProvider {
     switch (msg.type) {
       case 'room-created':
         this.clientId = msg.clientId;
+        this.hasConnected = true;
         if (this.role === 'host') {
           // Seed Y.js from the current scene
           this.syncSceneToYDoc();
@@ -150,6 +163,7 @@ export class CollaborationProvider {
 
       case 'join-approved':
         this.clientId = msg.clientId;
+        this.hasConnected = true;
         this.emit({ type: 'join-approved', clientId: this.clientId });
         this.emit({ type: 'connected', clientId: this.clientId });
         // Request sync from host (send our state vector)

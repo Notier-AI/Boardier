@@ -127,10 +127,9 @@ export class BoardierEngine {
     // Pre-load common icon sets so bracket icons resolve quickly in AI-generated content
     preloadIconSets();
 
-    // Initialize collaboration if configured
+    // Initialize collaboration if configured (don't auto-connect — CollabOverlay handles that)
     if (config.collaboration) {
       this.collab = new CollaborationProvider(this.scene, config.collaboration);
-      this.collab.connect();
     }
   }
 
