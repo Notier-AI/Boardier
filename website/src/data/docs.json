@@ -43,6 +43,14 @@
       {
         "version": "0.4.5",
         "note": "Removed forced applyPreset — AI-generated CSS colors now pass through directly"
+      },
+      {
+        "version": "0.4.6",
+        "note": "Fixed overlapping text — flex branch no longer matches containers with deeply nested div children, and children with block content are routed to the full walker instead of extracting merged text"
+      },
+      {
+        "version": "0.4.7",
+        "note": "Collapse HTML whitespace in text extraction; set labelColor on shapes from CSS color"
       }
     ],
     "usage": "",
@@ -55,7 +63,7 @@
     "classes": [],
     "functions": [],
     "filePath": "ai/htmlConverter.ts",
-    "lineCount": 564
+    "lineCount": 599
   },
   {
     "module": "ai/index",
@@ -199,7 +207,7 @@
     "classes": [],
     "functions": [],
     "filePath": "scripts/generateChangelog.ts",
-    "lineCount": 221
+    "lineCount": 229
   },
   {
     "module": "scripts/parseDocsFromSource",
@@ -267,7 +275,7 @@
     ],
     "functions": [],
     "filePath": "core/Engine.ts",
-    "lineCount": 1038
+    "lineCount": 1058
   },
   {
     "module": "core/History",
@@ -358,6 +366,10 @@
       {
         "version": "0.4.3",
         "note": "Added multiLine, scrollbar, scrollbarSize, scrollbarColor, scrollbarTrackColor, scrollbarRadius properties to TextElement"
+      },
+      {
+        "version": "0.4.7",
+        "note": "Added scrollTop to TextElement for interactive scrolling; added labelColor to RectangleElement, EllipseElement, DiamondElement"
       }
     ],
     "usage": "",
@@ -436,7 +448,7 @@
     "classes": [],
     "functions": [],
     "filePath": "core/types.ts",
-    "lineCount": 481
+    "lineCount": 490
   },
   {
     "module": "elements/arrow",
@@ -549,7 +561,7 @@
     "classes": [],
     "functions": [],
     "filePath": "elements/diamond.ts",
-    "lineCount": 108
+    "lineCount": 109
   },
   {
     "module": "elements/ellipse",
@@ -567,7 +579,7 @@
     "classes": [],
     "functions": [],
     "filePath": "elements/ellipse.ts",
-    "lineCount": 101
+    "lineCount": 102
   },
   {
     "module": "elements/embed",
@@ -729,7 +741,7 @@
     "classes": [],
     "functions": [],
     "filePath": "elements/rectangle.ts",
-    "lineCount": 148
+    "lineCount": 150
   },
   {
     "module": "elements/table",
@@ -766,6 +778,10 @@
       {
         "version": "0.4.5",
         "note": "Bracket icon labels now resolve from react-icons dynamically with fuzzy matching — use names like [FiCheck], [LuStar], or plain [Check]"
+      },
+      {
+        "version": "0.4.7",
+        "note": "Text now scrolls interactively via mouse wheel; render offset uses scrollTop field"
       }
     ],
     "usage": "",
@@ -778,7 +794,7 @@
     "classes": [],
     "functions": [],
     "filePath": "elements/text.ts",
-    "lineCount": 257
+    "lineCount": 264
   },
   {
     "module": "index",
@@ -1345,6 +1361,10 @@
       {
         "version": "0.4.3",
         "note": "Added multi-line toggle and scrollbar customization controls for text elements"
+      },
+      {
+        "version": "0.4.7",
+        "note": "Added label color picker for rectangle, ellipse, and diamond elements"
       }
     ],
     "usage": "",
@@ -1357,7 +1377,7 @@
     "classes": [],
     "functions": [],
     "filePath": "ui/PropertyPanel.tsx",
-    "lineCount": 952
+    "lineCount": 971
   },
   {
     "module": "ui/ShapeLabelEditor",
@@ -1605,7 +1625,7 @@
     "classes": [],
     "functions": [],
     "filePath": "utils/renderHelpers.ts",
-    "lineCount": 195
+    "lineCount": 233
   },
   {
     "module": "utils/roughDraw",

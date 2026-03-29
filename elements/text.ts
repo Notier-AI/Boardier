@@ -6,6 +6,7 @@
  * @boardier-changed 0.4.3 Added multiLine support with scrollbar rendering when content overflows the element bounds
  * @boardier-changed 0.4.4 Text now word-wraps within element width so it never exceeds its hitbox; bracket icon labels like [Check] render as styled inline labels
  * @boardier-changed 0.4.5 Bracket icon labels now resolve from react-icons dynamically with fuzzy matching — use names like [FiCheck], [LuStar], or plain [Check]
+ * @boardier-changed 0.4.7 Text now scrolls interactively via mouse wheel; render offset uses scrollTop field
  */
 import type { TextElement, Vec2, Bounds } from '../core/types';
 import { registerElement } from './base';
@@ -66,6 +67,10 @@ function render(ctx: CanvasRenderingContext2D, el: TextElement): void {
   const totalContentH = lines.length * lineH;
   const startY = -el.height / 2;
 
+  // Apply scroll offset
+  const maxScroll = Math.max(0, totalContentH - el.height);
+  const scrollOff = Math.min(el.scrollTop ?? 0, maxScroll);
+
   // Always clip to element bounds
   ctx.save();
   ctx.beginPath();
@@ -75,7 +80,7 @@ function render(ctx: CanvasRenderingContext2D, el: TextElement): void {
   const overflows = totalContentH > el.height;
 
   for (let i = 0; i < lines.length; i++) {
-    const lineY = startY + i * lineH;
+    const lineY = startY + i * lineH - scrollOff;
 
     if (lineY + lineH < -el.height / 2) continue;
     if (lineY > el.height / 2) break;
@@ -174,6 +179,8 @@ function render(ctx: CanvasRenderingContext2D, el: TextElement): void {
     const trackH = el.height - 4;
     const thumbRatio = Math.min(el.height / totalContentH, 1);
     const thumbH = Math.max(trackH * thumbRatio, sbSize * 2);
+    const scrollRatio = maxScroll > 0 ? scrollOff / maxScroll : 0;
+    const thumbY = trackY + scrollRatio * (trackH - thumbH);
 
     // Track
     if (sbTrackColor !== 'transparent') {
@@ -184,7 +191,7 @@ function render(ctx: CanvasRenderingContext2D, el: TextElement): void {
 
     // Thumb
     ctx.fillStyle = sbColor;
-    roundRect(ctx, trackX, trackY, sbSize, thumbH, sbRadius);
+    roundRect(ctx, trackX, thumbY, sbSize, thumbH, sbRadius);
     ctx.fill();
   }
 

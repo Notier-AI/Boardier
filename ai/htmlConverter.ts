@@ -11,6 +11,8 @@
  * @boardier-changed 0.4.3 Added style preset awareness — reads data-boardier-style from root container, defaults to rough hand-drawn style
  * @boardier-changed 0.4.4 Flex containers with inline children (navs, headers) now create separate positioned text elements instead of merging into one
  * @boardier-changed 0.4.5 Removed forced applyPreset — AI-generated CSS colors now pass through directly
+ * @boardier-changed 0.4.6 Fixed overlapping text — flex branch no longer matches containers with deeply nested div children, and children with block content are routed to the full walker instead of extracting merged text
+ * @boardier-changed 0.4.7 Collapse HTML whitespace in text extraction; set labelColor on shapes from CSS color
  */
 
 import type { BoardierElement } from '../core/types';
@@ -237,21 +239,48 @@ function walkNode(
         const iy = inlineRect.y - oy;
         const iw = inlineRect.width;
         const ih = inlineRect.height;
-        const inlineText = (inlineChild.textContent || '').trim();
+
+        // Children with nested block content should be handled by the full
+        // walker — extracting .textContent would merge all descendant text
+        // into one blob that overlaps with the individually-walked children.
+        if (hasBlockLevelChildren(inlineChild)) {
+          const childBg = parseColor(inlineStyle.backgroundColor);
+          const childBorderW = parseFloat(inlineStyle.borderTopWidth) || 0;
+          if (childBg || childBorderW > 0) {
+            elements.push(createRectangle({
+              x: ix, y: iy, width: iw, height: ih,
+              backgroundColor: childBg || 'transparent',
+              fillStyle: childBg ? 'solid' : 'none',
+              strokeColor: childBorderW > 0 ? (parseBorderColor(inlineStyle) || '#1e1e1e') : 'transparent',
+              strokeWidth: childBorderW > 0 ? Math.min(childBorderW, 4) : 0,
+              borderRadius: Math.min(parseRadius(inlineStyle), 50),
+              label: '',
+              opacity: parseFloat(inlineStyle.opacity) || 1,
+              roughness: 0,
+            }));
+          }
+          walkNode(inlineChild, elements, ox, oy, depth + 1);
+          continue;
+        }
+
+        const inlineText = (inlineChild.textContent || '').replace(/\s+/g, ' ').trim();
         const inlineBg = parseColor(inlineStyle.backgroundColor);
         const inlineBorderW = parseFloat(inlineStyle.borderTopWidth) || 0;
         if (isButtonLike(inlineChild, inlineChild.tagName.toLowerCase(), inlineStyle)) {
+          const inlineTextColor = parseColor(inlineStyle.color) || '#ffffff';
           elements.push(createRectangle({
             x: ix, y: iy, width: iw, height: ih,
             backgroundColor: inlineBg || '#1971c2',
             fillStyle: 'solid',
-            strokeColor: inlineBorderW > 0 ? (parseBorderColor(inlineStyle) || '#1e1e1e') : (parseColor(inlineStyle.color) || '#ffffff'),
+            strokeColor: inlineBorderW > 0 ? (parseBorderColor(inlineStyle) || '#1e1e1e') : 'transparent',
             strokeWidth: inlineBorderW > 0 ? Math.min(inlineBorderW, 4) : 0,
             borderRadius: Math.min(parseRadius(inlineStyle), 50),
             label: inlineText || '',
+            labelColor: inlineTextColor,
             roughness: 0,
           }));
         } else if (inlineBg || inlineBorderW > 0) {
+          const inlineTextColor = parseColor(inlineStyle.color) || '#1e1e1e';
           elements.push(createRectangle({
             x: ix, y: iy, width: iw, height: ih,
             backgroundColor: inlineBg || 'transparent',
@@ -260,6 +289,7 @@ function walkNode(
             strokeWidth: inlineBorderW > 0 ? Math.min(inlineBorderW, 4) : 0,
             borderRadius: Math.min(parseRadius(inlineStyle), 50),
             label: inlineText || '',
+            labelColor: inlineTextColor,
             roughness: 0,
           }));
         } else if (inlineText) {
@@ -271,10 +301,6 @@ function walkNode(
             textAlign: parseTextAlign(inlineStyle.textAlign),
             strokeColor: parseColor(inlineStyle.color) || '#1e1e1e',
           } as any));
-        }
-        // If this child itself has block children, recurse
-        if (hasBlockLevelChildren(inlineChild)) {
-          walkNode(inlineChild, elements, ox, oy, depth + 1);
         }
       }
       continue;
@@ -313,10 +339,11 @@ function walkNode(
         x, y, width: w, height: h,
         backgroundColor: bgColor || '#1971c2',
         fillStyle: 'solid',
-        strokeColor: hasBorder ? (parseBorderColor(style) || '#1e1e1e') : textColor,
+        strokeColor: hasBorder ? (parseBorderColor(style) || '#1e1e1e') : 'transparent',
         strokeWidth: hasBorder ? Math.min(borderWidth, 4) : 0,
         borderRadius: Math.min(radius, 50),
         label: textContent || '',
+        labelColor: textColor,
         roughness: 0,
       }));
       continue;
@@ -329,10 +356,11 @@ function walkNode(
         x, y, width: w, height: h,
         backgroundColor: bgColor || 'transparent',
         fillStyle: hasBg ? 'solid' : 'none',
-        strokeColor: hasBorder ? (parseBorderColor(style) || '#1e1e1e') : textColor,
+        strokeColor: hasBorder ? (parseBorderColor(style) || '#1e1e1e') : 'transparent',
         strokeWidth: hasBorder ? Math.min(borderWidth, 4) : 0,
         borderRadius: Math.min(radius, 50),
         label: textContent,
+        labelColor: textColor,
         opacity: parseFloat(style.opacity) || 1,
         roughness: 0,
       }));
@@ -494,7 +522,13 @@ function hasInlineTextChildren(el: Element): boolean {
     const child = el.children[i] as HTMLElement;
     const tag = child.tagName.toLowerCase();
     const text = (child.textContent || '').trim();
-    if (text && (INLINE_TAGS.has(tag) || tag === 'a' || tag === 'div' || tag === 'button')) {
+    if (!text) continue;
+    // Truly inline tags, links, and buttons always count
+    if (INLINE_TAGS.has(tag) || tag === 'a' || tag === 'button') {
+      textChildCount++;
+    }
+    // div children count only if they are leaf-like (no deeply nested blocks)
+    else if (tag === 'div' && !hasBlockLevelChildren(child)) {
       textChildCount++;
     }
   }
@@ -513,7 +547,8 @@ function getDirectTextContent(el: Element): string {
       }
     }
   }
-  return text.trim().substring(0, 200);
+  // Collapse HTML whitespace (newlines + indentation) into single spaces
+  return text.replace(/\s+/g, ' ').trim().substring(0, 200);
 }
 
 // ─── Element-to-description serializer ────────────────────────────

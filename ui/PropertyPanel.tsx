@@ -7,6 +7,7 @@
  * @boardier-changed 0.4.1 Added export dropdown button for exporting selected elements in multiple formats
  * @boardier-changed 0.4.2 Mobile layout rewritten — horizontal icon bar at bottom with popup property editors and overflow menu
  * @boardier-changed 0.4.3 Added multi-line toggle and scrollbar customization controls for text elements
+ * @boardier-changed 0.4.7 Added label color picker for rectangle, ellipse, and diamond elements
  */
 import React, { useRef, useState, useEffect } from 'react';
 import type { BoardierElement, FillStyle, StrokeStyle } from '../core/types';
@@ -161,6 +162,7 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
   if (elements.length === 0) return null;
   const strokePickerRef = useRef<HTMLInputElement>(null);
   const fillPickerRef = useRef<HTMLInputElement>(null);
+  const labelPickerRef = useRef<HTMLInputElement>(null);
   const [perCorner, setPerCorner] = useState(false);
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
   const [activePopup, setActivePopup] = useState<string | null>(null);
@@ -177,6 +179,7 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
   const hasText = elements.some(e => e.type === 'text');
   const hasLabel = elements.some(e => 'label' in e);
   const hasTextOrLabel = hasText || hasLabel;
+  const hasLabelColor = elements.some(e => e.type === 'rectangle' || e.type === 'ellipse' || e.type === 'diamond');
   const isNotLine = elements.every(e => e.type !== 'line' && e.type !== 'arrow' && e.type !== 'freehand');
   const isRect = elements.some(e => e.type === 'rectangle');
   const isEmbed = elements.some(e => e.type === 'embed');
@@ -447,6 +450,13 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
             {numInput((first as any).scrollbarRadius ?? 3, 0, 20, 1, v => onUpdate({ scrollbarRadius: v } as any), 'px')}
           </div>
         )}
+      </>)}
+      {hasLabelColor && (<>
+        <span style={{ ...sectionTitle, marginTop: 4 }}>Label Color</span>
+        <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+          {STROKE_COLORS.map(c => swatch(c, (first as any).labelColor === c, () => onUpdate({ labelColor: c } as any)))}
+          {customPicker((first as any).labelColor || first.strokeColor, c => onUpdate({ labelColor: c } as any), labelPickerRef)}
+        </div>
       </>)}
     </> });
 
@@ -856,6 +866,15 @@ export const PropertyPanel: React.FC<PropertyPanelProps> = ({ elements, onUpdate
             </div>
           </>)}
         </>, 'Font')}
+
+        {/* ── Label Color ── */}
+        {hasLabelColor && card(<>
+          <span style={sectionTitle}>Label Color</span>
+          <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+            {STROKE_COLORS.map(c => swatch(c, (first as any).labelColor === c, () => onUpdate({ labelColor: c } as any)))}
+            {customPicker((first as any).labelColor || first.strokeColor, c => onUpdate({ labelColor: c } as any), labelPickerRef)}
+          </div>
+        </>, 'Label Color')}
 
         {/* ── Embed URL ── */}
         {isEmbed && card(<>

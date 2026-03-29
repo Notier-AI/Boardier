@@ -120,9 +120,11 @@ function render(ctx: CanvasRenderingContext2D, el: RectangleElement): void {
   // Render label text centered inside
   if (el.label) {
     const labelFont = el.roughness > 0 ? HANDWRITTEN_FONT : 'system-ui, sans-serif';
-    ctx.font = `${Math.min(el.width * 0.8, 18)}px ${labelFont}`;
-    ctx.fillStyle = el.strokeColor;
-    renderLabelWithIcons(ctx, el.label, 0, 0, el.width * 0.9, el.strokeColor);
+    const labelFontSize = Math.min(el.width * 0.8, 18);
+    ctx.font = `${labelFontSize}px ${labelFont}`;
+    const lc = el.labelColor || el.strokeColor;
+    ctx.fillStyle = lc;
+    renderLabelWithIcons(ctx, el.label, 0, 0, el.width * 0.9, lc, el.height * 0.9);
   }
   ctx.restore();
 }

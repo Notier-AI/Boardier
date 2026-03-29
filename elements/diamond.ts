@@ -82,8 +82,9 @@ function render(ctx: CanvasRenderingContext2D, el: DiamondElement): void {
   if (el.label) {
     const labelFont = el.roughness > 0 ? HANDWRITTEN_FONT : 'system-ui, sans-serif';
     ctx.font = `${Math.min(el.width * 0.5, 18)}px ${labelFont}`;
-    ctx.fillStyle = el.strokeColor;
-    renderLabelWithIcons(ctx, el.label, 0, 0, el.width * 0.5, el.strokeColor);
+    const lc = el.labelColor || el.strokeColor;
+    ctx.fillStyle = lc;
+    renderLabelWithIcons(ctx, el.label, 0, 0, el.width * 0.5, lc, el.height * 0.5);
   }
   ctx.restore();
 }

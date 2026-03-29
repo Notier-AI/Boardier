@@ -7,6 +7,7 @@
  * @boardier-changed 0.3.0 Added AIChatProvider, AIChatMessage, and AIChatConfig types for the AI chat popup component
  * @boardier-changed 0.3.2 Added showDarkModeToggle option to BoardierConfig
  * @boardier-changed 0.4.3 Added multiLine, scrollbar, scrollbarSize, scrollbarColor, scrollbarTrackColor, scrollbarRadius properties to TextElement
+ * @boardier-changed 0.4.7 Added scrollTop to TextElement for interactive scrolling; added labelColor to RectangleElement, EllipseElement, DiamondElement
  */
 
 // ─── Boardier Core Types ─────────────────────────────────────────────
@@ -101,16 +102,22 @@ export interface RectangleElement extends BoardierElementBase {
   /** Per-corner radii: [topLeft, topRight, bottomRight, bottomLeft]. If set, overrides borderRadius. */
   borderRadii?: [number, number, number, number];
   label: string;
+  /** Label text color. Falls back to strokeColor if not set. */
+  labelColor?: string;
 }
 
 export interface EllipseElement extends BoardierElementBase {
   type: 'ellipse';
   label: string;
+  /** Label text color. Falls back to strokeColor if not set. */
+  labelColor?: string;
 }
 
 export interface DiamondElement extends BoardierElementBase {
   type: 'diamond';
   label: string;
+  /** Label text color. Falls back to strokeColor if not set. */
+  labelColor?: string;
 }
 
 /**
@@ -169,6 +176,8 @@ export interface TextElement extends BoardierElementBase {
   scrollbarTrackColor: string;
   /** Scrollbar thumb border radius. Default 3. */
   scrollbarRadius: number;
+  /** Scroll position in pixels (0 = top). Updated by wheel interaction. */
+  scrollTop?: number;
 }
 
 export interface IconElement extends BoardierElementBase {

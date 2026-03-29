@@ -104,6 +104,14 @@ const VERSION_META: Record<string, { date: string; summary: string }> = {
     date: '2026-03-27',
     summary: 'React-icons integration — bracket icon labels [LuCheck], [FiStar], etc. now resolve dynamically from react-icons with fuzzy matching in all shape labels and text elements. Removed forced AI style presets so the AI can freely design with user instructions. Professional style preset uses varied corporate colors.',
   },
+  '0.4.6': {
+    date: '2026-03-28',
+    summary: 'Fixed overlapping text in AI-generated layouts — flex branch no longer matches containers with deeply nested div children, and children with block content are routed to the full walker instead of extracting merged text blobs. Container rectangles no longer get all descendant text as labels.',
+  },
+  '0.4.7': {
+    date: '2026-03-29',
+    summary: 'Text elements now scroll interactively via mouse wheel. HTML whitespace collapsed in AI-generated text. Shape labels support word-wrap and height clipping. Added labelColor property to rectangle, ellipse, and diamond for independent foreground color. AI converter now sets labelColor from CSS color.',
+  },
 };
 
 // ─── Main ─────────────────────────────────────────────────────────────

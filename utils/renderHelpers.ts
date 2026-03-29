@@ -135,11 +135,31 @@ export function drawPatternFill(
 
 const BRACKET_ICON_RE = /\[([A-Z][A-Za-z0-9]*)\]/g;
 
+/** Simple word-wrap for label text. */
+function wrapLabelLine(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
+  if (maxWidth <= 0 || !text) return [text];
+  if (ctx.measureText(text).width <= maxWidth) return [text];
+  const words = text.split(/\s+/);
+  const lines: string[] = [];
+  let current = '';
+  for (const word of words) {
+    const test = current ? current + ' ' + word : word;
+    if (ctx.measureText(test).width > maxWidth && current) {
+      lines.push(current);
+      current = word;
+    } else {
+      current = test;
+    }
+  }
+  if (current) lines.push(current);
+  return lines.length > 0 ? lines : [text];
+}
+
 /**
  * Render a label string that may contain bracket icon tokens like [LuUsers].
  * Icons are resolved from react-icons and drawn inline with the text.
- * If no bracket icons are found, acts like a plain ctx.fillText.
- * Assumes ctx.font, ctx.fillStyle, ctx.textBaseline are already set.
+ * Handles multi-line labels via word-wrap. Clips to the available area.
+ * Assumes ctx.font and ctx.fillStyle are already set.
  * Renders centered at (cx, cy) within maxWidth.
  */
 export function renderLabelWithIcons(
@@ -149,26 +169,44 @@ export function renderLabelWithIcons(
   cy: number,
   maxWidth: number,
   color: string,
+  maxHeight?: number,
 ): void {
-  if (!BRACKET_ICON_RE.test(label)) {
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(label, cx, cy, maxWidth);
-    return;
-  }
+  const fontSize = parseFloat(ctx.font) || 14;
+  const lineH = fontSize * 1.3;
+  // Collapse whitespace in label (safety net for legacy data)
+  const cleanLabel = label.replace(/\s+/g, ' ').trim();
+  if (!cleanLabel) return;
+
+  const hasIcons = BRACKET_ICON_RE.test(cleanLabel);
   BRACKET_ICON_RE.lastIndex = 0;
 
-  const fontSize = parseFloat(ctx.font) || 14;
+  if (!hasIcons) {
+    // Simple text: word-wrap and render centered
+    const lines = wrapLabelLine(ctx, cleanLabel, maxWidth);
+    const totalH = lines.length * lineH;
+    const maxH = maxHeight ?? totalH;
+    const startY = cy - Math.min(totalH, maxH) / 2 + lineH / 2;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    for (let i = 0; i < lines.length; i++) {
+      const ly = startY + i * lineH;
+      if (maxHeight && (ly - lineH / 2 < cy - maxHeight / 2 || ly + lineH / 2 > cy + maxHeight / 2)) continue;
+      ctx.fillText(lines[i], cx, ly, maxWidth);
+    }
+    return;
+  }
+
+  // Has bracket icons — parse segments, render single line centered
   const iconSize = fontSize;
   const segments: { type: 'text' | 'icon'; value: string }[] = [];
   let lastIdx = 0;
   let match: RegExpExecArray | null;
-  while ((match = BRACKET_ICON_RE.exec(label)) !== null) {
-    if (match.index > lastIdx) segments.push({ type: 'text', value: label.slice(lastIdx, match.index) });
+  while ((match = BRACKET_ICON_RE.exec(cleanLabel)) !== null) {
+    if (match.index > lastIdx) segments.push({ type: 'text', value: cleanLabel.slice(lastIdx, match.index) });
     segments.push({ type: 'icon', value: match[1] });
     lastIdx = match.index + match[0].length;
   }
-  if (lastIdx < label.length) segments.push({ type: 'text', value: label.slice(lastIdx) });
+  if (lastIdx < cleanLabel.length) segments.push({ type: 'text', value: cleanLabel.slice(lastIdx) });
 
   let totalW = 0;
   for (const seg of segments) {

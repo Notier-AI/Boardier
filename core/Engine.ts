@@ -420,6 +420,46 @@ export class BoardierEngine {
       this.viewState.scrollX = screen.x - worldBefore.x * newZoom;
       this.viewState.scrollY = screen.y - worldBefore.y * newZoom;
     } else {
+      // Check if hovering over a scrollable text element
+      const world = this.renderer.screenToWorld(screen, this.viewState);
+      const hit = this.scene.hitTest(world, 4);
+      if (hit && hit.type === 'text' && hit.scrollbar !== false) {
+        const el = hit;
+        const lineH = el.fontSize * el.lineHeight;
+        const rawLines = el.multiLine !== false ? el.text.split('\n') : [el.text.replace(/\n/g, ' ')];
+        // Word-wrap using the canvas context for accurate content height
+        const ctx = this.canvas.getContext('2d');
+        let wrappedCount = rawLines.length;
+        if (ctx) {
+          ctx.font = `${el.fontSize}px ${el.fontFamily}`;
+          wrappedCount = 0;
+          for (const raw of rawLines) {
+            if (!raw || el.width <= 0) { wrappedCount++; continue; }
+            if (ctx.measureText(raw).width <= el.width) { wrappedCount++; continue; }
+            const words = raw.split(/(\s+)/);
+            let cur = '';
+            for (const w of words) {
+              const test = cur + w;
+              if (ctx.measureText(test).width > el.width && cur.length > 0) {
+                wrappedCount++;
+                cur = w.trimStart();
+              } else { cur = test; }
+            }
+            if (cur) wrappedCount++;
+          }
+        }
+        const totalContentH = wrappedCount * lineH;
+        const maxScroll = Math.max(0, totalContentH - el.height);
+        if (maxScroll > 0) {
+          const current = el.scrollTop ?? 0;
+          const next = clamp(current + e.deltaY, 0, maxScroll);
+          if (next !== current) {
+            this.scene.updateElement(el.id, { scrollTop: next } as any);
+            this.render();
+            return;
+          }
+        }
+      }
       // Pan
       this.viewState.scrollX -= e.deltaX;
       this.viewState.scrollY -= e.deltaY;
