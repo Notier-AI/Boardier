@@ -17,7 +17,7 @@ Boardier is a **themeable, extensible canvas-based whiteboard** shipped as a Rea
 - **AI-ready API** — `searchElements()`, `getSceneSummary()`, `getSceneStats()`, `moveElement()`, `resizeElement()`, `setElementColor()`, `panTo()`, `selectElements()`, and more, designed for LLM agents
 - **Multi-page support** — create, rename, delete, and switch between pages/slides
 - **Presentation mode** — fullscreen slide presentation with keyboard navigation
-- **Export** — PNG, SVG, and JSON export
+- **Export** — PNG, SVG, Boardier (our special format) and JSON export
 - **Mermaid → Boardier** — convert Mermaid flowchart syntax into positioned canvas elements
 - **Undo/redo** — full-scene snapshot history with configurable depth
 - **Copy/paste** — in-memory clipboard with offset pasting
