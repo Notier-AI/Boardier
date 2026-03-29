@@ -407,6 +407,16 @@ export class BoardierEngine {
   /** Get the collaboration provider, or null if multiplayer is not enabled. */
   getCollaboration(): CollaborationProvider | null { return this.collab; }
 
+  /** Start a collaboration session dynamically (host mode if no roomId, guest if roomId provided). */
+  startCollaboration(config: import('./types').CollaborationConfig): CollaborationProvider {
+    if (this.collab) {
+      this.collab.destroy();
+    }
+    this.collab = new CollaborationProvider(this.scene, config);
+    this.collab.connect();
+    return this.collab;
+  }
+
   // ─── Event handling (called by React component) ──────────────────
 
   handlePointerDown(e: PointerEvent): void {

@@ -27,6 +27,7 @@ import type {
   BoardierToolType,
   BoardierConfig,
   BoardierSceneData,
+  CollaborationConfig,
   ViewState,
   Vec2,
   TextElement,
@@ -76,6 +77,8 @@ export interface BoardierCanvasProps {
   darkMode?: boolean;
   readOnly?: boolean;
   config?: Partial<BoardierConfig>;
+  /** WebSocket URL of the collaboration signaling server. If provided, a Share button appears. */
+  signalingUrl?: string;
   style?: React.CSSProperties;
   className?: string;
 }
@@ -95,7 +98,7 @@ export interface BoardierCanvasRef {
 /* ──────────────── component ──────────────── */
 
 export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>(
-  ({ initialData, onChange, onSendToAI, theme: themeProp, darkMode = false, readOnly = false, config = {}, style, className }, ref) => {
+  ({ initialData, onChange, onSendToAI, theme: themeProp, darkMode = false, readOnly = false, config = {}, signalingUrl, style, className }, ref) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const engineRef = useRef<BoardierEngine | null>(null);
@@ -655,6 +658,17 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
       engineRef.current?.renamePage(pageId, name);
     }, []);
 
+    // ── Start collaboration (host mode) ──────────────
+
+    const handleStartCollab = useCallback(() => {
+      const engine = engineRef.current;
+      if (!engine || collabProvider) return;
+      const url = signalingUrl || config.collaboration?.signalingUrl;
+      if (!url) return;
+      const cp = engine.startCollaboration({ signalingUrl: url });
+      setCollabProvider(cp);
+    }, [signalingUrl, config.collaboration?.signalingUrl, collabProvider]);
+
     // ── Selected elements for property panel ─────────
     // elementVersion forces re-computation when element properties change
     const selectedElements = React.useMemo(() =>
@@ -957,6 +971,44 @@ export const BoardierCanvas = forwardRef<BoardierCanvasRef, BoardierCanvasProps>
               ) : (
                 <svg width={isMobile ? 20 : 16} height={isMobile ? 20 : 16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></svg>
               )}
+            </button>
+          </div>
+        )}
+
+        {/* Share / Collaborate button */}
+        {!readOnly && (signalingUrl || config.collaboration?.signalingUrl) && !collabProvider && (
+          <div style={{
+            position: 'absolute',
+            top: 12,
+            right: 12,
+            zIndex: 15,
+          }}>
+            <button
+              onClick={handleStartCollab}
+              title="Share &amp; collaborate"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: isMobile ? '8px 14px' : '6px 12px',
+                border: `1px solid ${resolvedTheme.panelBorder}`,
+                borderRadius: resolvedTheme.borderRadius,
+                background: resolvedTheme.panelBackground,
+                boxShadow: resolvedTheme.shadow,
+                cursor: 'pointer',
+                color: resolvedTheme.selectionColor,
+                fontSize: 12,
+                fontWeight: 600,
+                fontFamily: resolvedTheme.uiFontFamily,
+                whiteSpace: 'nowrap',
+              }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = resolvedTheme.panelHover; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = resolvedTheme.panelBackground; }}
+            >
+              <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8" /><polyline points="16 6 12 2 8 6" /><line x1="12" y1="2" x2="12" y2="15" />
+              </svg>
+              Share
             </button>
           </div>
         )}

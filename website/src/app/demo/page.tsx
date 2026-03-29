@@ -36,6 +36,7 @@ export default function DemoPage() {
     <main className="w-screen h-screen">
       <BoardierCanvas
         ref={canvasRef}
+        signalingUrl={SIGNALING_URL}
         config={collabConfig ? { collaboration: collabConfig as CollaborationConfig } : undefined}
       />
       <AIChatPopup
