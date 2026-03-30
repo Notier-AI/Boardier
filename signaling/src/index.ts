@@ -11,6 +11,20 @@
 
 interface Env {
   ROOM: DurableObjectNamespace;
+  /** Comma-separated list of allowed origins. Falls back to boardier.dev + localhost. */
+  ALLOWED_ORIGINS?: string;
+}
+
+/** Check if the request origin is allowed. */
+function isOriginAllowed(request: Request, env: Env): boolean {
+  const origin = request.headers.get('Origin') || '';
+  const allowed = env.ALLOWED_ORIGINS
+    ? env.ALLOWED_ORIGINS.split(',').map(s => s.trim())
+    : ['https://boardier.dev', 'https://www.boardier.dev'];
+  // Always allow localhost for development
+  if (/^https?:\/\/localhost(:\d+)?$/.test(origin)) return true;
+  if (/^https?:\/\/127\.0\.0\.1(:\d+)?$/.test(origin)) return true;
+  return allowed.some(a => origin === a);
 }
 
 // ─── Worker entry ───────────────────────────────────────
@@ -23,11 +37,16 @@ export default {
     if (request.method === 'OPTIONS') {
       return new Response(null, {
         headers: {
-          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Origin': request.headers.get('Origin') || '*',
           'Access-Control-Allow-Methods': 'GET, OPTIONS',
           'Access-Control-Allow-Headers': '*',
         },
       });
+    }
+
+    // Reject connections from unauthorized origins
+    if (!isOriginAllowed(request, env)) {
+      return new Response('Forbidden: origin not allowed', { status: 403 });
     }
 
     // Route: /room/:roomId
