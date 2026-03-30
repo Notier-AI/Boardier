@@ -3,6 +3,7 @@
  * @boardier-category Themes
  * @boardier-description Factory function that creates a Notier-branded theme. Accepts optional overrides for accent and background colors.
  * @boardier-since 0.1.0
+ * @boardier-changed 0.5.1 Added guideSpacingColor, guideSizeColor, guideLabelBackground, guideLabelText to light and dark variants
  * @boardier-usage `const theme = createNotierTheme({ accent: '#6366f1' });`
  */
 import type { BoardierTheme } from './types';
@@ -35,6 +36,10 @@ export function createNotierTheme(
 
       guideColor: '#f06595',
       guideDash: [4, 4],
+      guideSpacingColor: '#20c997',
+      guideSizeColor: '#b197fc',
+      guideLabelBackground: '#f06595',
+      guideLabelText: '#ffffff',
       lassoColor: '#6366f1',
       lassoFill: 'rgba(99,102,241,0.10)',
 
@@ -83,6 +88,10 @@ export function createNotierTheme(
 
     guideColor: '#f06595',
     guideDash: [4, 4],
+    guideSpacingColor: '#20c997',
+    guideSizeColor: '#845ef7',
+    guideLabelBackground: '#f06595',
+    guideLabelText: '#ffffff',
     lassoColor: '#6366f1',
     lassoFill: 'rgba(99,102,241,0.06)',
 

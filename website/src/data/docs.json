@@ -275,7 +275,7 @@
     ],
     "functions": [],
     "filePath": "core/Collaboration.ts",
-    "lineCount": 409
+    "lineCount": 433
   },
   {
     "module": "core/Engine",
@@ -286,6 +286,10 @@
       {
         "version": "0.5.0",
         "note": "Added CollaborationProvider integration — collab-aware undo/redo via Y.js UndoManager, cursor/selection forwarding, and getCollaboration() accessor"
+      },
+      {
+        "version": "0.5.1",
+        "note": "Render loop now gathers smart guides and spacing gaps from both SelectTool and ShapeTool"
       }
     ],
     "usage": "",
@@ -305,7 +309,7 @@
     ],
     "functions": [],
     "filePath": "core/Engine.ts",
-    "lineCount": 1108
+    "lineCount": 1134
   },
   {
     "module": "core/History",
@@ -337,7 +341,12 @@
     "category": "Core",
     "description": "Canvas 2D renderer responsible for drawing all elements, the grid, selection overlays, smart guides, and lasso outlines. Performs viewport culling, coordinate transforms (screen ↔ world), and theme-aware color adaptation for dark backgrounds.",
     "since": "0.1.0",
-    "changed": [],
+    "changed": [
+      {
+        "version": "0.5.1",
+        "note": "Replaced plain dashed smart guide lines with type-aware rendering — glow layer, diamond snap-point markers, pill-shaped distance labels, and bracket-style equal-spacing gap indicators"
+      }
+    ],
     "usage": "",
     "see": "BoardierEngine, Scene",
     "ai": "",
@@ -348,7 +357,7 @@
     "classes": [],
     "functions": [],
     "filePath": "core/Renderer.ts",
-    "lineCount": 465
+    "lineCount": 612
   },
   {
     "module": "core/Scene",
@@ -882,8 +891,13 @@
     "category": "Themes",
     "description": "Ships two built-in themes: `defaultTheme` (light) and `defaultDarkTheme`. Both are complete BoardierTheme objects that can be used directly or spread into custom themes. Also exports `roughUIStyle` and `cleanUIStyle` presets.",
     "since": "0.1.0",
-    "changed": [],
-    "usage": "`<BoardierCanvas theme={defaultTheme} />` or `<BoardierCanvas theme={defaultDarkTheme} />`",
+    "changed": [
+      {
+        "version": "0.5.1",
+        "note": "Added guideSpacingColor, guideSizeColor, guideLabelBackground, guideLabelText to light and dark themes `<BoardierCanvas theme={defaultTheme} />` or `<BoardierCanvas theme={defaultDarkTheme} />`"
+      }
+    ],
+    "usage": "",
     "see": "",
     "ai": "",
     "props": "",
@@ -893,14 +907,19 @@
     "classes": [],
     "functions": [],
     "filePath": "themes/defaultTheme.ts",
-    "lineCount": 163
+    "lineCount": 171
   },
   {
     "module": "themes/notierTheme",
     "category": "Themes",
     "description": "Factory function that creates a Notier-branded theme. Accepts optional overrides for accent and background colors.",
     "since": "0.1.0",
-    "changed": [],
+    "changed": [
+      {
+        "version": "0.5.1",
+        "note": "Added guideSpacingColor, guideSizeColor, guideLabelBackground, guideLabelText to light and dark variants"
+      }
+    ],
     "usage": "`const theme = createNotierTheme({ accent: '#6366f1' });`",
     "see": "",
     "ai": "",
@@ -911,14 +930,19 @@
     "classes": [],
     "functions": [],
     "filePath": "themes/notierTheme.ts",
-    "lineCount": 124
+    "lineCount": 133
   },
   {
     "module": "themes/types",
     "category": "Themes",
     "description": "The complete BoardierTheme interface. Every visual aspect of the engine — canvas background, grid, selection, panels, tooltips, fonts, and element defaults — is configurable through a single theme object. The `uiStyle` section provides full CSS-level control over UI component shapes.",
     "since": "0.1.0",
-    "changed": [],
+    "changed": [
+      {
+        "version": "0.5.1",
+        "note": "Added guideSpacingColor, guideSizeColor, guideLabelBackground, guideLabelText properties for enhanced smart guide rendering"
+      }
+    ],
     "usage": "`const myTheme: BoardierTheme = { ...defaultTheme, canvasBackground: '#1e1e1e' };`",
     "see": "",
     "ai": "",
@@ -935,7 +959,7 @@
     "classes": [],
     "functions": [],
     "filePath": "themes/types.ts",
-    "lineCount": 134
+    "lineCount": 143
   },
   {
     "module": "tools/BaseTool",
@@ -1104,7 +1128,12 @@
     "category": "Tools",
     "description": "The default selection tool. Handles click-to-select, box selection, lasso selection, drag-to-move, resize handles, smart alignment guides, and keyboard shortcuts (delete, copy, paste, undo/redo, select-all). This is the most complex tool in Boardier.",
     "since": "0.1.0",
-    "changed": [],
+    "changed": [
+      {
+        "version": "0.5.1",
+        "note": "Replaced inline smart guide logic with enhanced smartGuides engine — alignment, equal-spacing, dimension-matching, pattern learning, and improved visual rendering"
+      }
+    ],
     "usage": "",
     "see": "",
     "ai": "",
@@ -1115,14 +1144,19 @@
     "classes": [],
     "functions": [],
     "filePath": "tools/SelectTool.ts",
-    "lineCount": 706
+    "lineCount": 667
   },
   {
     "module": "tools/ShapeTool",
     "category": "Tools",
-    "description": "Generic tool for creating rectangle, ellipse, and diamond shapes. Click-and-drag creates the shape; hold Shift for square/circle constraint.",
+    "description": "Generic tool for creating rectangle, ellipse, and diamond shapes. Click-and-drag creates the shape; hold Shift for square/circle constraint. Snaps to smart guides during creation.",
     "since": "0.1.0",
-    "changed": [],
+    "changed": [
+      {
+        "version": "0.5.1",
+        "note": "Added smart guide snapping during shape creation — edges snap to alignment, spacing, and size-match guides while drawing"
+      }
+    ],
     "usage": "",
     "see": "",
     "ai": "",
@@ -1133,7 +1167,7 @@
     "classes": [],
     "functions": [],
     "filePath": "tools/ShapeTool.ts",
-    "lineCount": 87
+    "lineCount": 149
   },
   {
     "module": "tools/TextTool",
@@ -1243,7 +1277,7 @@
     "classes": [],
     "functions": [],
     "filePath": "ui/BoardierCanvas.tsx",
-    "lineCount": 1259
+    "lineCount": 1315
   },
   {
     "module": "ui/CollabOverlay",
@@ -1261,7 +1295,7 @@
     "classes": [],
     "functions": [],
     "filePath": "ui/CollabOverlay.tsx",
-    "lineCount": 282
+    "lineCount": 295
   },
   {
     "module": "ui/ContextMenu",
@@ -1462,9 +1496,14 @@
   {
     "module": "ui/RemoteCursors",
     "category": "UI",
-    "description": "Canvas overlay that renders colored cursors and name badges for remote users in a collaborative session. Each cursor is positioned in world coordinates and transformed to screen space.",
+    "description": "Canvas overlay that renders soft, modern cursors and name badges for remote users in a collaborative session, plus colored selection outlines around elements they have selected. Each cursor is positioned in world coordinates and transformed to screen space.",
     "since": "0.5.0",
-    "changed": [],
+    "changed": [
+      {
+        "version": "0.5.0",
+        "note": "Redesigned cursors to modern soft rounded style without arrow tail; added remote selection outlines"
+      }
+    ],
     "usage": "",
     "see": "",
     "ai": "",
@@ -1475,7 +1514,7 @@
     "classes": [],
     "functions": [],
     "filePath": "ui/RemoteCursors.tsx",
-    "lineCount": 62
+    "lineCount": 136
   },
   {
     "module": "ui/ShapeLabelEditor",
@@ -1742,5 +1781,23 @@
     "functions": [],
     "filePath": "utils/roughDraw.ts",
     "lineCount": 195
+  },
+  {
+    "module": "utils/smartGuides",
+    "category": "Utilities",
+    "description": "Enhanced smart guide engine for alignment, equal-spacing, and dimension-matching snap guides. Includes a pattern-learning system that tracks the user's preferred spacings, sizes, and alignments to offer increasingly relevant suggestions. All computation is pure — rendering is handled separately by the Renderer.",
+    "since": "0.5.1",
+    "changed": [],
+    "usage": "",
+    "see": "",
+    "ai": "",
+    "props": "",
+    "ref": "",
+    "params": [],
+    "types": [],
+    "classes": [],
+    "functions": [],
+    "filePath": "utils/smartGuides.ts",
+    "lineCount": 681
   }
 ]

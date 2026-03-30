@@ -3,7 +3,7 @@
  * @boardier-category Themes
  * @boardier-description Ships two built-in themes: `defaultTheme` (light) and `defaultDarkTheme`. Both are complete BoardierTheme objects that can be used directly or spread into custom themes. Also exports `roughUIStyle` and `cleanUIStyle` presets.
  * @boardier-since 0.1.0
- * @boardier-usage `<BoardierCanvas theme={defaultTheme} />` or `<BoardierCanvas theme={defaultDarkTheme} />`
+ * @boardier-changed 0.5.1 Added guideSpacingColor, guideSizeColor, guideLabelBackground, guideLabelText to light and dark themes `<BoardierCanvas theme={defaultTheme} />` or `<BoardierCanvas theme={defaultDarkTheme} />`
  */
 import type { BoardierTheme, BoardierUIStyle } from './types';
 
@@ -84,6 +84,10 @@ export const defaultTheme: BoardierTheme = {
 
   guideColor: '#f06595',
   guideDash: [4, 4],
+  guideSpacingColor: '#20c997',
+  guideSizeColor: '#845ef7',
+  guideLabelBackground: '#f06595',
+  guideLabelText: '#ffffff',
   lassoColor: '#4f83ff',
   lassoFill: 'rgba(79,131,255,0.06)',
 
@@ -127,6 +131,10 @@ export const defaultDarkTheme: BoardierTheme = {
 
   guideColor: '#f06595',
   guideDash: [4, 4],
+  guideSpacingColor: '#20c997',
+  guideSizeColor: '#b197fc',
+  guideLabelBackground: '#f06595',
+  guideLabelText: '#ffffff',
   lassoColor: '#4f83ff',
   lassoFill: 'rgba(79,131,255,0.10)',
 

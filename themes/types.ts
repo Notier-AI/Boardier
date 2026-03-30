@@ -3,6 +3,7 @@
  * @boardier-category Themes
  * @boardier-description The complete BoardierTheme interface. Every visual aspect of the engine — canvas background, grid, selection, panels, tooltips, fonts, and element defaults — is configurable through a single theme object. The `uiStyle` section provides full CSS-level control over UI component shapes.
  * @boardier-since 0.1.0
+ * @boardier-changed 0.5.1 Added guideSpacingColor, guideSizeColor, guideLabelBackground, guideLabelText properties for enhanced smart guide rendering
  * @boardier-usage `const myTheme: BoardierTheme = { ...defaultTheme, canvasBackground: '#1e1e1e' };`
  */
 
@@ -86,6 +87,14 @@ export interface BoardierTheme {
   // Smart guides (alignment lines shown during drag)
   guideColor: string;
   guideDash: number[];
+  /** Color for equal-spacing gap indicators. @boardier-since 0.5.1 */
+  guideSpacingColor: string;
+  /** Color for size-match guide lines. @boardier-since 0.5.1 */
+  guideSizeColor: string;
+  /** Background color for guide distance labels. @boardier-since 0.5.1 */
+  guideLabelBackground: string;
+  /** Text color for guide distance labels. @boardier-since 0.5.1 */
+  guideLabelText: string;
 
   // Lasso selection
   lassoColor: string;

@@ -4,10 +4,11 @@
  * @boardier-description Canvas 2D renderer responsible for drawing all elements, the grid, selection overlays, smart guides, and lasso outlines. Performs viewport culling, coordinate transforms (screen ↔ world), and theme-aware color adaptation for dark backgrounds.
  * @boardier-since 0.1.0
  * @boardier-see BoardierEngine, Scene
+ * @boardier-changed 0.5.1 Replaced plain dashed smart guide lines with type-aware rendering — glow layer, diamond snap-point markers, pill-shaped distance labels, and bracket-style equal-spacing gap indicators
  */
 import type { BoardierElement, Vec2, ViewState, Bounds } from './types';
 import type { BoardierTheme } from '../themes/types';
-import type { SmartGuide } from '../tools/SelectTool';
+import type { SmartGuide, SpacingGap } from '../utils/smartGuides';
 import { renderElement, getElementBounds } from '../elements/base';
 import { boundsIntersect } from '../utils/math';
 
@@ -102,7 +103,7 @@ export class Renderer {
     viewState: ViewState,
     selectedIds: Set<string>,
     theme: BoardierTheme,
-    options?: { showGrid?: boolean; gridSize?: number; boxSelect?: Bounds | null; lassoPath?: Vec2[] | null; smartGuides?: SmartGuide[]; bindHighlightIds?: string[] },
+    options?: { showGrid?: boolean; gridSize?: number; boxSelect?: Bounds | null; lassoPath?: Vec2[] | null; smartGuides?: SmartGuide[]; spacingGaps?: SpacingGap[]; bindHighlightIds?: string[] },
   ): void {
     const ctx = this.ctx;
     const { zoom, scrollX, scrollY } = viewState;
@@ -200,7 +201,11 @@ export class Renderer {
     }
 
     if (options?.smartGuides && options.smartGuides.length > 0) {
-      this.drawSmartGuides(ctx, options.smartGuides, theme);
+      this.drawSmartGuides(ctx, options.smartGuides, theme, zoom);
+    }
+
+    if (options?.spacingGaps && options.spacingGaps.length > 0) {
+      this.drawSpacingGaps(ctx, options.spacingGaps, theme, zoom);
     }
 
     // Soft glow on elements targeted for line/arrow binding
@@ -413,26 +418,168 @@ export class Renderer {
 
   // ─── Smart Guides ────────────────────────────────────────────────
 
-  private drawSmartGuides(ctx: CanvasRenderingContext2D, guides: SmartGuide[], theme: BoardierTheme): void {
-    ctx.strokeStyle = theme.guideColor;
-    ctx.lineWidth = 1;
-    ctx.setLineDash(theme.guideDash);
-
+  private drawSmartGuides(ctx: CanvasRenderingContext2D, guides: SmartGuide[], theme: BoardierTheme, zoom: number): void {
     for (const g of guides) {
+      // Pick color based on guide type
+      const color = g.type === 'spacing' ? theme.guideSpacingColor
+        : g.type === 'size' ? theme.guideSizeColor
+        : theme.guideColor;
+
+      // Glow layer (soft outer)
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.globalAlpha = 0.15;
+      ctx.lineWidth = 4 / zoom;
+      ctx.setLineDash([]);
       ctx.beginPath();
       if (g.axis === 'x') {
-        // Vertical guide
         ctx.moveTo(g.position, g.from);
         ctx.lineTo(g.position, g.to);
       } else {
-        // Horizontal guide
         ctx.moveTo(g.from, g.position);
         ctx.lineTo(g.to, g.position);
       }
       ctx.stroke();
-    }
+      ctx.restore();
 
-    ctx.setLineDash([]);
+      // Main line
+      ctx.strokeStyle = color;
+      ctx.globalAlpha = 0.85;
+      ctx.lineWidth = 1 / zoom;
+      ctx.setLineDash(g.type === 'align' ? theme.guideDash.map(d => d / zoom) : []);
+      ctx.beginPath();
+      if (g.axis === 'x') {
+        ctx.moveTo(g.position, g.from);
+        ctx.lineTo(g.position, g.to);
+      } else {
+        ctx.moveTo(g.from, g.position);
+        ctx.lineTo(g.to, g.position);
+      }
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.globalAlpha = 1;
+
+      // Diamond snap-point markers at the ends
+      const diamondSize = 3 / zoom;
+      ctx.fillStyle = color;
+      const ends = g.axis === 'x'
+        ? [{ x: g.position, y: g.from }, { x: g.position, y: g.to }]
+        : [{ x: g.from, y: g.position }, { x: g.to, y: g.position }];
+      for (const p of ends) {
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y - diamondSize);
+        ctx.lineTo(p.x + diamondSize, p.y);
+        ctx.lineTo(p.x, p.y + diamondSize);
+        ctx.lineTo(p.x - diamondSize, p.y);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      // Distance label pill
+      if (g.label && g.labelPosition) {
+        this.drawGuidePill(ctx, g.labelPosition.x, g.labelPosition.y, g.label, theme, zoom);
+      }
+    }
+  }
+
+  private drawSpacingGaps(ctx: CanvasRenderingContext2D, gaps: SpacingGap[], theme: BoardierTheme, zoom: number): void {
+    const color = theme.guideSpacingColor;
+    for (const gap of gaps) {
+      const half = gap.size / 2;
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1 / zoom;
+      ctx.setLineDash([2 / zoom, 2 / zoom]);
+      ctx.globalAlpha = 0.6;
+
+      if (gap.axis === 'x') {
+        // Horizontal gap: draw bracket-style indicator
+        const left = gap.center - half;
+        const right = gap.center + half;
+        const y = (gap.perpStart + gap.perpEnd) / 2;
+        // Horizontal line
+        ctx.beginPath();
+        ctx.moveTo(left, y);
+        ctx.lineTo(right, y);
+        ctx.stroke();
+        // Left cap
+        ctx.setLineDash([]);
+        ctx.beginPath();
+        ctx.moveTo(left, gap.perpStart);
+        ctx.lineTo(left, gap.perpEnd);
+        ctx.stroke();
+        // Right cap
+        ctx.beginPath();
+        ctx.moveTo(right, gap.perpStart);
+        ctx.lineTo(right, gap.perpEnd);
+        ctx.stroke();
+      } else {
+        // Vertical gap
+        const top = gap.center - half;
+        const bottom = gap.center + half;
+        const x = (gap.perpStart + gap.perpEnd) / 2;
+        ctx.beginPath();
+        ctx.moveTo(x, top);
+        ctx.lineTo(x, bottom);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.beginPath();
+        ctx.moveTo(gap.perpStart, top);
+        ctx.lineTo(gap.perpEnd, top);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(gap.perpStart, bottom);
+        ctx.lineTo(gap.perpEnd, bottom);
+        ctx.stroke();
+      }
+
+      ctx.restore();
+
+      // Label pill
+      this.drawGuidePill(ctx, gap.center, (gap.perpStart + gap.perpEnd) / 2, gap.label, theme, zoom, color);
+    }
+  }
+
+  /** Draw a small pill-shaped label in world coords. */
+  private drawGuidePill(ctx: CanvasRenderingContext2D, wx: number, wy: number, text: string, theme: BoardierTheme, zoom: number, overrideColor?: string): void {
+    const fontSize = 9 / zoom;
+    ctx.save();
+    ctx.font = `${fontSize}px ${theme.uiFontFamily || 'system-ui, sans-serif'}`;
+    const metrics = ctx.measureText(text);
+    const tw = metrics.width;
+    const th = fontSize;
+    const padX = 4 / zoom;
+    const padY = 2 / zoom;
+    const pillW = tw + padX * 2;
+    const pillH = th + padY * 2;
+    const r = 3 / zoom;
+
+    const px = wx - pillW / 2;
+    const py = wy - pillH / 2;
+
+    // Rounded rect background
+    ctx.fillStyle = overrideColor || theme.guideLabelBackground;
+    ctx.globalAlpha = 0.9;
+    ctx.beginPath();
+    ctx.moveTo(px + r, py);
+    ctx.lineTo(px + pillW - r, py);
+    ctx.quadraticCurveTo(px + pillW, py, px + pillW, py + r);
+    ctx.lineTo(px + pillW, py + pillH - r);
+    ctx.quadraticCurveTo(px + pillW, py + pillH, px + pillW - r, py + pillH);
+    ctx.lineTo(px + r, py + pillH);
+    ctx.quadraticCurveTo(px, py + pillH, px, py + pillH - r);
+    ctx.lineTo(px, py + r);
+    ctx.quadraticCurveTo(px, py, px + r, py);
+    ctx.closePath();
+    ctx.fill();
+
+    // Text
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = theme.guideLabelText;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, wx, wy);
+    ctx.restore();
   }
 
   // ─── Handle hit-test (in world coords) ────────────────────────────

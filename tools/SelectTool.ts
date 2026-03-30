@@ -3,21 +3,23 @@
  * @boardier-category Tools
  * @boardier-description The default selection tool. Handles click-to-select, box selection, lasso selection, drag-to-move, resize handles, smart alignment guides, and keyboard shortcuts (delete, copy, paste, undo/redo, select-all). This is the most complex tool in Boardier.
  * @boardier-since 0.1.0
+ * @boardier-changed 0.5.1 Replaced inline smart guide logic with enhanced smartGuides engine — alignment, equal-spacing, dimension-matching, pattern learning, and improved visual rendering
  */
 import type { Vec2, Bounds, BoardierElement } from '../core/types';
 import { BaseTool, type ToolContext } from './BaseTool';
 import { getElementBounds } from '../elements/base';
 import { normalizeBounds, pointInPolygon, boundsCenter } from '../utils/math';
+import {
+  type SmartGuide,
+  type SpacingGap,
+  type SmartGuideResult,
+  type RefEdgeCache,
+  buildRefEdgeCache,
+  computeSmartGuides,
+  PatternTracker,
+} from '../utils/smartGuides';
 
 type DragMode = 'none' | 'move' | 'boxSelect' | 'lassoSelect' | 'resize' | 'lineEndpoint' | 'lineControl' | 'rotate';
-
-/** A single smart guide line (horizontal or vertical) */
-export interface SmartGuide {
-  axis: 'x' | 'y';
-  position: number;  // world coord of the guide line
-  from: number;      // start of line on the other axis
-  to: number;        // end of line on the other axis
-}
 
 export class SelectTool extends BaseTool {
   readonly type = 'select' as const;
@@ -36,6 +38,8 @@ export class SelectTool extends BaseTool {
   private lassoPath: Vec2[] = [];
   // Smart guides visible during drag
   private smartGuides: SmartGuide[] = [];
+  // Spacing gap indicators visible during drag
+  private spacingGaps: SpacingGap[] = [];
   // Line/arrow handle dragging
   private lineHandleElementId: string = '';
   private lineEndpointIndex: number = -1; // 0 = start, 1 = end
@@ -45,6 +49,8 @@ export class SelectTool extends BaseTool {
   private rotateOrigRotation: number = 0;
   // Bind target hover (for line endpoint reconnection highlighting)
   hoverBindTargetId: string | null = null;
+  // Pattern tracker for learned spacing/sizing habits
+  private patternTracker = new PatternTracker();
 
   getCursor(): string {
     return 'default';
@@ -198,14 +204,18 @@ export class SelectTool extends BaseTool {
       const dy = world.y - this.dragStart.y;
 
       // Build tentative bounds for all selected elements
-      const movingBounds: { x: number; y: number; width: number; height: number }[] = [];
+      const movingBounds: Bounds[] = [];
       for (const [, orig] of this.snapshotBeforeDrag) {
         movingBounds.push({ x: orig.x + dx, y: orig.y + dy, width: orig.width, height: orig.height });
       }
 
-      // Compute guides + snap in a single pass
-      const { guides, snapDx, snapDy } = this.computeSmartGuidesAndSnap(ctx, movingBounds);
-      this.smartGuides = guides;
+      // Compute guides + snap via the enhanced engine
+      const cache = this.getRefEdgeCache(ctx);
+      const zoom = ctx.getViewState().zoom || 1;
+      const result = computeSmartGuides(movingBounds, cache, zoom, this.patternTracker);
+      this.smartGuides = result.guides;
+      this.spacingGaps = result.gaps;
+      const { snapDx, snapDy } = result;
 
       let finalDx = dx + snapDx;
       let finalDy = dy + snapDy;
@@ -272,6 +282,14 @@ export class SelectTool extends BaseTool {
 
   onPointerUp(ctx: ToolContext, world: Vec2, _e: PointerEvent): void {
     if (this.mode === 'move') {
+      // Record placement patterns for learning
+      const selectedIds = new Set(ctx.scene.getSelectedIds());
+      const allBounds = ctx.scene.getElements()
+        .filter(el => !selectedIds.has(el.id))
+        .map(getElementBounds);
+      for (const el of ctx.scene.getSelectedElements()) {
+        this.patternTracker.recordPlacement(getElementBounds(el), allBounds);
+      }
       // Auto-include elements in frames after move
       this.autoIncludeInFrames(ctx);
       ctx.commitHistory();
@@ -296,6 +314,7 @@ export class SelectTool extends BaseTool {
     this.boxSelectBounds = null;
     this.lassoPath = [];
     this.smartGuides = [];
+    this.spacingGaps = [];
     this.snapshotBeforeDrag.clear();
     this.lineEndpointIndex = -1;
     this._refEdgesCache = null;
@@ -354,91 +373,29 @@ export class SelectTool extends BaseTool {
     return this.smartGuides;
   }
 
-  // ─── Smart Guides computation ──────────────────────────────────
-
-  /** Pre-computed reference edges from non-selected elements. Cached once per drag. */
-  private _refEdgesCache: { x: number[]; y: number[]; yMin: number; yMax: number; xMin: number; xMax: number } | null = null;
-
-  private buildRefEdges(ctx: ToolContext): typeof this._refEdgesCache {
-    if (this._refEdgesCache) return this._refEdgesCache;
-    const selectedIds = new Set(ctx.scene.getSelectedIds());
-    const allElements = ctx.scene.getElements();
-    const rx: number[] = [];
-    const ry: number[] = [];
-    let yMin = Infinity, yMax = -Infinity, xMin = Infinity, xMax = -Infinity;
-    for (const el of allElements) {
-      if (selectedIds.has(el.id)) continue;
-      const b = getElementBounds(el);
-      const cxv = b.x + b.width / 2;
-      const cyv = b.y + b.height / 2;
-      rx.push(b.x, cxv, b.x + b.width);
-      ry.push(b.y, cyv, b.y + b.height);
-      if (b.y < yMin) yMin = b.y;
-      if (b.y + b.height > yMax) yMax = b.y + b.height;
-      if (b.x < xMin) xMin = b.x;
-      if (b.x + b.width > xMax) xMax = b.x + b.width;
-    }
-    this._refEdgesCache = { x: rx, y: ry, yMin, yMax, xMin, xMax };
-    return this._refEdgesCache;
+  getSpacingGaps(): SpacingGap[] {
+    return this.spacingGaps;
   }
 
-  /**
-   * Compute smart guides AND the snap delta for a set of moving bounds.
-   * Returns { guides, snapDx, snapDy } — caller should apply snap offsets.
-   */
-  private computeSmartGuidesAndSnap(
-    ctx: ToolContext,
-    movingBounds: { x: number; y: number; width: number; height: number }[],
-  ): { guides: SmartGuide[]; snapDx: number; snapDy: number } {
-    const zoom = ctx.getViewState().zoom || 1;
-    const threshold = 5 / zoom;
-    const refs = this.buildRefEdges(ctx)!;
-    const guides: SmartGuide[] = [];
-    let bestSnapX = Infinity;
-    let bestSnapY = Infinity;
-    let snapDx = 0;
-    let snapDy = 0;
+  getPatternTracker(): PatternTracker {
+    return this.patternTracker;
+  }
 
-    for (const b of movingBounds) {
-      const cx = b.x + b.width / 2;
-      const cy = b.y + b.height / 2;
-      const movX = [b.x, cx, b.x + b.width];
-      const movY = [b.y, cy, b.y + b.height];
+  // ─── Smart Guides — reference edge cache ───────────────────────
 
-      for (const mx of movX) {
-        for (let j = 0; j < refs.x.length; j++) {
-          const diff = mx - refs.x[j];
-          const absDiff = diff < 0 ? -diff : diff;
-          if (absDiff < threshold) {
-            const lo = b.y < refs.yMin ? b.y : refs.yMin;
-            const hi = (b.y + b.height) > refs.yMax ? (b.y + b.height) : refs.yMax;
-            guides.push({ axis: 'x', position: refs.x[j], from: lo - 20, to: hi + 20 });
-            if (absDiff < bestSnapX) { bestSnapX = absDiff; snapDx = -diff; }
-          }
-        }
-      }
-      for (const my of movY) {
-        for (let j = 0; j < refs.y.length; j++) {
-          const diff = my - refs.y[j];
-          const absDiff = diff < 0 ? -diff : diff;
-          if (absDiff < threshold) {
-            const lo = b.x < refs.xMin ? b.x : refs.xMin;
-            const hi = (b.x + b.width) > refs.xMax ? (b.x + b.width) : refs.xMax;
-            guides.push({ axis: 'y', position: refs.y[j], from: lo - 20, to: hi + 20 });
-            if (absDiff < bestSnapY) { bestSnapY = absDiff; snapDy = -diff; }
-          }
-        }
-      }
+  /** Pre-computed reference edge cache. Rebuilt once per drag session. */
+  private _refEdgesCache: RefEdgeCache | null = null;
+
+  private getRefEdgeCache(ctx: ToolContext): RefEdgeCache {
+    if (this._refEdgesCache) return this._refEdgesCache;
+    const selectedIds = new Set(ctx.scene.getSelectedIds());
+    const refBounds: Bounds[] = [];
+    for (const el of ctx.scene.getElements()) {
+      if (selectedIds.has(el.id)) continue;
+      refBounds.push(getElementBounds(el));
     }
-
-    // Quick dedup
-    const seen = new Set<string>();
-    const unique: SmartGuide[] = [];
-    for (const g of guides) {
-      const key = `${g.axis}:${Math.round(g.position * 2)}`;
-      if (!seen.has(key)) { seen.add(key); unique.push(g); }
-    }
-    return { guides: unique, snapDx, snapDy };
+    this._refEdgesCache = buildRefEdgeCache(refBounds);
+    return this._refEdgesCache;
   }
 
   // ─── Resize logic (shapes only) ────────────────────────────────
@@ -465,9 +422,13 @@ export class SelectTool extends BaseTool {
     if (nw < 5) { nw = 5; if (this.resizeHandle === 0 || this.resizeHandle === 3 || this.resizeHandle === 7) nx = ob.x + ob.width - 5; }
     if (nh < 5) { nh = 5; if (this.resizeHandle === 0 || this.resizeHandle === 1 || this.resizeHandle === 4) ny = ob.y + ob.height - 5; }
 
-    // Snap resized bounds against reference edges
-    const { guides, snapDx, snapDy } = this.computeSmartGuidesAndSnap(ctx, [{ x: nx, y: ny, width: nw, height: nh }]);
-    this.smartGuides = guides;
+    // Snap resized bounds against reference edges via enhanced engine
+    const cache = this.getRefEdgeCache(ctx);
+    const zoom = ctx.getViewState().zoom || 1;
+    const result = computeSmartGuides([{ x: nx, y: ny, width: nw, height: nh }], cache, zoom, this.patternTracker);
+    this.smartGuides = result.guides;
+    this.spacingGaps = result.gaps;
+    const { snapDx, snapDy } = result;
 
     // Apply snap to the moving edges only
     const h = this.resizeHandle;

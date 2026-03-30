@@ -5,6 +5,7 @@
  * @boardier-since 0.1.0
  * @boardier-see Scene, Renderer, History, Clipboard, BaseTool
  * @boardier-changed 0.5.0 Added CollaborationProvider integration — collab-aware undo/redo via Y.js UndoManager, cursor/selection forwarding, and getCollaboration() accessor
+ * @boardier-changed 0.5.1 Render loop now gathers smart guides and spacing gaps from both SelectTool and ShapeTool
  */
 import type {
   BoardierElement,
@@ -684,6 +685,19 @@ export class BoardierEngine {
       bindHighlightIds.push(selectTool.hoverBindTargetId);
     }
 
+    // Gather smart guides from the active tool (select or shape tools)
+    let smartGuides = selectTool?.getSmartGuides?.() ?? [];
+    let spacingGaps = selectTool?.getSpacingGaps?.() ?? [];
+
+    // Shape tools also emit guides during creation
+    const activeShapeTool = (['rectangle', 'ellipse', 'diamond'] as const)
+      .map(t => this.tools.get(t) as ShapeTool | undefined)
+      .find(t => t?.getSmartGuides?.()?.length);
+    if (activeShapeTool) {
+      smartGuides = [...smartGuides, ...(activeShapeTool.getSmartGuides?.() ?? [])];
+      spacingGaps = [...spacingGaps, ...(activeShapeTool.getSpacingGaps?.() ?? [])];
+    }
+
     this.renderer.render(
       this.scene.getElements(),
       this.viewState,
@@ -694,7 +708,8 @@ export class BoardierEngine {
         gridSize: this.config.gridSize ?? 20,
         boxSelect: selectTool?.getBoxSelectBounds?.() ?? null,
         lassoPath: selectTool?.getLassoPath?.() ?? null,
-        smartGuides: selectTool?.getSmartGuides?.() ?? [],
+        smartGuides,
+        spacingGaps,
         bindHighlightIds,
       },
     );
