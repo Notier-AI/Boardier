@@ -9,6 +9,7 @@ import DrawOnScroll, { DOODLE_ARROW_RIGHT, DOODLE_UNDERLINE } from "./components
 import ParallaxDoodles from "./components/ParallaxDoodles";
 import ThemeToggle from "./components/ThemeToggle";
 import MobileNav from "./components/MobileNav";
+import NpmDownloadsBadge from "./components/NpmDownloadsBadge";
 
 export default function Home() {
   return (
@@ -52,8 +53,11 @@ export default function Home() {
       {/* Hero Section */}
       <main className="flex-1 flex flex-col items-center justify-center p-6 text-center max-w-4xl mx-auto w-full">
         <ScrollReveal delay={100} direction="none">
-          <div className="sketch-border bg-brand-blue/10 px-4 py-1 text-brand-blue mb-8 rotate-[-2deg] flex items-center gap-2 animate-float">
-            <Sparkles size={16} className="animate-pulse-soft" /> <span>AI Focused. No License needed.</span>
+          <div className="flex flex-col sm:flex-row gap-3 mb-8 items-center">
+            <div className="sketch-border bg-brand-blue/10 px-4 py-1 text-brand-blue rotate-[-2deg] flex items-center gap-2 animate-float">
+              <Sparkles size={16} className="animate-pulse-soft" /> <span>AI Focused. No License needed.</span>
+            </div>
+            <NpmDownloadsBadge />
           </div>
         </ScrollReveal>
         
