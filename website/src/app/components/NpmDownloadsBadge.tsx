@@ -53,12 +53,12 @@ export default function NpmDownloadsBadge() {
       href="https://www.npmjs.com/package/boardier"
       target="_blank"
       rel="noopener noreferrer"
-      className="sketch-border bg-brand-red/10 px-4 py-1 text-brand-red rotate-[2deg] flex items-center gap-2 hover:bg-brand-red/20 transition-colors group"
+      className="sketch-border bg-brand-red/10 px-3 sm:px-4 py-1 text-brand-red rotate-[2deg] flex items-center gap-1.5 sm:gap-2 hover:bg-brand-red/20 transition-colors group text-sm sm:text-base"
       title="Weekly NPM downloads"
     >
-      <Download size={16} className="group-hover:animate-bounce" />
+      <Download size={14} className="sm:w-4 sm:h-4 group-hover:animate-bounce" />
       <span className="font-semibold">{formatNumber(downloads)}</span>
-      <span className="text-sm opacity-80">weekly downloads</span>
+      <span className="text-xs sm:text-sm opacity-80">weekly downloads</span>
     </a>
   );
 }

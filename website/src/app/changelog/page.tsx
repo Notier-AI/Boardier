@@ -134,29 +134,29 @@ export default function ChangelogPage() {
   return (
     <div className="min-h-screen flex flex-col font-kalam">
       {/* Header */}
-      <header className="p-4 md:p-6 flex items-center justify-between border-b-2 border-root-fg border-dashed sticky top-0 bg-root-bg z-50">
-        <div className="flex items-center gap-3">
+      <header className="p-3 sm:p-4 md:p-6 flex items-center justify-between border-b-2 border-root-fg border-dashed sticky top-0 bg-root-bg z-50 gap-2">
+        <div className="flex items-center gap-2 sm:gap-3">
           <Link href="/" className="sketch-button p-2 bg-card-bg hover:bg-brand-blue hover:text-white group">
-            <ArrowLeft size={20} className="group-hover:-translate-x-0.5 transition-transform" />
+            <ArrowLeft size={18} className="sm:w-5 sm:h-5 group-hover:-translate-x-0.5 transition-transform" />
           </Link>
           <div className="flex items-center gap-2">
-            <div className="sketch-border p-1.5 bg-brand-green text-white animate-wiggle" style={{ animationDelay: "0.3s" }}>
-              <GitBranch size={20} />
+            <div className="sketch-border p-1 sm:p-1.5 bg-brand-green text-white animate-wiggle hidden sm:flex" style={{ animationDelay: "0.3s" }}>
+              <GitBranch size={18} className="sm:w-5 sm:h-5" />
             </div>
             <div className="flex flex-col">
-              <h1 className="text-2xl font-bold font-caveat leading-none">Changelog</h1>
-              <span className="text-[10px] text-root-fg/50">
+              <h1 className="text-xl sm:text-2xl font-bold font-caveat leading-none">Changelog</h1>
+              <span className="text-[9px] sm:text-[10px] text-root-fg/50">
                 {changelog.length} release{changelog.length !== 1 ? "s" : ""} &middot; {totalModules} modules
-                {totalPages > 1 && <> &middot; page {currentPage}/{totalPages}</>}
+                {totalPages > 1 && <span className="hidden sm:inline"> &middot; page {currentPage}/{totalPages}</span>}
               </span>
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <Link href="/docs" className="sketch-button px-2.5 py-1 text-xs hover:bg-brand-blue hover:text-white">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <Link href="/docs" className="sketch-button px-2 py-1 text-xs hover:bg-brand-blue hover:text-white hidden sm:flex">
             Docs
           </Link>
-          <a href="https://notier.ai" target="_blank" className="flex items-center gap-1.5 hover:text-brand-blue text-xs">
+          <a href="https://notier.ai" target="_blank" className="hidden sm:flex items-center gap-1.5 hover:text-brand-blue text-xs">
             <Image src="/notiericon.png" alt="Notier.ai" width={14} height={14} className="rounded-[2px]" />
             <span className="font-semibold">Notier.ai</span>
           </a>
@@ -164,26 +164,26 @@ export default function ChangelogPage() {
         </div>
       </header>
 
-      <main className="flex-1 p-6 md:p-8 max-w-4xl mx-auto w-full">
+      <main className="flex-1 p-4 sm:p-6 md:p-8 max-w-4xl mx-auto w-full">
         {/* Version timeline */}
         <div className="relative">
           {/* Vertical timeline line */}
           <div className="absolute left-[19px] top-0 bottom-0 w-0.5 bg-root-fg/15 hidden md:block" />
 
           {pagedChangelog.map((version, vi) => (
-            <section key={version.version} id={`v${version.version}`} className="mb-16 scroll-mt-24 relative">
+            <section key={version.version} id={`v${version.version}`} className="mb-12 sm:mb-16 scroll-mt-24 relative">
               {/* Version header */}
-              <div className="flex items-start gap-4 mb-6">
+              <div className="flex items-start gap-3 sm:gap-4 mb-4 sm:mb-6">
                 {/* Timeline dot */}
                 <div className="hidden md:flex w-10 h-10 shrink-0 sketch-border bg-card-bg items-center justify-center z-10 relative">
                   <Tag size={18} className={vi === 0 && currentPage === 1 ? "text-brand-green" : "text-root-fg/50"} />
                 </div>
 
                 <div className="flex-1">
-                  <div className="flex flex-wrap items-baseline gap-3 mb-2">
-                    <h2 className="text-4xl font-bold font-caveat">v{version.version}</h2>
-                    <span className="text-sm text-root-fg/50 flex items-center gap-1">
-                      <Clock size={14} /> {formatDate(version.date)}
+                  <div className="flex flex-wrap items-baseline gap-2 sm:gap-3 mb-2">
+                    <h2 className="text-3xl sm:text-4xl font-bold font-caveat">v{version.version}</h2>
+                    <span className="text-xs sm:text-sm text-root-fg/50 flex items-center gap-1">
+                      <Clock size={14} /> <span className="hidden sm:inline">{formatDate(version.date)}</span><span className="sm:hidden">{version.date}</span>
                     </span>
                     {vi === 0 && currentPage === 1 && (
                       <span className="sketch-border px-2 py-0.5 bg-brand-green/15 text-brand-green text-[10px] font-bold uppercase tracking-wider">
@@ -191,15 +191,15 @@ export default function ChangelogPage() {
                       </span>
                     )}
                     {version.version.startsWith("0.") && (
-                      <span className="text-[9px] text-root-fg/30 font-mono tracking-wide uppercase">
+                      <span className="text-[9px] text-root-fg/30 font-mono tracking-wide uppercase hidden sm:inline">
                         beta
                       </span>
                     )}
                   </div>
-                  <p className="text-root-fg/70 text-lg mb-4">{version.summary}</p>
+                  <p className="text-root-fg/70 text-base sm:text-lg mb-3 sm:mb-4">{version.summary}</p>
 
                   {/* Stats bar */}
-                  <div className="flex flex-wrap gap-2 mb-6">
+                  <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-4 sm:mb-6">
                     {version.stats.newModules > 0 && (
                       <span className="sketch-border px-2.5 py-1 text-xs flex items-center gap-1 bg-brand-green/10 text-brand-green">
                         <Plus size={13} /> {version.stats.newModules} new

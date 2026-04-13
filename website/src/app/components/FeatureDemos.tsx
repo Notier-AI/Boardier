@@ -61,10 +61,10 @@ export function RoughnessDemo() {
     roughness >= 4.5 ? "it's alive 🫠" : roughness <= 0.2 ? "boring mode ✨" : `roughness: ${roughness.toFixed(1)}`;
 
   return (
-    <div className="sketch-card p-5 hover-lift flex flex-col items-center text-center">
-      <h3 className="text-2xl font-bold mb-1 font-caveat text-brand-red">Control the Roughness</h3>
-      <p className="text-sm text-root-fg/60 mb-3">Drag the slider. Watch everything get sketchier.</p>
-      <canvas ref={canvasRef} width={260} height={125} className="w-full max-w-[260px] mb-3 rounded" />
+    <div className="sketch-card p-4 sm:p-5 hover-lift flex flex-col items-center text-center">
+      <h3 className="text-xl sm:text-2xl font-bold mb-1 font-caveat text-brand-red">Control the Roughness</h3>
+      <p className="text-xs sm:text-sm text-root-fg/60 mb-3">Drag the slider. Watch everything get sketchier.</p>
+      <canvas ref={canvasRef} width={260} height={125} className="w-full max-w-[260px] mb-3 rounded demo-canvas-bg" />
       <input
         type="range"
         min="0"
@@ -144,14 +144,14 @@ export function FreehandDemo() {
   };
 
   return (
-    <div className="sketch-card p-5 hover-lift flex flex-col items-center text-center">
-      <h3 className="text-2xl font-bold mb-1 font-caveat text-brand-blue">Freehand? Go Ahead.</h3>
-      <p className="text-sm text-root-fg/60 mb-3">{quips[Math.min(strokes, quips.length - 1)]}</p>
+    <div className="sketch-card p-4 sm:p-5 hover-lift flex flex-col items-center text-center">
+      <h3 className="text-xl sm:text-2xl font-bold mb-1 font-caveat text-brand-blue">Freehand? Go Ahead.</h3>
+      <p className="text-xs sm:text-sm text-root-fg/60 mb-3">{quips[Math.min(strokes, quips.length - 1)]}</p>
       <canvas
         ref={canvasRef}
         width={260}
         height={140}
-        className="w-full max-w-[260px] border-2 border-dashed border-root-fg/20 rounded bg-card-bg cursor-crosshair mb-2 touch-none"
+        className="w-full max-w-[260px] border-2 border-dashed border-root-fg/20 rounded bg-canvas-bg cursor-crosshair mb-2 touch-none"
         onMouseDown={startDraw}
         onMouseMove={draw}
         onMouseUp={endDraw}
@@ -225,14 +225,14 @@ export function ColorDemo() {
 
   return (
     <div
-      className="sketch-card p-5 hover-lift flex flex-col items-center text-center transition-colors duration-300"
+      className="sketch-card p-4 sm:p-5 hover-lift flex flex-col items-center text-center transition-colors duration-300"
       style={{ borderColor: color }}
     >
-      <h3 className="text-2xl font-bold mb-1 font-caveat transition-colors duration-300" style={{ color }}>
+      <h3 className="text-xl sm:text-2xl font-bold mb-1 font-caveat transition-colors duration-300" style={{ color }}>
         Every Color is Yours
       </h3>
-      <p className="text-sm text-root-fg/60 mb-3">Tap a swatch. Everything follows — even the border.</p>
-      <canvas ref={canvasRef} width={230} height={105} className="w-full max-w-[230px] mb-3 rounded" />
+      <p className="text-xs sm:text-sm text-root-fg/60 mb-3">Tap a swatch. Everything follows — even the border.</p>
+      <canvas ref={canvasRef} width={230} height={105} className="w-full max-w-[230px] mb-3 rounded demo-canvas-bg" />
       <div className="flex gap-2.5">
         {palette.map((c) => (
           <button
@@ -351,10 +351,10 @@ export function FillStyleDemo() {
   }, [fill]);
 
   return (
-    <div className="sketch-card p-5 hover-lift flex flex-col items-center text-center">
-      <h3 className="text-2xl font-bold mb-1 font-caveat text-brand-pink">Hatch It, Dot It, Zig It</h3>
-      <p className="text-sm text-root-fg/60 mb-3">Pick a fill pattern. Every shape picks it up.</p>
-      <canvas ref={canvasRef} width={260} height={130} className="w-full max-w-[260px] mb-3 rounded" />
+    <div className="sketch-card p-4 sm:p-5 hover-lift flex flex-col items-center text-center">
+      <h3 className="text-xl sm:text-2xl font-bold mb-1 font-caveat text-brand-pink">Hatch It, Dot It, Zig It</h3>
+      <p className="text-xs sm:text-sm text-root-fg/60 mb-3">Pick a fill pattern. Every shape picks it up.</p>
+      <canvas ref={canvasRef} width={260} height={130} className="w-full max-w-[260px] mb-3 rounded demo-canvas-bg" />
       <div className="flex flex-wrap justify-center gap-1.5">
         {fillStyles.map((f) => (
           <button
@@ -458,13 +458,13 @@ export function AIGenerateDemo() {
   };
 
   return (
-    <div className="sketch-card p-5 hover-lift flex flex-col items-center text-center relative overflow-hidden">
+    <div className="sketch-card p-4 sm:p-5 hover-lift flex flex-col items-center text-center relative overflow-hidden">
       <div className="absolute top-2 right-2 sketch-border px-2 py-0.5 bg-brand-orange/15 text-brand-orange text-[10px] font-bold uppercase tracking-wider">
         Coming Soon
       </div>
-      <h3 className="text-2xl font-bold mb-1 font-caveat text-brand-orange">AI Generate</h3>
-      <p className="text-sm text-root-fg/60 mb-3">Describe it. The board draws it for you.</p>
-      <canvas ref={canvasRef} width={260} height={110} className="w-full max-w-[260px] rounded bg-card-bg mb-2 border-2 border-dashed border-brand-orange/20" />
+      <h3 className="text-xl sm:text-2xl font-bold mb-1 font-caveat text-brand-orange">AI Generate</h3>
+      <p className="text-xs sm:text-sm text-root-fg/60 mb-3">Describe it. The board draws it for you.</p>
+      <canvas ref={canvasRef} width={260} height={110} className="w-full max-w-[260px] rounded bg-canvas-bg mb-2 border-2 border-dashed border-brand-orange/20" />
       <div className="flex w-full max-w-[240px] gap-1.5">
         <input
           type="text"
@@ -537,12 +537,12 @@ export function StrokeWidthDemo() {
         : `stroke: ${width.toFixed(1)}px`;
 
   return (
-    <div className="sketch-card p-5 hover-lift flex flex-col items-center text-center">
-      <h3 className="text-2xl font-bold mb-1 font-caveat" style={{ color: "#6741d9" }}>
+    <div className="sketch-card p-4 sm:p-5 hover-lift flex flex-col items-center text-center">
+      <h3 className="text-xl sm:text-2xl font-bold mb-1 font-caveat" style={{ color: "#6741d9" }}>
         Thicc or Thin?
       </h3>
-      <p className="text-sm text-root-fg/60 mb-3">Slide it. Feel the weight of your lines.</p>
-      <canvas ref={canvasRef} width={260} height={125} className="w-full max-w-[260px] mb-3 rounded" />
+      <p className="text-xs sm:text-sm text-root-fg/60 mb-3">Slide it. Feel the weight of your lines.</p>
+      <canvas ref={canvasRef} width={260} height={125} className="w-full max-w-[260px] mb-3 rounded demo-canvas-bg" />
       <input
         type="range"
         min="0.3"
