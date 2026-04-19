@@ -10,9 +10,11 @@ import ParallaxDoodles from "./components/ParallaxDoodles";
 import ThemeToggle from "./components/ThemeToggle";
 import MobileNav from "./components/MobileNav";
 import NpmDownloadsBadge from "./components/NpmDownloadsBadge";
+import UnderConstruction from "./components/UnderConstruction";
 
 export default function Home() {
   return (
+    <UnderConstruction>
     <div className="min-h-screen flex flex-col font-kalam">
       {/* Parallax doodle scribbles floating in the margins */}
       <ParallaxDoodles />
@@ -176,6 +178,7 @@ export default function Home() {
         </div>
       </footer>
     </div>
+    </UnderConstruction>
   );
 }
 
